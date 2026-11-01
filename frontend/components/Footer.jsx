@@ -53,7 +53,9 @@ export default function Footer() {
 
               {/* Instagram */}
               <a
-                href="#"
+                href="https://www.instagram.com/tann_sultan17/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-7 h-7 rounded-full bg-[#E6F9F0] text-[#00A86B] flex items-center justify-center transition-opacity hover:opacity-80"
                 aria-label="Instagram"
               >
