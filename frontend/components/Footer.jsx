@@ -11,8 +11,17 @@ export default function Footer() {
           
           {/* Brand Info */}
           <div className="lg:col-span-5 space-y-3">
-            {/* Gray placeholder logo matching the Figma mockup */}
-            <div className="w-28 sm:w-32 h-7 sm:h-8 bg-[#D9D9D9] rounded-sm"></div>
+            {/* Brand Logo + Text (Reference: Logo + UntungJelas, semibold, highlight #259A66) */}
+            <a href="#beranda" className="inline-flex items-center gap-2.5 cursor-pointer select-none group">
+              <img
+                src="/assets/Icons/logo.png"
+                alt="UntungJelas Logo"
+                className="h-7 sm:h-8 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+              />
+              <span className="text-lg sm:text-[19px] font-semibold tracking-tight text-gray-900 leading-none">
+                Untung<span className="text-[#259A66]">Jelas</span>
+              </span>
+            </a>
             
             <p className="text-gray-500 text-xs max-w-xs leading-relaxed">
               Platform manajemen bisnis dan keuangan berbasis AI untuk UMKM Indonesia.

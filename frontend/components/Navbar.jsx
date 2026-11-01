@@ -110,8 +110,21 @@ export default function Navbar() {
           
           {/* Left: Logo + Nav links grouped together */}
           <div className="flex items-center space-x-6 sm:space-x-8 lg:space-x-12 h-full">
-            {/* Gray placeholder logo */}
-            <div className="w-24 sm:w-32 h-7 sm:h-8 bg-[#D9D9D9] rounded-sm flex-shrink-0"></div>
+            {/* Brand Logo + Text (Reference: Logo + UntungJelas, semibold, highlight #259A66) */}
+            <a
+              href="#beranda"
+              onClick={(e) => handleNavClick(e, { id: 'beranda', href: '#beranda' })}
+              className="flex items-center gap-2.5 flex-shrink-0 cursor-pointer select-none group"
+            >
+              <img
+                src="/assets/Icons/logo.png"
+                alt="UntungJelas Logo"
+                className="h-7 sm:h-8 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+              />
+              <span className="text-lg sm:text-[19px] font-semibold tracking-tight text-gray-900 leading-none">
+                Untung<span className="text-[#259A66]">Jelas</span>
+              </span>
+            </a>
 
             {/* Navigation links - Using gap instead of space-x to prevent absolute child margin distortion */}
             <nav ref={navRef} className="relative hidden md:flex items-center gap-7 lg:gap-9 h-full">
