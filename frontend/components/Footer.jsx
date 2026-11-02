@@ -1,7 +1,7 @@
 import React from 'react'
 import { CheckCircle2 } from 'lucide-react'
 
-export default function Footer() {
+export default function Footer({ onNavigateLogin }) {
   return (
     <footer className="bg-white pt-14 pb-10 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

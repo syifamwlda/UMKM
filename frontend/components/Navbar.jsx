@@ -8,7 +8,7 @@ const navLinks = [
   { id: 'faq', label: 'FAQ', href: '#faq' },
 ]
 
-export default function Navbar() {
+export default function Navbar({ onNavigateLogin }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeNav, setActiveNav] = useState('beranda')
   const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false })
@@ -163,7 +163,13 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center space-x-6 lg:space-x-7">
             <a 
               href="#login" 
-              className="text-sm font-medium text-gray-800 hover:text-gray-950 transition-colors"
+              onClick={(e) => {
+                if (onNavigateLogin) {
+                  e.preventDefault()
+                  onNavigateLogin()
+                }
+              }}
+              className="text-sm font-medium text-gray-800 hover:text-gray-950 transition-colors cursor-pointer"
             >
               Masuk
             </a>
@@ -215,8 +221,14 @@ export default function Navbar() {
             <div className="pt-3 border-t border-gray-100 flex flex-col gap-2.5">
               <a 
                 href="#login" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg"
+                onClick={(e) => {
+                  setMobileMenuOpen(false)
+                  if (onNavigateLogin) {
+                    e.preventDefault()
+                    onNavigateLogin()
+                  }
+                }}
+                className="w-full text-center py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 rounded-lg cursor-pointer"
               >
                 Masuk
               </a>
