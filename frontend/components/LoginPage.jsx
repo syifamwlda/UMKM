@@ -18,27 +18,27 @@ export default function LoginPage({ onNavigateHome }) {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F8F9FA] flex flex-col font-sans antialiased text-gray-900">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-[#F8F9FA] flex flex-col font-sans antialiased text-gray-900">
       
       {/* Top Floating Back Button for Quick Navigation */}
       <div className="absolute top-5 left-5 z-30">
         <button
           type="button"
           onClick={onNavigateHome}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:bg-white hover:text-gray-900 transition-all"
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:bg-white hover:text-gray-900 transition-all cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>Kembali ke Beranda</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] min-h-screen lg:h-screen w-full">
         
         {/* ================= LEFT COLUMN: LOGIN CARD ================= */}
-        <div className="flex flex-col items-center justify-center p-6 sm:p-10 lg:p-12 order-2 lg:order-1 relative">
+        <div className="flex flex-col items-center justify-center p-6 sm:p-10 lg:p-8 order-2 lg:order-1 relative lg:h-full lg:overflow-y-auto z-10">
           
           {/* White Login Card */}
-          <div className="w-full max-w-[430px] bg-white rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 shadow-[0_12px_45px_rgba(0,0,0,0.06)] border border-[#EDEDED]">
+          <div className="w-full max-w-[430px] bg-white rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 shadow-[0_12px_45px_rgba(0,0,0,0.06)] border border-[#EDEDED] relative z-20">
             
             {/* Brand Logo Lockup */}
             <div className="flex justify-center">
@@ -194,36 +194,13 @@ export default function LoginPage({ onNavigateHome }) {
 
         </div>
 
-        {/* ================= RIGHT COLUMN: GREEN HERO BANNER ================= */}
-        <div className="bg-[#009B5B] flex flex-col justify-between relative overflow-hidden order-1 lg:order-2 pt-14 sm:pt-16 lg:pt-20 px-8 sm:px-12 lg:px-16 min-h-[420px] lg:min-h-screen">
-          
-          {/* Top Right Bold Tagline */}
-          <div className="w-full flex justify-end z-20 relative">
-            <h2 className="text-white text-3xl sm:text-4xl lg:text-[42px] font-bold text-right leading-[1.2] tracking-tight max-w-md">
-              Pahami Bisnismu,<br />
-              Maksimalkan<br />
-              Keuntunganmu.
-            </h2>
-          </div>
-
-          {/* Bottom Illustration: Two Businessmen Layered Together */}
-          <div className="relative w-full mt-auto flex items-end justify-center lg:justify-end select-none pointer-events-none z-10 -mb-1">
-            
-            {/* Man 1: Casual with Glasses & Denim Shirt (Left / Behind) */}
-            <img
-              src="/assets/Pictures/login-man-casual.png"
-              alt="UMKM Business Owner"
-              className="h-[280px] sm:h-[380px] lg:h-[460px] xl:h-[530px] w-auto object-contain relative -mr-16 sm:-mr-24 lg:-mr-28 z-10 translate-y-1"
-            />
-
-            {/* Man 2: Suit with Tie (Right / Front) */}
-            <img
-              src="/assets/Pictures/login-man-suit.png"
-              alt="Business Professional"
-              className="h-[310px] sm:h-[420px] lg:h-[500px] xl:h-[580px] w-auto object-contain relative z-20"
-            />
-          </div>
-
+        {/* ================= RIGHT COLUMN: HERO BANNER (SINGLE COMPOSITE IMAGE) ================= */}
+        <div className="order-1 lg:order-2 flex items-end justify-end relative w-full lg:w-auto h-[360px] sm:h-[440px] lg:h-full lg:min-h-0 select-none pointer-events-none overflow-hidden">
+          <img
+            src="/assets/Pictures/login-hero-banner.png"
+            alt="UntungJelas - Pahami Bisnismu, Maksimalkan Keuntunganmu"
+            className="h-full w-auto max-h-screen object-contain object-right-bottom"
+          />
         </div>
 
       </div>
@@ -231,3 +208,4 @@ export default function LoginPage({ onNavigateHome }) {
     </div>
   )
 }
+
