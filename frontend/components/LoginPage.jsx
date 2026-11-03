@@ -18,16 +18,16 @@ export default function LoginPage({ onNavigateHome }) {
   }
 
   return (
-    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-[#F8F9FA] flex flex-col font-sans antialiased text-gray-900">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-[#F8F9FA] flex flex-col font-sans antialiased text-gray-900 relative">
       
-      {/* Top Floating Back Button for Quick Navigation */}
-      <div className="absolute top-5 left-5 z-30">
+      {/* Top Back Link (plain without pill wrapper) */}
+      <div className="absolute top-5 left-5 sm:top-7 sm:left-7 z-30">
         <button
           type="button"
           onClick={onNavigateHome}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm hover:bg-white hover:text-gray-900 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors cursor-pointer group"
         >
-          <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           <span>Kembali ke Beranda</span>
         </button>
       </div>
@@ -35,7 +35,7 @@ export default function LoginPage({ onNavigateHome }) {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] min-h-screen lg:h-screen w-full">
         
         {/* ================= LEFT COLUMN: LOGIN CARD ================= */}
-        <div className="flex flex-col items-center justify-center p-6 sm:p-10 lg:p-8 order-2 lg:order-1 relative lg:h-full lg:overflow-y-auto z-10">
+        <div className="flex flex-col items-center justify-center p-4 sm:p-8 lg:p-8 relative min-h-screen lg:min-h-0 lg:h-full lg:overflow-y-auto z-10 w-full">
           
           {/* White Login Card */}
           <div className="w-full max-w-[430px] bg-white rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 shadow-[0_12px_45px_rgba(0,0,0,0.06)] border border-[#EDEDED] relative z-20">
@@ -194,8 +194,8 @@ export default function LoginPage({ onNavigateHome }) {
 
         </div>
 
-        {/* ================= RIGHT COLUMN: HERO BANNER (SINGLE COMPOSITE IMAGE) ================= */}
-        <div className="order-1 lg:order-2 flex items-end justify-end relative w-full lg:w-auto h-[360px] sm:h-[440px] lg:h-full lg:min-h-0 select-none pointer-events-none overflow-hidden">
+        {/* ================= RIGHT COLUMN: HERO BANNER (DESKTOP ONLY) ================= */}
+        <div className="hidden lg:flex items-end justify-end relative lg:w-auto lg:h-full lg:min-h-0 select-none pointer-events-none overflow-hidden">
           <img
             src="/assets/Pictures/login-hero-banner.png"
             alt="UntungJelas - Pahami Bisnismu, Maksimalkan Keuntunganmu"
