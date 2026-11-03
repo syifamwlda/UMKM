@@ -8,7 +8,7 @@ const navLinks = [
   { id: 'faq', label: 'FAQ', href: '#faq' },
 ]
 
-export default function Navbar({ onNavigateLogin }) {
+export default function Navbar({ onNavigateLogin, onNavigateRegister }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeNav, setActiveNav] = useState('beranda')
   const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false })
@@ -103,7 +103,7 @@ export default function Navbar({ onNavigateLogin }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full relative">
+    <header className="sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navbar card with rounded bottom corners, stroke #E6E6E6 and shadow (Y: 3, Blur: 4, 5%) */}
         <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
@@ -175,7 +175,13 @@ export default function Navbar({ onNavigateLogin }) {
             </a>
             <a 
               href="#daftar" 
-              className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2.5 rounded-full transition-colors shadow-sm"
+              onClick={(e) => {
+                if (onNavigateRegister) {
+                  e.preventDefault()
+                  onNavigateRegister()
+                }
+              }}
+              className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2.5 rounded-full transition-colors shadow-sm cursor-pointer"
             >
               <span>Mulai Gratis</span>
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -234,8 +240,14 @@ export default function Navbar({ onNavigateLogin }) {
               </a>
               <a 
                 href="#daftar" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 bg-[#009B5B] text-white text-sm font-semibold py-2.5 rounded-full"
+                onClick={(e) => {
+                  setMobileMenuOpen(false)
+                  if (onNavigateRegister) {
+                    e.preventDefault()
+                    onNavigateRegister()
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-[#009B5B] text-white text-sm font-semibold py-2.5 rounded-full cursor-pointer"
               >
                 <span>Mulai Gratis</span>
                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
