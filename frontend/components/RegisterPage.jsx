@@ -97,7 +97,7 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
       {/* ================= TOP NAVBAR ================= */}
       <header className="sticky top-0 z-40 w-full flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-14 sm:h-16 flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-16 sm:h-[68px] flex items-center justify-between">
             
             {/* Left: Brand Logo */}
             <a
@@ -111,9 +111,9 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
               <img
                 src="/assets/Icons/logo.png"
                 alt="UntungJelas Logo"
-                className="h-6 sm:h-7 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+                className="h-7 sm:h-8 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
               />
-              <span className="text-base sm:text-lg font-semibold tracking-tight text-gray-900 leading-none">
+              <span className="text-lg sm:text-[20px] font-semibold tracking-tight text-gray-900 leading-none">
                 Untung<span className="text-[#259A66]">Jelas</span>
               </span>
             </a>
@@ -124,7 +124,7 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
               onClick={() => {
                 if (onNavigateHome) onNavigateHome('footer')
               }}
-              className="inline-flex items-center justify-center bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all shadow-sm active:scale-95 cursor-pointer"
+              className="inline-flex items-center justify-center bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2 sm:py-2.5 rounded-full transition-all shadow-sm hover:shadow active:scale-[0.98] cursor-pointer"
             >
               Hubungi Kami
             </button>
