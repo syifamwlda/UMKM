@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 
-export default function LoginPage({ onNavigateHome, onNavigateRegister }) {
+export default function LoginPage({ onNavigateHome, onNavigateRegister, onLoginSuccess }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -46,7 +46,11 @@ export default function LoginPage({ onNavigateHome, onNavigateRegister }) {
     setIsLoading(true)
     setTimeout(() => {
       setIsLoading(false)
-      onNavigateHome()
+      if (onLoginSuccess) {
+        onLoginSuccess()
+      } else {
+        onNavigateHome()
+      }
     }, 600)
   }
 
@@ -54,7 +58,11 @@ export default function LoginPage({ onNavigateHome, onNavigateRegister }) {
     setIsGoogleLoading(true)
     setTimeout(() => {
       setIsGoogleLoading(false)
-      onNavigateHome()
+      if (onLoginSuccess) {
+        onLoginSuccess()
+      } else {
+        onNavigateHome()
+      }
     }, 600)
   }
 

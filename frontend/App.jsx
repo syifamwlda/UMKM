@@ -9,11 +9,13 @@ import CtaBanner from './components/CtaBanner'
 import Footer from './components/Footer'
 import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
+import DashboardPage from './components/DashboardPage'
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => {
     if (window.location.hash === '#login') return 'login'
     if (window.location.hash === '#daftar' || window.location.hash === '#register') return 'register'
+    if (window.location.hash === '#dashboard') return 'dashboard'
     return 'home'
   })
 
@@ -24,6 +26,8 @@ export default function App() {
         setCurrentPage('login')
       } else if (window.location.hash === '#daftar' || window.location.hash === '#register') {
         setCurrentPage('register')
+      } else if (window.location.hash === '#dashboard') {
+        setCurrentPage('dashboard')
       } else {
         setCurrentPage('home')
       }
@@ -42,6 +46,10 @@ export default function App() {
       setCurrentPage('register')
       window.location.hash = '#daftar'
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (page === 'dashboard') {
+      setCurrentPage('dashboard')
+      window.location.hash = '#dashboard'
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       setCurrentPage('home')
       window.location.hash = targetId ? `#${targetId}` : '#'
@@ -56,12 +64,18 @@ export default function App() {
     }
   }
 
+  // If active page is dashboard, show DashboardPage
+  if (currentPage === 'dashboard') {
+    return <DashboardPage onLogout={() => navigateTo('home')} />
+  }
+
   // If active page is login, show LoginPage
   if (currentPage === 'login') {
     return (
       <LoginPage
         onNavigateHome={() => navigateTo('home')}
         onNavigateRegister={() => navigateTo('register')}
+        onLoginSuccess={() => navigateTo('dashboard')}
       />
     )
   }
@@ -72,6 +86,7 @@ export default function App() {
       <RegisterPage
         onNavigateHome={(targetId) => navigateTo('home', targetId)}
         onNavigateLogin={() => navigateTo('login')}
+        onRegisterSuccess={() => navigateTo('dashboard')}
       />
     )
   }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 
-export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
+export default function RegisterPage({ onNavigateHome, onNavigateLogin, onRegisterSuccess }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -69,8 +69,11 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
     setIsLoading(true)
     setTimeout(() => {
       setIsLoading(false)
-      // Redirect back to homepage on success
-      onNavigateHome()
+      if (onRegisterSuccess) {
+        onRegisterSuccess()
+      } else {
+        onNavigateHome()
+      }
     }, 600)
   }
 
@@ -78,7 +81,11 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
     setIsGoogleLoading(true)
     setTimeout(() => {
       setIsGoogleLoading(false)
-      onNavigateHome()
+      if (onRegisterSuccess) {
+        onRegisterSuccess()
+      } else {
+        onNavigateHome()
+      }
     }, 600)
   }
 
