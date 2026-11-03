@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 
 export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
   const [name, setName] = useState('')
@@ -118,25 +118,16 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin }) {
               </span>
             </a>
 
-            {/* Right: Masuk link + Mulai Gratis button */}
-            <div className="flex items-center space-x-3 sm:space-x-5">
-              <button
-                type="button"
-                onClick={onNavigateLogin}
-                className="text-xs sm:text-sm font-medium text-gray-800 hover:text-gray-950 transition-colors cursor-pointer"
-              >
-                Masuk
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="inline-flex items-center gap-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-full transition-colors shadow-sm cursor-pointer"
-              >
-                <span>Mulai Gratis</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-              </button>
-            </div>
+            {/* Right: Hubungi Kami Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigateHome) onNavigateHome('footer')
+              }}
+              className="inline-flex items-center justify-center bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-full transition-all shadow-sm active:scale-95 cursor-pointer"
+            >
+              Hubungi Kami
+            </button>
 
           </div>
         </div>

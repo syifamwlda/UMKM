@@ -47,6 +47,11 @@ export default function App() {
       window.location.hash = targetId ? `#${targetId}` : '#'
       if (!targetId || targetId === 'beranda') {
         window.scrollTo({ top: 0, behavior: 'smooth' })
+      } else {
+        setTimeout(() => {
+          const el = document.getElementById(targetId)
+          if (el) el.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
       }
     }
   }
@@ -65,7 +70,7 @@ export default function App() {
   if (currentPage === 'register') {
     return (
       <RegisterPage
-        onNavigateHome={() => navigateTo('home')}
+        onNavigateHome={(targetId) => navigateTo('home', targetId)}
         onNavigateLogin={() => navigateTo('login')}
       />
     )
