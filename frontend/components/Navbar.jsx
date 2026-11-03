@@ -103,7 +103,7 @@ export default function Navbar({ onNavigateLogin, onNavigateRegister }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full relative">
+    <header className="sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navbar card with rounded bottom corners, stroke #E6E6E6 and shadow (Y: 3, Blur: 4, 5%) */}
         <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">

@@ -74,7 +74,7 @@ function MainContent() {
     )
   }
 
-  // Layar 2: Register (Bertahap)
+  // Layar 2: Register
   if (currentPage === 'register') {
     return (
       <RegisterPage
@@ -94,7 +94,7 @@ function MainContent() {
     )
   }
 
-  // Layar 4: Landing Page Utama (Tampilan & struktur komponen tetap utuh)
+  // Layar 4: Landing Page Utama
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans antialiased">
       <Navbar
@@ -112,7 +112,10 @@ function MainContent() {
         <Faq />
         <CtaBanner />
       </main>
-      <Footer onNavigateLogin={() => navigateTo('login')} />
+      <Footer
+        onNavigateLogin={() => navigateTo('login')}
+        onNavigateRegister={() => navigateTo('register')}
+      />
     </div>
   )
 }
