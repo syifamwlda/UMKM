@@ -1,26 +1,53 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-export default function LoginPage({ onNavigateHome }) {
-  const [email, setEmail] = useState('')
+export default function LoginPage({ onNavigateHome, onNavigateRegister, onSuccessLogin }) {
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e) => {
+  const { login } = useAuth()
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
+    setErrorMessage('')
+    setSubmitted(false)
+
+    try {
+      await login(phone.trim(), password)
       setSubmitted(true)
-    }, 600)
+      setTimeout(() => {
+        if (onSuccessLogin) {
+          onSuccessLogin()
+        } else {
+          window.location.hash = '#produk'
+        }
+      }, 500)
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setErrorMessage(err.response.data.message)
+      } else if (err.response?.data?.errors) {
+        const firstKey = Object.keys(err.response.data.errors)[0]
+        setErrorMessage(err.response.data.errors[firstKey][0])
+      } else if (err.code === 'ERR_NETWORK') {
+        setErrorMessage('Gagal terhubung ke server backend. Pastikan server aktif.')
+      } else {
+        setErrorMessage('Terjadi kesalahan saat masuk. Periksa kembali nomor HP dan kata sandi Anda.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-[#F8F9FA] flex flex-col font-sans antialiased text-gray-900 relative">
       
-      {/* Top Back Link (plain without pill wrapper) */}
+      {/* Top Back Link */}
       <div className="absolute top-5 left-5 sm:top-7 sm:left-7 z-30">
         <button
           type="button"
@@ -74,16 +101,24 @@ export default function LoginPage({ onNavigateHome }) {
             {/* Form */}
             <form onSubmit={handleSubmit} className="mt-7 space-y-4">
               
+              {/* Pesan Error Validasi / Login */}
+              {errorMessage && (
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium flex items-start gap-2 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{errorMessage}</span>
+                </div>
+              )}
+
               {/* Field: Email / Nomor Telepon */}
               <div>
                 <label className="block text-xs font-semibold text-gray-800 mb-1.5">
-                  Email/Nomor Telepon<span className="text-red-500">*</span>
+                  Nomor Telepon<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Masukkan alamat email kamu disini"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Contoh: 081234567890"
                   className="w-full px-4 py-3 text-xs sm:text-sm bg-white rounded-xl border border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:border-[#009B5B] focus:ring-1 focus:ring-[#009B5B] transition-all"
                   required
                 />
@@ -124,7 +159,7 @@ export default function LoginPage({ onNavigateHome }) {
                 </div>
               </div>
 
-              {/* Success Notification simulation */}
+              {/* Success Notification */}
               {submitted && (
                 <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs text-center font-medium">
                   Selamat datang kembali! Mengalihkan ke dashboard...
@@ -135,9 +170,16 @@ export default function LoginPage({ onNavigateHome }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 bg-[#009B5B] hover:bg-[#00854d] text-white font-semibold rounded-xl text-sm transition-all shadow-sm active:scale-[0.99] disabled:opacity-75 disabled:cursor-not-allowed mt-2 cursor-pointer"
+                className="w-full py-3.5 bg-[#009B5B] hover:bg-[#00854d] text-white font-semibold rounded-xl text-sm transition-all shadow-sm active:scale-[0.99] disabled:opacity-75 disabled:cursor-not-allowed mt-2 cursor-pointer flex items-center justify-center gap-2"
               >
-                {isLoading ? 'Memproses...' : 'Masuk'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Memproses...</span>
+                  </>
+                ) : (
+                  <span>Masuk</span>
+                )}
               </button>
             </form>
 
@@ -178,16 +220,19 @@ export default function LoginPage({ onNavigateHome }) {
             {/* Register Note */}
             <p className="text-center text-[11px] sm:text-xs text-gray-600 mt-6">
               Belum Punya Akun?{' '}
-              <a
-                href="#daftar"
-                onClick={(e) => {
-                  e.preventDefault()
-                  onNavigateHome()
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigateRegister) {
+                    onNavigateRegister()
+                  } else {
+                    window.location.hash = '#daftar'
+                  }
                 }}
-                className="text-[#0066CC] font-semibold hover:underline"
+                className="text-[#0066CC] font-semibold hover:underline cursor-pointer"
               >
                 Daftar Disini!
-              </a>
+              </button>
             </p>
 
           </div>
@@ -208,4 +253,3 @@ export default function LoginPage({ onNavigateHome }) {
     </div>
   )
 }
-

@@ -8,7 +8,7 @@ const navLinks = [
   { id: 'faq', label: 'FAQ', href: '#faq' },
 ]
 
-export default function Navbar({ onNavigateLogin }) {
+export default function Navbar({ onNavigateLogin, onNavigateRegister }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeNav, setActiveNav] = useState('beranda')
   const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false })
@@ -126,7 +126,7 @@ export default function Navbar({ onNavigateLogin }) {
               </span>
             </a>
 
-            {/* Navigation links - Using gap instead of space-x to prevent absolute child margin distortion */}
+            {/* Navigation links */}
             <nav ref={navRef} className="relative hidden md:flex items-center gap-7 lg:gap-9 h-full">
               {navLinks.map((link) => {
                 const isActive = activeNav === link.id
@@ -175,7 +175,13 @@ export default function Navbar({ onNavigateLogin }) {
             </a>
             <a 
               href="#daftar" 
-              className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2.5 rounded-full transition-colors shadow-sm"
+              onClick={(e) => {
+                if (onNavigateRegister) {
+                  e.preventDefault()
+                  onNavigateRegister()
+                }
+              }}
+              className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2.5 rounded-full transition-colors shadow-sm cursor-pointer"
             >
               <span>Mulai Gratis</span>
               <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -197,7 +203,7 @@ export default function Navbar({ onNavigateLogin }) {
         </div>
       </div>
 
-      {/* Mobile menu dropdown - Floating Absolute Overlay that does NOT push page content */}
+      {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 px-4 sm:px-6 pt-2 z-50">
           <div className="bg-white border border-[#E6E6E6] rounded-2xl p-4 shadow-[0px_10px_30px_rgba(0,0,0,0.08)] space-y-3">
@@ -234,8 +240,14 @@ export default function Navbar({ onNavigateLogin }) {
               </a>
               <a 
                 href="#daftar" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 bg-[#009B5B] text-white text-sm font-semibold py-2.5 rounded-full"
+                onClick={(e) => {
+                  setMobileMenuOpen(false)
+                  if (onNavigateRegister) {
+                    e.preventDefault()
+                    onNavigateRegister()
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-[#009B5B] text-white text-sm font-semibold py-2.5 rounded-full cursor-pointer"
               >
                 <span>Mulai Gratis</span>
                 <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />

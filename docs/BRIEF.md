@@ -2,8 +2,7 @@
 
 (Baca file ini sebelum mengerjakan tugas apa pun.)
 
-Nama aplikasi: belum ditentukan (gunakan nama sementara "UntungApp" di kode dan UI; mudah diganti nanti).
-
+Nama aplikasi: UntungJelas
 ## Konteks
 
 Aplikasi web untuk lomba GTNIC 2026 kategori Web Development, sub-tema
