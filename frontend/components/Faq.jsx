@@ -28,7 +28,7 @@ export default function Faq() {
     <section id="faq" className="pt-6 sm:pt-10 lg:pt-12 pb-16 sm:pb-20 lg:pb-28 bg-white scroll-mt-16 lg:scroll-mt-20 lg:min-h-[calc(100vh-3rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-14 items-center">
-          
+
           {/* Left Column: Heading & Accordion List - Slides in from the left */}
           <div className="lg:col-span-7">
             <ScrollReveal variant="fade-right" duration={700}>
@@ -55,19 +55,17 @@ export default function Faq() {
                       >
                         <span>{item.question}</span>
                         <span className="text-gray-900 flex-shrink-0">
-                          <Plus 
-                            className={`w-5 h-5 stroke-[2.2] transition-transform duration-300 ease-in-out ${
-                              isOpen ? 'rotate-45 text-[#00A86B]' : 'rotate-0'
-                            }`} 
+                          <Plus
+                            className={`w-5 h-5 stroke-[2.2] transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-45 text-[#00A86B]' : 'rotate-0'
+                              }`}
                           />
                         </span>
                       </button>
-                      
+
                       {/* Smooth Animated Collapsible Content */}
-                      <div 
-                        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                        }`}
+                      <div
+                        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                          }`}
                       >
                         <div className="overflow-hidden">
                           <div className="px-5 sm:px-7 pb-5 pt-1 text-sm sm:text-base text-gray-600 leading-relaxed border-t border-gray-100">
