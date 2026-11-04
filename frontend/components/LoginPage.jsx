@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-export default function LoginPage({ onNavigateHome, onNavigateRegister, onSuccessLogin }) {
+export default function LoginPage({ onNavigateHome, onNavigateRegister, onLoginSuccess, onSuccessLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -49,10 +49,11 @@ export default function LoginPage({ onNavigateHome, onNavigateRegister, onSucces
 
     try {
       await login(email.trim(), password)
-      if (onSuccessLogin) {
-        onSuccessLogin()
+      const callback = onLoginSuccess || onSuccessLogin
+      if (callback) {
+        callback()
       } else {
-        window.location.hash = '#produk'
+        window.location.hash = '#dashboard'
       }
     } catch (err) {
       if (err.response?.data?.message) {
@@ -76,7 +77,12 @@ export default function LoginPage({ onNavigateHome, onNavigateRegister, onSucces
     setIsGoogleLoading(true)
     setTimeout(() => {
       setIsGoogleLoading(false)
-      onNavigateHome()
+      const callback = onLoginSuccess || onSuccessLogin
+      if (callback) {
+        callback()
+      } else {
+        window.location.hash = '#dashboard'
+      }
     }, 600)
   }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -11,14 +11,17 @@ import CtaBanner from './components/CtaBanner'
 import Footer from './components/Footer'
 import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
+import DashboardPage from './components/DashboardPage'
 import ProductHppPage from './components/ProductHppPage'
 
 function MainContent() {
+  const { logout } = useAuth()
   const [currentPage, setCurrentPage] = useState(() => {
     const hash = window.location.hash
     if (hash === '#login') return 'login'
     if (hash === '#daftar' || hash === '#register') return 'register'
-    if (hash === '#produk' || hash === '#dashboard') return 'produk'
+    if (hash === '#dashboard') return 'dashboard'
+    if (hash === '#produk') return 'produk'
     return 'home'
   })
 
@@ -30,7 +33,9 @@ function MainContent() {
         setCurrentPage('login')
       } else if (hash === '#daftar' || hash === '#register') {
         setCurrentPage('register')
-      } else if (hash === '#produk' || hash === '#dashboard') {
+      } else if (hash === '#dashboard') {
+        setCurrentPage('dashboard')
+      } else if (hash === '#produk') {
         setCurrentPage('produk')
       } else {
         setCurrentPage('home')
@@ -50,6 +55,10 @@ function MainContent() {
       setCurrentPage('register')
       window.location.hash = '#daftar'
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (page === 'dashboard') {
+      setCurrentPage('dashboard')
+      window.location.hash = '#dashboard'
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } else if (page === 'produk') {
       setCurrentPage('produk')
       window.location.hash = '#produk'
@@ -59,42 +68,69 @@ function MainContent() {
       window.location.hash = targetId ? `#${targetId}` : '#'
       if (!targetId || targetId === 'beranda') {
         window.scrollTo({ top: 0, behavior: 'smooth' })
+      } else {
+        setTimeout(() => {
+          const el = document.getElementById(targetId)
+          if (el) el.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
       }
     }
   }
 
-  // Layar 1: Login
+  const handleLogout = async () => {
+    await logout()
+    navigateTo('home')
+  }
+
+  // Layar Dashboard (Protected)
+  if (currentPage === 'dashboard') {
+    return (
+      <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
+        <DashboardPage
+          onLogout={handleLogout}
+          onNavigateProduct={() => navigateTo('produk')}
+        />
+      </ProtectedRoute>
+    )
+  }
+
+  // Layar Hitung Modal Produk (Protected)
+  if (currentPage === 'produk') {
+    return (
+      <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
+        <ProductHppPage
+          onNavigateHome={() => navigateTo('home')}
+          onNavigateDashboard={() => navigateTo('dashboard')}
+        />
+      </ProtectedRoute>
+    )
+  }
+
+  // Layar Login
   if (currentPage === 'login') {
     return (
       <LoginPage
         onNavigateHome={() => navigateTo('home')}
         onNavigateRegister={() => navigateTo('register')}
-        onSuccessLogin={() => navigateTo('produk')}
+        onLoginSuccess={() => navigateTo('dashboard')}
+        onSuccessLogin={() => navigateTo('dashboard')}
       />
     )
   }
 
-  // Layar 2: Register
+  // Layar Register
   if (currentPage === 'register') {
     return (
       <RegisterPage
-        onNavigateHome={() => navigateTo('home')}
+        onNavigateHome={(targetId) => navigateTo('home', targetId)}
         onNavigateLogin={() => navigateTo('login')}
-        onSuccessRegister={() => navigateTo('produk')}
+        onRegisterSuccess={() => navigateTo('dashboard')}
+        onSuccessRegister={() => navigateTo('dashboard')}
       />
     )
   }
 
-  // Layar 3: Hitung Modal Produk (Protected)
-  if (currentPage === 'produk') {
-    return (
-      <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
-        <ProductHppPage onNavigateHome={() => navigateTo('home')} />
-      </ProtectedRoute>
-    )
-  }
-
-  // Layar 4: Landing Page Utama
+  // Layar Landing Page Utama
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans antialiased">
       <Navbar

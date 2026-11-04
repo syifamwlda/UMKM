@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const BUSINESS_TYPES = [
@@ -13,7 +13,7 @@ const BUSINESS_TYPES = [
   'Usaha Lainnya',
 ]
 
-export default function RegisterPage({ onNavigateHome, onNavigateLogin, onSuccessRegister }) {
+export default function RegisterPage({ onNavigateHome, onNavigateLogin, onRegisterSuccess, onSuccessRegister }) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [businessName, setBusinessName] = useState('')
@@ -100,10 +100,11 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onSucces
 
       await register(payload)
 
-      if (onSuccessRegister) {
-        onSuccessRegister()
+      const callback = onRegisterSuccess || onSuccessRegister
+      if (callback) {
+        callback()
       } else {
-        window.location.hash = '#produk'
+        window.location.hash = '#dashboard'
       }
     } catch (err) {
       if (err.response?.data?.message) {
@@ -127,7 +128,12 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onSucces
     setIsGoogleLoading(true)
     setTimeout(() => {
       setIsGoogleLoading(false)
-      onNavigateHome()
+      const callback = onRegisterSuccess || onSuccessRegister
+      if (callback) {
+        callback()
+      } else {
+        window.location.hash = '#dashboard'
+      }
     }, 600)
   }
 
@@ -146,7 +152,7 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onSucces
       {/* ================= TOP NAVBAR ================= */}
       <header className="sticky top-0 z-40 w-full flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-14 sm:h-16 flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-md rounded-b-2xl shadow-[0px_3px_4px_rgba(0,0,0,0.05)] border border-[#E6E6E6] px-5 sm:px-8 h-16 sm:h-[68px] flex items-center justify-between">
             
             {/* Left: Brand Logo */}
             <a
@@ -160,32 +166,23 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onSucces
               <img
                 src="/assets/Icons/logo.png"
                 alt="UntungJelas Logo"
-                className="h-6 sm:h-7 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+                className="h-7 sm:h-8 w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
               />
-              <span className="text-base sm:text-lg font-semibold tracking-tight text-gray-900 leading-none">
+              <span className="text-lg sm:text-[20px] font-semibold tracking-tight text-gray-900 leading-none">
                 Untung<span className="text-[#259A66]">Jelas</span>
               </span>
             </a>
 
-            {/* Right: Masuk link + Mulai Gratis button */}
-            <div className="flex items-center space-x-3 sm:space-x-5">
-              <button
-                type="button"
-                onClick={onNavigateLogin}
-                className="text-xs sm:text-sm font-medium text-gray-800 hover:text-gray-950 transition-colors cursor-pointer"
-              >
-                Masuk
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="inline-flex items-center gap-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-full transition-colors shadow-sm cursor-pointer"
-              >
-                <span>Mulai Gratis</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-              </button>
-            </div>
+            {/* Right: Hubungi Kami Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigateHome) onNavigateHome('footer')
+              }}
+              className="inline-flex items-center justify-center bg-[#009B5B] hover:bg-[#00874e] text-white text-xs sm:text-sm font-semibold px-5 sm:px-6 py-2 sm:py-2.5 rounded-full transition-all shadow-sm hover:shadow active:scale-[0.98] cursor-pointer"
+            >
+              Hubungi Kami
+            </button>
 
           </div>
         </div>
