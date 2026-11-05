@@ -903,7 +903,7 @@ export default function DashboardPage({ onLogout }) {
   const menuUtama = [
     { name: 'Dashboard', icon: LayoutGrid },
     { name: 'Kasir', icon: Store },
-    { name: 'Kalkulator HPP', icon: Calculator },
+    { name: 'Katalog & HPP', icon: Calculator },
     { name: 'Laporan Keuangan', icon: BarChart3 },
     { name: 'Asisten AI', icon: Sparkles },
   ]
