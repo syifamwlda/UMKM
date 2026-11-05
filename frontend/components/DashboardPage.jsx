@@ -2195,13 +2195,13 @@ export default function DashboardPage({ onLogout }) {
 
                     {/* Previous Period Real Data Comparison (when enabled) */}
                     {comparePrevious && prevPointData && (
-                      <div className="mt-2.5 pt-2 border-t border-dashed border-gray-200/80 flex items-center justify-between text-[11px]">
+                      <div className="mt-2.5 pt-2 border-t border-dashed border-gray-200/80 flex items-center justify-between gap-3 text-[11px]">
                         <div className="flex items-center gap-1 text-gray-500">
                           <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
                           <span>Periode Lalu ({prevPointData.day}): <strong className="text-gray-700 font-semibold">Rp{prevPointData.omzet.toLocaleString('id-ID')}</strong></span>
                         </div>
-                        <span className={`font-bold ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
-                          {prevDiffOmzet >= 0 ? '+' : ''}Rp{prevDiffOmzet.toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
+                        <span className={`font-bold whitespace-nowrap ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
+                          {prevDiffOmzet >= 0 ? '+Rp' : '-Rp'}{Math.abs(prevDiffOmzet).toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
                         </span>
                       </div>
                     )}
@@ -2491,12 +2491,12 @@ export default function DashboardPage({ onLogout }) {
 
                         {/* Floating Tooltip Card (UntungJelas Modern Style) */}
                         <div
-                          className="hidden sm:block absolute bg-white/98 backdrop-blur-md border border-gray-100 rounded-2xl p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-w-[240px] pointer-events-none transition-all duration-200 z-30 select-none"
+                          className="hidden sm:block absolute bg-white/98 backdrop-blur-md border border-gray-100 rounded-2xl p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-w-[270px] pointer-events-none transition-all duration-200 z-30 select-none"
                           style={{
                             top: '20px',
                             ...(activeIdx < nPoints / 2
-                              ? { left: `min(calc(${((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 260px))` }
-                              : { right: `min(calc(${100 - ((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 260px))` })
+                              ? { left: `min(calc(${((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 290px))` }
+                              : { right: `min(calc(${100 - ((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 290px))` })
                           }}
                         >
                           {/* Tooltip Header: Date & Margin */}
@@ -2513,11 +2513,11 @@ export default function DashboardPage({ onLogout }) {
                             {/* Omzet Penjualan */}
                             {chartSeries.omzet && (
                               <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 text-gray-600 font-medium">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
                                   <span className="w-2.5 h-2.5 rounded-full bg-[#1E88E5] flex-shrink-0" />
                                   <span>Omzet Penjualan</span>
                                 </div>
-                                <span className="font-bold text-gray-900">
+                                <span className="font-bold text-gray-900 whitespace-nowrap">
                                   Rp{activePointData.omzet.toLocaleString('id-ID')}
                                 </span>
                               </div>
@@ -2526,11 +2526,11 @@ export default function DashboardPage({ onLogout }) {
                             {/* Untung Bersih */}
                             {chartSeries.laba && (
                               <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 text-gray-600 font-medium">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
                                   <span className="w-2.5 h-2.5 rounded-full bg-[#009B5B] flex-shrink-0" />
                                   <span>Untung Bersih</span>
                                 </div>
-                                <span className="font-extrabold text-[#009B5B]">
+                                <span className="font-extrabold text-[#009B5B] whitespace-nowrap">
                                   Rp{activePointData.laba.toLocaleString('id-ID')}
                                 </span>
                               </div>
@@ -2539,11 +2539,11 @@ export default function DashboardPage({ onLogout }) {
                             {/* Biaya & HPP */}
                             {chartSeries.costs && (
                               <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 text-gray-600 font-medium">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
                                   <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E] flex-shrink-0" />
                                   <span>Biaya & HPP</span>
                                 </div>
-                                <span className="font-bold text-gray-900">
+                                <span className="font-bold text-gray-900 whitespace-nowrap">
                                   Rp{activePointCosts.toLocaleString('id-ID')}
                                 </span>
                               </div>
@@ -2552,25 +2552,25 @@ export default function DashboardPage({ onLogout }) {
                             {/* Previous Period Real Data Comparison in Tooltip */}
                             {comparePrevious && prevPointData && (
                               <div className="pt-2.5 mt-2.5 border-t border-gray-100/90 space-y-1.5 select-none">
-                                <div className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-2 text-gray-500 font-medium">
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2 text-gray-500 font-medium whitespace-nowrap">
                                     <span className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-gray-100 flex-shrink-0" />
                                     <span>Periode Lalu ({prevPointData.day})</span>
                                   </div>
-                                  <span className="font-semibold text-gray-700">
+                                  <span className="font-semibold text-gray-700 whitespace-nowrap">
                                     Rp{prevPointData.omzet.toLocaleString('id-ID')}
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-2 text-gray-500 font-medium">
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2 text-gray-500 font-medium whitespace-nowrap">
                                     <span className="w-2.5 h-2.5 flex items-center justify-center text-[10px] font-bold text-gray-400 flex-shrink-0">
                                       {prevDiffOmzet >= 0 ? '▲' : '▼'}
                                     </span>
                                     <span>Pertumbuhan</span>
                                   </div>
-                                  <span className={`font-bold ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
-                                    {prevDiffOmzet >= 0 ? '+' : ''}Rp{prevDiffOmzet.toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
+                                  <span className={`font-bold whitespace-nowrap ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
+                                    {prevDiffOmzet >= 0 ? '+Rp' : '-Rp'}{Math.abs(prevDiffOmzet).toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
                                   </span>
                                 </div>
                               </div>
