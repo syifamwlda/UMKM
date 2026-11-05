@@ -992,7 +992,7 @@ export default function DashboardPage({ onLogout }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] font-sans text-gray-900 flex antialiased selection:bg-[#009B5B]/15">
+    <div className="min-h-screen bg-[#F4F6F8] font-sans text-gray-900 flex antialiased">
       
       {/* ================= SIDEBAR (DESKTOP) ================= */}
       <aside className="hidden lg:flex flex-col w-64 xl:w-72 bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] m-4 mr-0 p-6 justify-between flex-shrink-0 min-h-[calc(100vh-2rem)] sticky top-4 self-start">
@@ -2139,23 +2139,17 @@ export default function DashboardPage({ onLogout }) {
                   </div>
 
                   {/* Mobile Interactive Data Bar - Clean 2-Row Flat Style (No nested cards) */}
-                  <div className="lg:hidden mb-4 bg-gray-50/80 border border-gray-200/70 rounded-2xl p-3 sm:p-3.5 shadow-2xs">
-                    {/* Top Row: Date & Margin (Flat typography, no card border on margin) */}
-                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-gray-200/60">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#009B5B] animate-pulse" />
-                        <span className="text-xs sm:text-[13px] font-bold text-gray-900">
+                  <div className="lg:hidden mb-4 bg-gray-50/80 border border-gray-200/70 rounded-2xl p-3 sm:p-3.5 shadow-2xs select-none">
+                    {/* Top Row: Date & Margin (Flat typography, no green card or badge) */}
+                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-gray-200/60 select-none">
+                      <div className="flex items-center gap-1.5 select-none">
+                        <span className="text-xs sm:text-[13px] font-bold text-gray-900 select-none">
                           {activePointDateStr}
                         </span>
-                        {isLatestPoint && (
-                          <span className="text-[9px] font-bold text-[#009B5B] bg-emerald-100/80 px-1.5 py-0.5 rounded-md">
-                            {activePointData.day.includes(':') ? 'Terkini' : 'Hari Ini'}
-                          </span>
-                        )}
                       </div>
 
                       {/* Flat Margin readout (tanpa card/badge) */}
-                      <div className="text-xs">
+                      <div className="text-xs select-none">
                         <span className="text-gray-400 font-medium">Margin: </span>
                         <span className="font-extrabold text-[#009B5B]">
                           {activePointData.omzet > 0 ? ((activePointData.laba / activePointData.omzet) * 100).toFixed(1) : '0'}%
@@ -2505,15 +2499,10 @@ export default function DashboardPage({ onLogout }) {
                               : { right: `min(calc(${100 - ((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 240px))` })
                           }}
                         >
-                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100/80">
-                            <p className="text-[11px] font-bold text-gray-800">
+                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100/80 select-none">
+                            <p className="text-[11px] font-bold text-gray-800 select-none">
                               {activePointDateStr}
                             </p>
-                            {isLatestPoint && (
-                              <span className="text-[9px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                {activePointData.day.includes(':') ? 'Terkini' : 'Hari Ini'}
-                              </span>
-                            )}
                           </div>
 
                           <div className="space-y-2 text-xs">
