@@ -2731,13 +2731,13 @@ export default function DashboardPage({ onLogout }) {
                         className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-700 cursor-pointer select-none"
                       >
                         <div
-                          className={`w-8 h-4.5 rounded-full transition-colors relative flex items-center px-0.5 ${
+                          className={`w-9 h-5 rounded-full transition-colors duration-200 relative flex items-center p-0.5 ${
                             comparePrevious ? 'bg-[#009B5B]' : 'bg-gray-200'
                           }`}
                         >
                           <div
-                            className={`w-3.5 h-3.5 rounded-full bg-white shadow-xs transition-transform duration-200 ${
-                              comparePrevious ? 'translate-x-3.5' : 'translate-x-0'
+                            className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
+                              comparePrevious ? 'translate-x-4' : 'translate-x-0'
                             }`}
                           />
                         </div>
