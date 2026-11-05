@@ -33,7 +33,17 @@ import {
   ArrowUp,
   Activity,
   BarChart2,
-  MoreVertical
+  MoreVertical,
+  Utensils,
+  Trash2,
+  RotateCcw,
+  Banknote,
+  QrCode,
+  CreditCard,
+  Package,
+  Star,
+  Printer,
+  Share2
 } from 'lucide-react'
 
 // Daily cafe performance records for September, October & November 2026
@@ -622,21 +632,154 @@ export default function DashboardPage({ onLogout }) {
   ])
 
   // ================= KASIR (POS) STATE =================
-  const [posCart, setPosCart] = useState([
-    { id: 1, name: 'Croissant Cokelat', price: 10000, qty: 1 },
-    { id: 2, name: 'Es Kopi Milkshake', price: 13000, qty: 1 }
+  const [posCatalog] = useState([
+    {
+      id: 1,
+      name: 'Cafe Latte Gayo',
+      category: 'Minuman',
+      desc: 'Espresso double shot..',
+      price: 22000,
+      hpp: 13900,
+      profit: 8100,
+      marginPct: 37,
+      image: '/assets/kasir/cafe-latte.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: true,
+    },
+    {
+      id: 2,
+      name: 'Kopi Susu Gula Aren',
+      category: 'Minuman',
+      desc: 'Espresso blend, gula..',
+      price: 18000,
+      hpp: 11800,
+      profit: 6200,
+      marginPct: 34,
+      image: '/assets/kasir/kopi-susu.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: true,
+      defaultNote: 'Level Gula: 50%',
+    },
+    {
+      id: 3,
+      name: 'Matcha Latte Kyoto',
+      category: 'Minuman',
+      desc: 'Pure Kyoto Matcha..',
+      price: 24000,
+      hpp: 15000,
+      profit: 9000,
+      marginPct: 38,
+      image: '/assets/kasir/matcha-latte.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: false,
+    },
+    {
+      id: 4,
+      name: 'Roti Bakar Coklat',
+      category: 'Makanan',
+      desc: 'Roti brioche panggang..',
+      price: 16000,
+      hpp: 10800,
+      profit: 5200,
+      marginPct: 32,
+      image: '/assets/kasir/roti-bakar.png',
+      tagColor: 'bg-purple-50 text-purple-700',
+      popular: true,
+    },
+    {
+      id: 5,
+      name: 'Croissant Cokelat',
+      category: 'Pastry & Bakery',
+      desc: 'French butter pastry..',
+      price: 15000,
+      hpp: 10500,
+      profit: 4500,
+      marginPct: 30,
+      image: '/assets/kasir/croissant.png',
+      tagColor: 'bg-orange-50 text-orange-700',
+      popular: true,
+      defaultNote: 'Penyajian: Dihangatkan',
+    },
+    {
+      id: 6,
+      name: 'Spaghetti Aglio Olio',
+      category: 'Makanan',
+      desc: 'Tumisan smoked beef..',
+      price: 28000,
+      hpp: 16800,
+      profit: 11200,
+      marginPct: 40,
+      image: '/assets/kasir/spaghetti.png',
+      tagColor: 'bg-purple-50 text-purple-700',
+      popular: false,
+    },
+    {
+      id: 7,
+      name: 'Cold Brew Coffee',
+      category: 'Minuman',
+      desc: 'Kopi Arabica steeped..',
+      price: 20000,
+      hpp: 12600,
+      profit: 7400,
+      marginPct: 37,
+      image: '/assets/kasir/cold-brew.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: false,
+    },
+    {
+      id: 8,
+      name: 'Almond Croissant',
+      category: 'Pastry & Bakery',
+      desc: 'Flaky crust pastry..',
+      price: 18000,
+      hpp: 12200,
+      profit: 5800,
+      marginPct: 32,
+      image: '/assets/kasir/almond-croissant.png',
+      tagColor: 'bg-orange-50 text-orange-700',
+      popular: false,
+    },
   ])
 
-  const posCatalog = [
-    { id: 1, name: 'Croissant Cokelat', price: 10000, category: 'Pastry', icon: 'croissant' },
-    { id: 2, name: 'Es Kopi Milkshake', price: 13000, category: 'Minuman', icon: 'coffee' },
-    { id: 3, name: 'Kopi Susu Aren', price: 15000, category: 'Minuman', icon: 'coffee' },
-    { id: 4, name: 'Matcha Latte', price: 18000, category: 'Minuman', icon: 'coffee' },
-    { id: 5, name: 'Roti Bakar Srikaya', price: 12000, category: 'Makanan', icon: 'croissant' },
-    { id: 6, name: 'Kentang Goreng Keju', price: 14000, category: 'Snack', icon: 'croissant' },
-  ]
+  // Cart matches the user's mockup:
+  // Kopi Susu Gula Aren x2 (36.000) + Croissant Cokelat x1 (15.000) + Cafe Latte Gayo x1 (22.000) = Rp 73.000
+  const [posCart, setPosCart] = useState([
+    {
+      id: 2,
+      name: 'Kopi Susu Gula Aren',
+      price: 18000,
+      hpp: 11800,
+      qty: 2,
+      note: 'Level Gula: 50%',
+      image: '/assets/kasir/kopi-susu.png'
+    },
+    {
+      id: 5,
+      name: 'Croissant Cokelat',
+      price: 15000,
+      hpp: 10500,
+      qty: 1,
+      note: 'Penyajian: Dihangatkan',
+      image: '/assets/kasir/croissant.png'
+    },
+    {
+      id: 1,
+      name: 'Cafe Latte Gayo',
+      price: 22000,
+      hpp: 10000,
+      qty: 1,
+      note: 'Normal ice & sweet',
+      image: '/assets/kasir/cafe-latte.png'
+    }
+  ])
 
   const [posCategory, setPosCategory] = useState('Semua')
+  const [posSearch, setPosSearch] = useState('')
+  const [posTable, setPosTable] = useState('Meja 04')
+  const [posOrderType, setPosOrderType] = useState('Dine-in')
+  const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
+  const [posShiftProfit, setPosShiftProfit] = useState(482500)
+  const [posReceiptModal, setPosReceiptModal] = useState(null)
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -864,10 +1007,11 @@ export default function DashboardPage({ onLogout }) {
     showToast('Semua notifikasi telah ditandai dibaca.')
   }
 
-  // POS Cart Calculations
+  // POS Cart Calculations (Real-time live calculation)
   const cartSubtotal = posCart.reduce((sum, item) => sum + item.price * item.qty, 0)
-  const cartTax = Math.round(cartSubtotal * 0.1)
-  const cartTotal = cartSubtotal + cartTax
+  const cartHpp = posCart.reduce((sum, item) => sum + (item.hpp || Math.round(item.price * 0.6)) * item.qty, 0)
+  const cartProfit = Math.max(0, cartSubtotal - cartHpp)
+  const cartMarginPct = cartSubtotal > 0 ? ((cartProfit / cartSubtotal) * 100).toFixed(1) : '0'
 
   const handleAddToCart = (product) => {
     setPosCart((prev) => {
@@ -877,9 +1021,20 @@ export default function DashboardPage({ onLogout }) {
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item
         )
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, qty: 1 }]
+      return [
+        ...prev,
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          hpp: product.hpp,
+          qty: 1,
+          note: product.defaultNote || '',
+          image: product.image,
+        }
+      ]
     })
-    showToast(`${product.name} ditambahkan ke struk!`)
+    showToast(`${product.name} ditambahkan ke pesanan`)
   }
 
   const handleUpdateQty = (id, delta) => {
@@ -890,14 +1045,37 @@ export default function DashboardPage({ onLogout }) {
     )
   }
 
+  const handleRemoveFromCart = (id) => {
+    setPosCart((prev) => prev.filter((item) => item.id !== id))
+    showToast('Menu dihapus dari pesanan')
+  }
+
+  const handleResetCart = () => {
+    setPosCart([])
+    showToast('Pesanan telah di-reset')
+  }
+
   const handleCompletePayment = (method) => {
     if (posCart.length === 0) return
-    const totalTrx = cartTotal
-    const profitEst = Math.round(totalTrx * 0.38)
+    const totalTrx = cartSubtotal
+    const profitEst = cartProfit
+    const receiptData = {
+      txId: '#TX-' + Math.floor(100 + Math.random() * 900),
+      table: posTable,
+      orderType: posOrderType,
+      method: method,
+      items: [...posCart],
+      subtotal: totalTrx,
+      hpp: cartHpp,
+      profit: profitEst,
+      margin: cartMarginPct,
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    }
+    setPosShiftProfit((prev) => prev + profitEst)
     setPosCart([])
+    setPosReceiptModal(receiptData)
     updateRealtimeData(totalTrx, profitEst, `Kasir: ${method}`)
     showToast(`Transaksi berhasil via ${method}! Struk tercetak.`)
-    setActiveMenu('Dashboard')
   }
 
   const menuUtama = [
@@ -1448,192 +1626,475 @@ export default function DashboardPage({ onLogout }) {
 
         {/* ================= IF ACTIVE MENU IS KASIR (POS) ================= */}
         {activeMenu === 'Kasir' ? (
-          <div className="space-y-5 animate-fade-in">
-            {/* POS Top Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-              <div>
+          <div className="space-y-4 animate-fade-in">
+            {/* Top Bar for Kasir (Clean Navigation - No Shift Pagi, No Rata-rata Margin Hari Ini) */}
+            <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setActiveMenu('Dashboard')}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#009B5B] hover:underline mb-1 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-xl border border-gray-200 shadow-2xs transition-all active:scale-95 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Kembali ke Dashboard</span>
                 </button>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                  Kasir POS (Point of Sale)
-                </h1>
-                <p className="text-xs text-gray-500">
-                  Layani transaksi pelanggan cepat dan otomatis catat laba bersih.
-                </p>
+                <div className="hidden sm:block h-4 w-px bg-gray-200" />
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#009B5B] animate-pulse" />
+                  <span className="text-xs sm:text-[13px] font-bold text-gray-900">
+                    Kasir POS Pintar
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-200">
-                  Laci Kasir: <strong>Rp850.000</strong>
-                </span>
+              <div className="flex items-center gap-2.5">
+                <div className="text-right hidden sm:block">
+                  <span className="text-xs font-bold text-gray-800 block leading-tight">Kedai Kopi Nabila</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Kasir #1 Aktif</span>
+                </div>
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+                  alt="Nabila"
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/20"
+                />
               </div>
             </div>
 
-            {/* POS Grid: Catalog Left (8 cols) & Cart Right (4 cols) */}
+            {/* Main Dual-Pane POS Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
               
-              {/* Product Catalog (8 cols) */}
-              <div className="xl:col-span-8 space-y-4">
-                {/* Category Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  {['Semua', 'Minuman', 'Pastry', 'Makanan', 'Snack'].map((cat) => (
+              {/* ================= LEFT PANE: PRODUCT CATALOG (8 COLS) ================= */}
+              <div className="xl:col-span-8 bg-white rounded-3xl border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                
+                {/* Search Bar Input */}
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={posSearch}
+                    onChange={(e) => setPosSearch(e.target.value)}
+                    placeholder="Cari nama produk, SKU, atau bahan baku kopi..."
+                    className="w-full pl-10 pr-9 py-2.5 bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-200/90 rounded-2xl text-xs sm:text-[13px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#009B5B]/20 focus:border-[#009B5B] transition-all"
+                  />
+                  {posSearch && (
                     <button
-                      key={cat}
                       type="button"
-                      onClick={() => setPosCategory(cat)}
-                      className={`text-xs px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                        posCategory === cat
-                          ? 'bg-[#009B5B] text-white shadow-sm'
-                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
-                      }`}
+                      onClick={() => setPosSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
                     >
-                      {cat}
+                      <X className="w-3.5 h-3.5" />
                     </button>
-                  ))}
+                  )}
                 </div>
 
-                {/* Product Grid Cards */}
+                {/* Category Filter Pills Row */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {[
+                    { id: 'Semua', label: 'Semua (24)', icon: LayoutGrid },
+                    { id: 'Minuman', label: 'Minuman (12)', icon: Coffee },
+                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery (6)', icon: Croissant },
+                    { id: 'Makanan', label: 'Makanan (6)', icon: Utensils },
+                  ].map((cat) => {
+                    const CatIcon = cat.icon
+                    const isSelected = posCategory === cat.id
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setPosCategory(cat.id)}
+                        className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#1E88E5] text-white shadow-xs'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/90'
+                        }`}
+                      >
+                        <CatIcon className="w-3.5 h-3.5" />
+                        <span>{cat.label}</span>
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setPosCategory(posCategory === 'Favorit' ? 'Semua' : 'Favorit')}
+                    title="Menu Favorit"
+                    className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                      posCategory === 'Favorit'
+                        ? 'bg-amber-400 text-white border-amber-400 shadow-xs'
+                        : 'bg-white hover:bg-gray-50 text-gray-400 hover:text-amber-500 border-gray-200/90'
+                    }`}
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                </div>
+
+                {/* Product Cards Grid (3 Columns) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
                   {posCatalog
-                    .filter((p) => posCategory === 'Semua' || p.category === posCategory)
+                    .filter((p) => {
+                      const matchesCategory =
+                        posCategory === 'Semua'
+                          ? true
+                          : posCategory === 'Favorit'
+                          ? p.popular
+                          : p.category === posCategory
+                      const matchesSearch =
+                        !posSearch ||
+                        p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
+                        p.desc.toLowerCase().includes(posSearch.toLowerCase())
+                      return matchesCategory && matchesSearch
+                    })
                     .map((item) => (
                       <div
                         key={item.id}
                         onClick={() => handleAddToCart(item)}
-                        className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-[#009B5B] shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
+                        className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-[#009B5B] mb-3 group-hover:scale-110 transition-transform">
-                          {item.icon === 'croissant' ? (
-                            <Croissant className="w-5 h-5 stroke-[1.8]" />
-                          ) : (
-                            <Coffee className="w-5 h-5 stroke-[1.8]" />
-                          )}
+                        {/* Top Margin Badge (UntungJelas Smart Tag) */}
+                        <div className="flex items-center justify-end mb-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                            <TrendingUp className="w-3 h-3 stroke-[2.2]" />
+                            <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug">
-                            {item.name}
-                          </p>
-                          <span className="text-[10px] text-gray-400 font-medium block mt-0.5">
+
+                        {/* Product Image */}
+                        <div className="h-24 sm:h-28 w-full flex items-center justify-center my-1 relative">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-300 drop-shadow-xs"
+                          />
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="mt-1">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.tagColor} inline-block mb-1`}>
                             {item.category}
                           </span>
-                          <p className="text-xs font-extrabold text-gray-800 mt-2">
-                            Rp{item.price.toLocaleString('id-ID')}
+                          <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
+                            {item.name}
+                          </h4>
+                          <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">
+                            {item.desc}
                           </p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-xs sm:text-sm font-black text-[#1E88E5]">
+                              Rp{item.price.toLocaleString('id-ID')}
+                            </span>
+                            <span className="w-6 h-6 rounded-lg bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-600 flex items-center justify-center text-xs font-bold transition-all shadow-2xs">
+                              +
+                            </span>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          className="mt-3 w-full py-1.5 bg-gray-50 hover:bg-[#009B5B] hover:text-white text-gray-700 text-[11px] font-semibold rounded-lg transition-colors flex items-center justify-center gap-1"
-                        >
-                          <Plus className="w-3 h-3 stroke-[2.5]" />
-                          <span>Tambah</span>
-                        </button>
                       </div>
                     ))}
                 </div>
+
+                {/* Bottom Bar: Akumulasi Untung Bersih Shift */}
+                <div className="pt-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                  <div className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-50 text-[#009B5B] flex items-center justify-center font-bold text-base flex-shrink-0">
+                      💰
+                    </span>
+                    <span>
+                      Akumulasi Untung Bersih Shift Ini: <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong> <span className="text-gray-400">/ Target Rp600.000</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 sm:w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#009B5B] rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.round((posShiftProfit / 600000) * 100))}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-bold text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded">
+                      {((posShiftProfit / 600000) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+
               </div>
 
-              {/* Struk / Cart Right (4 cols) */}
-              <div className="xl:col-span-4 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-gray-600" />
-                    <h3 className="text-xs font-bold text-gray-900">Struk Transaksi Baru</h3>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">
-                    {posCart.length} Menu
+              {/* ================= RIGHT PANE: ORDER / CART PANEL (4 COLS) ================= */}
+              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-4">
+                
+                {/* Header: Pesanan Saat Ini + #TX-554 */}
+                <div className="flex items-center justify-between pb-1">
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
+                    Pesanan Saat Ini
+                  </h3>
+                  <span className="text-[11px] font-extrabold text-[#009B5B] bg-emerald-100/80 px-2.5 py-1 rounded-xl">
+                    #TX-554
                   </span>
                 </div>
 
-                {/* Cart Items */}
-                <div className="space-y-3 max-h-72 overflow-y-auto my-2">
+                {/* Table & Order Settings Buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
+                      const curIdx = tables.indexOf(posTable)
+                      const nextTable = tables[(curIdx + 1) % tables.length]
+                      setPosTable(nextTable)
+                      showToast(`Pindah ke ${nextTable}`)
+                    }}
+                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <Store className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{posTable}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextType = posOrderType === 'Dine-in' ? 'Take-away' : 'Dine-in'
+                      setPosOrderType(nextType)
+                      showToast(`Pesanan diset: ${nextType}`)
+                    }}
+                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <Utensils className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{posOrderType}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetCart}
+                    className="py-1.5 px-2 bg-white hover:bg-rose-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-rose-600 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Reset</span>
+                  </button>
+                </div>
+
+                {/* Cart Items List */}
+                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
                   {posCart.length > 0 ? (
                     posCart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between text-xs py-1">
-                        <div className="flex-1 pr-2">
-                          <p className="font-semibold text-gray-800 leading-tight">{item.name}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            @Rp{item.price.toLocaleString('id-ID')}
-                          </p>
+                      <div
+                        key={item.id}
+                        className="bg-white rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center gap-3 transition-all"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
+                          <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
                         </div>
 
-                        {/* Qty +/- */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, -1)}
-                            className="w-6 h-6 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs"
-                          >
-                            -
-                          </button>
-                          <span className="text-xs font-bold text-gray-900 w-4 text-center">
-                            {item.qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, 1)}
-                            className="w-6 h-6 rounded-md bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] flex items-center justify-center font-bold text-xs"
-                          >
-                            +
-                          </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <h5 className="text-xs font-bold text-gray-900 truncate">{item.name}</h5>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFromCart(item.id)}
+                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer"
+                              title="Hapus menu"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note || item.desc}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-lg p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, -1)}
+                                className="w-5 h-5 rounded-md bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-bold text-gray-900 w-5 text-center">{item.qty}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, 1)}
+                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-black text-gray-900">
+                              Rp{(item.price * item.qty).toLocaleString('id-ID')}
+                            </span>
+                          </div>
                         </div>
-
-                        <span className="text-xs font-bold text-gray-900 ml-3 min-w-[60px] text-right">
-                          Rp{(item.price * item.qty).toLocaleString('id-ID')}
-                        </span>
                       </div>
                     ))
                   ) : (
-                    <div className="py-10 text-center text-xs text-gray-400">
-                      Struk masih kosong. Klik menu di katalog untuk menambahkan pesanan.
+                    <div className="py-8 text-center text-xs text-gray-400 bg-white/70 rounded-2xl border border-dashed border-emerald-200 p-4">
+                      Keranjang kosong. Pilih menu di sebelah kiri untuk menambah pesanan.
                     </div>
                   )}
                 </div>
 
-                {/* Calculation Summary */}
-                <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span className="font-semibold text-gray-800">Rp{cartSubtotal.toLocaleString('id-ID')}</span>
+                {/* Subtotal & Pajak */}
+                <div className="pt-2 border-t border-emerald-200/60 flex items-baseline justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 block">Subtotal Pesanan</span>
+                    <span className="text-[10px] text-gray-400 font-medium">Pajak Restoran / PB1 (0% UMKM)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Pajak Resto (10%)</span>
-                    <span className="font-semibold text-gray-800">Rp{cartTax.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-100">
-                    <span>Total Bayar</span>
-                    <span className="text-[#009B5B]">Rp{cartTotal.toLocaleString('id-ID')}</span>
+                  <div className="text-right">
+                    <span className="text-lg sm:text-xl font-black text-[#009B5B] block">
+                      Rp{cartSubtotal.toLocaleString('id-ID')}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">Rp0</span>
                   </div>
                 </div>
 
-                {/* Payment Action Buttons */}
-                <div className="mt-5 space-y-2">
-                  <button
-                    type="button"
-                    disabled={posCart.length === 0}
-                    onClick={() => handleCompletePayment('Tunai (Cash)')}
-                    className="w-full py-2.5 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                  >
-                    Bayar Tunai (Cash)
-                  </button>
+                {/* Real-time HPP & Profit Card (UntungJelas Exclusive Feature) */}
+                <div className="bg-[#009B5B] text-white rounded-2xl p-3.5 space-y-2 shadow-sm">
+                  <div className="flex items-center justify-between text-xs text-emerald-100">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <Package className="w-3.5 h-3.5" />
+                      <span>Modal Bahan Baku (HPP)</span>
+                    </div>
+                    <span className="font-semibold text-white">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                  </div>
 
-                  <button
-                    type="button"
-                    disabled={posCart.length === 0}
-                    onClick={() => handleCompletePayment('QRIS / E-Wallet')}
-                    className="w-full py-2.5 bg-[#1E88E5] hover:bg-[#1976D2] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                  >
-                    Bayar QRIS / Transfer
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-100">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                      <span>Untung Bersih (Estimasi):</span>
+                    </div>
+                    <span className="text-base sm:text-lg font-black text-white">
+                      +Rp{cartProfit.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  {/* Inner White Margin Pill */}
+                  <div className="bg-white rounded-xl p-2 text-gray-800 flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#009B5B]">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>Margin {cartMarginPct}%</span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-medium truncate">
+                      Langsung sinkron ke Kas Untung Bersih hari ini
+                    </span>
+                  </div>
                 </div>
+
+                {/* Payment Methods Selector */}
+                <div>
+                  <span className="text-[11px] font-bold text-gray-700 block mb-1.5">Pilih Metode Pembayaran</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'Tunai', icon: Banknote, label: 'Tunai' },
+                      { id: 'QRIS', icon: QrCode, label: 'QRIS' },
+                      { id: 'Kartu/Debit', icon: CreditCard, label: 'Kartu/Debit' },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPosPaymentMethod(m.id)}
+                        className={`py-2 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          posPaymentMethod === m.id
+                            ? 'bg-[#1E88E5] text-white shadow-sm ring-2 ring-blue-300'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/80 shadow-2xs'
+                        }`}
+                      >
+                        <m.icon className="w-4 h-4" />
+                        <span className="text-[10px]">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Checkout & Submit Button */}
+                <button
+                  type="button"
+                  disabled={posCart.length === 0}
+                  onClick={() => handleCompletePayment(posPaymentMethod)}
+                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2 text-left">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold block leading-tight">Bayar & Catat Untung</span>
+                      <span className="text-[9px] text-emerald-100/90 font-medium block">HPP & Laba otomatis dibukukan</span>
+                    </div>
+                  </div>
+                  <span className="text-sm sm:text-base font-black">
+                    Rp{cartSubtotal.toLocaleString('id-ID')}
+                  </span>
+                </button>
+
               </div>
 
             </div>
+
+            {/* Modal: Struk Transaksi Selesai */}
+            {posReceiptModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+                <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-scale-up relative">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                    Pembayaran Berhasil!
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Transaksi {posReceiptModal.txId} telah dibukukan ke kasir.
+                  </p>
+
+                  {/* Struk Paper Preview */}
+                  <div className="my-4 p-4 bg-gray-50 rounded-2xl border border-gray-200/80 text-left text-xs space-y-2">
+                    <div className="flex justify-between font-bold text-gray-900 pb-2 border-b border-gray-200">
+                      <span>Kedai Kopi Nabila</span>
+                      <span>{posReceiptModal.time}</span>
+                    </div>
+                    <div className="text-[11px] text-gray-500">
+                      <span>{posReceiptModal.table} • {posReceiptModal.orderType} • {posReceiptModal.method}</span>
+                    </div>
+
+                    <div className="py-2 border-y border-dashed border-gray-200 space-y-1">
+                      {posReceiptModal.items.map((it, idx) => (
+                        <div key={idx} className="flex justify-between">
+                          <span className="text-gray-700">{it.qty}x {it.name}</span>
+                          <span className="font-semibold text-gray-900">Rp{(it.price * it.qty).toLocaleString('id-ID')}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-1 pt-1 text-[11px]">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Total Penjualan:</span>
+                        <span className="font-bold text-gray-900">Rp{posReceiptModal.subtotal.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500">
+                        <span>Modal Bahan (HPP):</span>
+                        <span>Rp{posReceiptModal.hpp.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-[#009B5B]">
+                        <span>Untung Bersih ({posReceiptModal.margin}%):</span>
+                        <span>+Rp{posReceiptModal.profit.toLocaleString('id-ID')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        showToast('Mencetak struk kasir thermal 58mm...')
+                        setPosReceiptModal(null)
+                      }}
+                      className="w-full py-2.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Cetak Struk Thermal</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPosReceiptModal(null)}
+                      className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                    >
+                      Tutup & Pesanan Baru
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
