@@ -144,6 +144,118 @@ const formatDayMonth = (dateStr) => {
   return `${d} ${MONTH_SHORT_ID[m - 1]}`
 }
 
+// ================= ROLLING ODOMETER / DIGIT REEL TICKER =================
+// 20 items: 0..9 then 0..9 for seamless vertical reel spinning
+const DIGIT_REEL = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+function SingleDigitReel({ digit, delay = 0 }) {
+  const [target, setTarget] = useState(0)
+
+  useEffect(() => {
+    // Delay rolling so on initial page mount it starts at 0 and rolls up to 10 + digit
+    const timer = setTimeout(() => {
+      setTarget(10 + digit)
+    }, 40 + delay)
+    return () => clearTimeout(timer)
+  }, [digit, delay])
+
+  return (
+    <span
+      className="inline-block relative overflow-hidden text-center select-none"
+      style={{
+        height: '1.45em',
+        width: '0.65em',
+        verticalAlign: 'middle'
+      }}
+    >
+      <span
+        className="block will-change-transform"
+        style={{
+          transform: `translateY(-${target * 5}%)`,
+          transition: 'transform 0.85s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+      >
+        {DIGIT_REEL.map((num, i) => (
+          <span
+            key={i}
+            className="flex items-center justify-center font-black"
+            style={{ height: '1.45em', lineHeight: 1 }}
+          >
+            {num}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
+function RollNumberTicker({ value, prefix = '', suffix = '', formatLocale = true, className = '' }) {
+  let numStr = ''
+  if (typeof value === 'number') {
+    numStr = formatLocale ? Math.abs(value).toLocaleString('id-ID') : String(Math.abs(value))
+  } else {
+    const match = String(value).match(/\d+/)
+    if (match) {
+      const n = parseInt(match[0], 10)
+      numStr = formatLocale ? n.toLocaleString('id-ID') : String(n)
+    } else {
+      numStr = String(value)
+    }
+  }
+
+  const isNeg = typeof value === 'number' && value < 0
+  const finalPrefix = isNeg ? `-${prefix}` : prefix
+
+  const chars = numStr.split('')
+  let digitCount = 0
+
+  return (
+    <span className={`inline-flex items-center tracking-tight ${className}`}>
+      {finalPrefix && (
+        <span
+          className="select-none font-black mr-0.5 inline-flex items-center justify-center"
+          style={{ height: '1.45em' }}
+        >
+          {finalPrefix}
+        </span>
+      )}
+      {chars.map((char, idx) => {
+        const isDigit = /\d/.test(char)
+        if (isDigit) {
+          const digit = parseInt(char, 10)
+          const delay = digitCount * 45
+          digitCount++
+          const keyFromRight = `d-${chars.length - 1 - idx}`
+          return (
+            <SingleDigitReel
+              key={keyFromRight}
+              digit={digit}
+              delay={delay}
+            />
+          )
+        }
+        return (
+          <span
+            key={`sep-${idx}`}
+            className="select-none font-black px-[1px] inline-flex items-center justify-center text-center"
+            style={{ height: '1.45em', width: '0.28em' }}
+          >
+            {char}
+          </span>
+        )
+      })}
+      {suffix && (
+        <span
+          className="select-none font-black ml-1.5 inline-flex items-center justify-center"
+          style={{ height: '1.45em' }}
+        >
+          {suffix}
+        </span>
+      )}
+    </span>
+  )
+}
+
 export default function DashboardPage({ onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
@@ -156,12 +268,12 @@ export default function DashboardPage({ onLogout }) {
   // 1. Date Filter & Interactive Calendar States
   const [selectedDateFilter, setSelectedDateFilter] = useState('Hari ini, 1 Nov 2026')
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const [calMonth, setCalMonth] = useState({ year: 2026, month: 9 }) // 9 is October, 10 is November
-  const [selectedStartDate, setSelectedStartDate] = useState('2026-10-25')
+  const [calMonth, setCalMonth] = useState({ year: 2026, month: 10 }) // 10 is November (current today date)
+  const [selectedStartDate, setSelectedStartDate] = useState('2026-11-01')
   const [selectedEndDate, setSelectedEndDate] = useState('2026-11-01')
-  const [tempStart, setTempStart] = useState('2026-10-25')
+  const [tempStart, setTempStart] = useState('2026-11-01')
   const [tempEnd, setTempEnd] = useState('2026-11-01')
-  const [chartTitle, setChartTitle] = useState('Arus Kas & Keuntungan (Omzet vs Laba)')
+  const [chartTitle, setChartTitle] = useState('Performa Jam Operasional Hari Ini (08:00 - 20:00)')
   const [chartSubtitle, setChartSubtitle] = useState('Pantau tren omzet, modal bahan baku (HPP), dan laba bersih usaha secara real-time.')
   
   // 2. Search Autocomplete
@@ -215,8 +327,8 @@ export default function DashboardPage({ onLogout }) {
     untungGrowth: '12% dari kemarin',
     omzet: 650000,
     omzetGrowth: '+8% rata-rata harian',
-    transaksi: '24 Struk',
-    transaksiSub: 'Rata-rata Rp27.800/struk',
+    transaksi: 24,
+    transaksiSub: 'Rata-rata Rp27.083/struk',
     kesehatan: 82,
     kesehatanLabel: 'Sehat'
   })
@@ -581,7 +693,7 @@ export default function DashboardPage({ onLogout }) {
         untungGrowth: isToday ? '12% dari kemarin' : `${formatDayMonth(prevDateStr)}: Rp${prevData.laba.toLocaleString('id-ID')}`,
         omzet: dData.omzet,
         omzetGrowth: isToday ? '+8% rata-rata harian' : `Total 1 Hari (${formatDayMonth(start)})`,
-        transaksi: `${dData.transaksi} Struk`,
+        transaksi: dData.transaksi,
         transaksiSub: `Rata-rata Rp${Math.round(dData.omzet / dData.transaksi).toLocaleString('id-ID')}/struk`,
         kesehatan: 82,
         kesehatanLabel: 'Sehat'
@@ -665,7 +777,7 @@ export default function DashboardPage({ onLogout }) {
         untungGrowth: `Akumulasi ${dates.length} Hari`,
         omzet: totalOmzet,
         omzetGrowth: `Rata-rata Rp${Math.round(totalOmzet / dates.length).toLocaleString('id-ID')}/hari`,
-        transaksi: `${totalTransaksi} Struk`,
+        transaksi: totalTransaksi,
         transaksiSub: `Rata-rata Rp${avgPerStruk.toLocaleString('id-ID')}/struk`,
         kesehatan: Math.min(96, Math.max(72, Math.round(72 + marginPct * 0.4))),
         kesehatanLabel: marginPct >= 35 ? 'Sangat Sehat' : 'Sehat'
@@ -1544,253 +1656,272 @@ export default function DashboardPage({ onLogout }) {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsDatePickerOpen(!isDatePickerOpen)
-                      setTempStart(selectedStartDate)
-                      setTempEnd(selectedEndDate)
+                      const nextOpen = !isDatePickerOpen
+                      setIsDatePickerOpen(nextOpen)
+                      if (nextOpen) {
+                        setTempStart(selectedStartDate)
+                        setTempEnd(selectedEndDate)
+                        if (selectedStartDate) {
+                          const [y, m] = selectedStartDate.split('-').map(Number)
+                          setCalMonth({ year: y, month: m - 1 })
+                        }
+                      }
                     }}
-                    className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200/90 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors cursor-pointer select-none"
+                    className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200/90 rounded-xl px-3 sm:px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors cursor-pointer select-none"
                   >
                     <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{selectedDateFilter}</span>
+                    <span className="truncate max-w-[130px] sm:max-w-none">{selectedDateFilter}</span>
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isDatePickerOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Calendar / Date Filter Dropdown */}
                   {isDatePickerOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-80 sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-40 animate-fade-in select-none">
-                      
-                      {/* Dropdown Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                        <div>
-                          <p className="text-xs font-bold text-gray-900">Pilih Tanggal / Rentang</p>
-                          <p className="text-[10px] text-gray-400">Pilih 1 hari atau rentang tanggal (A - Z)</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-11-01')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-11-01', '2026-11-01')
-                          }}
-                          className="text-[11px] font-bold text-[#009B5B] hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Hari Ini
-                        </button>
-                      </div>
+                    <>
+                      {/* Mobile Backdrop Overlay */}
+                      <div
+                        className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 sm:hidden"
+                        onClick={() => setIsDatePickerOpen(false)}
+                      />
 
-                      {/* Quick Presets row */}
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-11-01')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-11-01', '2026-11-01')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-11-01' && selectedEndDate === '2026-11-01'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Hari Ini
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-31')
-                            setTempEnd('2026-10-31')
-                            applyDateSelection('2026-10-31', '2026-10-31')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-31' && selectedEndDate === '2026-10-31'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Kemarin
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-26')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-10-26', '2026-11-01')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-26' && selectedEndDate === '2026-11-01'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          7 Hari Terakhir
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-01')
-                            setTempEnd('2026-10-31')
-                            applyDateSelection('2026-10-01', '2026-10-31')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-01' && selectedEndDate === '2026-10-31'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Bulan Lalu (Okt)
-                        </button>
-                      </div>
-
-                      {/* Month Navigation */}
-                      <div className="flex items-center justify-between px-1 py-1.5 mb-1 bg-gray-50/80 rounded-xl">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (calMonth.month === 9) {
-                              setCalMonth({ year: 2026, month: 8 })
-                            } else if (calMonth.month === 10) {
-                              setCalMonth({ year: 2026, month: 9 })
-                            }
-                          }}
-                          disabled={calMonth.month <= 8}
-                          className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs font-bold text-gray-800">
-                          {MONTH_NAMES_ID[calMonth.month]} {calMonth.year}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (calMonth.month === 8) {
-                              setCalMonth({ year: 2026, month: 9 })
-                            } else if (calMonth.month === 9) {
-                              setCalMonth({ year: 2026, month: 10 })
-                            }
-                          }}
-                          disabled={calMonth.month >= 10}
-                          className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Day of Week Headers */}
-                      <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 py-1">
-                        <span>Min</span>
-                        <span>Sen</span>
-                        <span>Sel</span>
-                        <span>Rab</span>
-                        <span>Kam</span>
-                        <span>Jum</span>
-                        <span>Sab</span>
-                      </div>
-
-                      {/* Days Grid */}
-                      <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
-                        {Array.from({ length: new Date(calMonth.year, calMonth.month, 1).getDay() }).map((_, i) => (
-                          <div key={`pad-${i}`} className="h-8" />
-                        ))}
-
-                        {Array.from({
-                          length: new Date(calMonth.year, calMonth.month + 1, 0).getDate()
-                        }).map((_, i) => {
-                          const d = i + 1
-                          const dStr = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-                          const isToday = dStr === '2026-11-01'
-                          const isFuture = dStr > '2026-11-01'
-                          const isStart = tempStart === dStr
-                          const isEnd = tempEnd === dStr
-                          const isInRange = tempStart && tempEnd && dStr >= tempStart && dStr <= tempEnd
-
-                          return (
+                      {/* Modal Card: Centered on mobile (< sm), dropdown below button on desktop (>= sm) */}
+                      <div className="fixed inset-x-3 top-20 sm:top-full max-w-[360px] mx-auto z-50 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-[360px] bg-white rounded-3xl sm:rounded-2xl shadow-2xl border border-gray-100 p-4 select-none animate-fade-in">
+                        
+                        {/* Dropdown Header */}
+                        <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-gray-900">Pilih Tanggal</p>
+                            <p className="text-[10px] text-gray-400">Pilih 1 hari atau rentang tanggal</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
                             <button
-                              key={d}
                               type="button"
-                              disabled={isFuture}
                               onClick={() => {
-                                if (isFuture) return
-                                if (!tempStart || (tempStart && tempEnd)) {
-                                  setTempStart(dStr)
-                                  setTempEnd(null)
-                                } else if (tempStart && !tempEnd) {
-                                  if (dStr < tempStart) {
-                                    setTempEnd(tempStart)
-                                    setTempStart(dStr)
-                                  } else {
-                                    setTempEnd(dStr)
-                                  }
-                                }
+                                applyDateSelection('2026-11-01', '2026-11-01')
                               }}
-                              className={`h-8 text-xs font-medium transition-all relative flex items-center justify-center ${
-                                isFuture
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : isStart && isEnd
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-xl shadow-sm'
-                                  : isStart
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-l-xl'
-                                  : isEnd
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-r-xl'
-                                  : isInRange
-                                  ? 'bg-emerald-50 text-emerald-900 font-semibold'
-                                  : isToday
-                                  ? 'border border-[#009B5B] text-[#009B5B] font-bold rounded-xl hover:bg-emerald-50/50'
-                                  : 'text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer'
-                              }`}
+                              className="text-[11px] font-bold text-[#009B5B] hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                             >
-                              <span>{d}</span>
-                              {isToday && !isStart && !isEnd && (
-                                <span className="absolute bottom-0.5 w-1 h-1 bg-[#009B5B] rounded-full" />
-                              )}
+                              Hari Ini
                             </button>
-                          )
-                        })}
-                      </div>
-
-                      {/* Footer: Preview & Action Buttons */}
-                      <div className="pt-3 border-t border-gray-100 mt-3 flex items-center justify-between">
-                        <div className="text-[11px] text-gray-500">
-                          {tempStart && tempEnd && tempStart !== tempEnd ? (
-                            <span>
-                              <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} 2026</strong>
-                              <span className="text-[10px] text-gray-400 ml-1">({countDays(tempStart, tempEnd)} hari)</span>
-                            </span>
-                          ) : tempStart ? (
-                            <span>
-                              <strong className="text-gray-900">{tempStart === '2026-11-01' ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(tempStart)} 2026`}</strong>
-                              <span className="text-[10px] text-gray-400 ml-1">(1 hari)</span>
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">Pilih tanggal pada kalender</span>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => setIsDatePickerOpen(false)}
+                              className="sm:hidden p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                              title="Tutup"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        {/* Quick Presets row without ugly scrollbar */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           <button
                             type="button"
-                            onClick={() => setIsDatePickerOpen(false)}
-                            className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => {
+                              applyDateSelection('2026-11-01', '2026-11-01')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-11-01' && selectedEndDate === '2026-11-01'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                           >
-                            Batal
+                            Hari Ini
                           </button>
                           <button
                             type="button"
                             onClick={() => {
-                              if (tempStart) {
-                                applyDateSelection(tempStart, tempEnd || tempStart)
-                              }
+                              applyDateSelection('2026-10-31', '2026-10-31')
                             }}
-                            disabled={!tempStart}
-                            className="px-3.5 py-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-31' && selectedEndDate === '2026-10-31'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                           >
-                            Terapkan
+                            Kemarin
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyDateSelection('2026-10-26', '2026-11-01')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-26' && selectedEndDate === '2026-11-01'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            7 Hari Terakhir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyDateSelection('2026-10-01', '2026-10-31')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-01' && selectedEndDate === '2026-10-31'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            Bulan Lalu (Okt)
                           </button>
                         </div>
-                      </div>
 
-                    </div>
+                        {/* Month Navigation */}
+                        <div className="flex items-center justify-between px-1 py-1.5 mb-1 bg-gray-50/80 rounded-xl">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth.month === 9) {
+                                setCalMonth({ year: 2026, month: 8 })
+                              } else if (calMonth.month === 10) {
+                                setCalMonth({ year: 2026, month: 9 })
+                              }
+                            }}
+                            disabled={calMonth.month <= 8}
+                            className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-xs font-bold text-gray-800">
+                            {MONTH_NAMES_ID[calMonth.month]} {calMonth.year}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth.month === 8) {
+                                setCalMonth({ year: 2026, month: 9 })
+                              } else if (calMonth.month === 9) {
+                                setCalMonth({ year: 2026, month: 10 })
+                              }
+                            }}
+                            disabled={calMonth.month >= 10}
+                            className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Day of Week Headers */}
+                        <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 py-1">
+                          <span>Min</span>
+                          <span>Sen</span>
+                          <span>Sel</span>
+                          <span>Rab</span>
+                          <span>Kam</span>
+                          <span>Jum</span>
+                          <span>Sab</span>
+                        </div>
+
+                        {/* Days Grid */}
+                        <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+                          {Array.from({ length: new Date(calMonth.year, calMonth.month, 1).getDay() }).map((_, i) => (
+                            <div key={`pad-${i}`} className="h-8" />
+                          ))}
+
+                          {Array.from({
+                            length: new Date(calMonth.year, calMonth.month + 1, 0).getDate()
+                          }).map((_, i) => {
+                            const d = i + 1
+                            const dStr = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                            const isToday = dStr === '2026-11-01'
+                            const isFuture = dStr > '2026-11-01'
+                            const isStart = tempStart === dStr
+                            const isEnd = tempEnd === dStr
+                            const isInRange = tempStart && tempEnd && dStr >= tempStart && dStr <= tempEnd
+
+                            return (
+                              <button
+                                key={d}
+                                type="button"
+                                disabled={isFuture}
+                                onClick={() => {
+                                  if (isFuture) return
+                                  if (!tempStart || (tempStart && tempEnd && tempStart !== tempEnd)) {
+                                    // Single click selects this day
+                                    setTempStart(dStr)
+                                    setTempEnd(dStr)
+                                  } else if (tempStart && tempEnd && tempStart === tempEnd) {
+                                    if (dStr === tempStart) {
+                                      setTempEnd(dStr)
+                                    } else if (dStr < tempStart) {
+                                      setTempEnd(tempStart)
+                                      setTempStart(dStr)
+                                    } else {
+                                      setTempEnd(dStr)
+                                    }
+                                  }
+                                }}
+                                className={`h-8 text-xs font-medium transition-all relative flex items-center justify-center ${
+                                  isFuture
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : isStart && isEnd
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-xl shadow-sm'
+                                    : isStart
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-l-xl'
+                                    : isEnd
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-r-xl'
+                                    : isInRange
+                                    ? 'bg-emerald-50 text-emerald-900 font-semibold'
+                                    : isToday
+                                    ? 'border border-[#009B5B] text-[#009B5B] font-bold rounded-xl hover:bg-emerald-50/50'
+                                    : 'text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer'
+                                }`}
+                              >
+                                <span>{d}</span>
+                                {isToday && !isStart && !isEnd && (
+                                  <span className="absolute bottom-0.5 w-1 h-1 bg-[#009B5B] rounded-full" />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Footer: Preview & Action Buttons */}
+                        <div className="pt-3 border-t border-gray-100 mt-3 flex items-center justify-between gap-2">
+                          <div className="text-[11px] text-gray-600 font-medium truncate min-w-0">
+                            {tempStart && tempEnd && tempStart !== tempEnd ? (
+                              <span className="truncate block">
+                                <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} 2026</strong>
+                                <span className="text-[10px] text-gray-400 ml-1">({countDays(tempStart, tempEnd)} hari)</span>
+                              </span>
+                            ) : tempStart ? (
+                              <span className="truncate block">
+                                <strong className="text-gray-900">{tempStart === '2026-11-01' ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(tempStart)} 2026`}</strong>
+                                <span className="text-[10px] text-gray-400 ml-1">(1 hari)</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Pilih tanggal pada kalender</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setIsDatePickerOpen(false)}
+                              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (tempStart) {
+                                  applyDateSelection(tempStart, tempEnd || tempStart)
+                                }
+                              }}
+                              disabled={!tempStart}
+                              className="px-3.5 py-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+                            >
+                              Terapkan
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1825,7 +1956,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black tracking-tight">
-                    Rp{kpiStats.untung.toLocaleString('id-ID')}
+                    <RollNumberTicker value={kpiStats.untung} prefix="Rp" />
                   </h3>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-emerald-100 font-medium">
@@ -1846,7 +1977,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    Rp{kpiStats.omzet.toLocaleString('id-ID')}
+                    <RollNumberTicker value={kpiStats.omzet} prefix="Rp" />
                   </h3>
                 </div>
                 <div className="text-[11px] text-[#009B5B] font-semibold">
@@ -1866,7 +1997,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    {kpiStats.transaksi}
+                    {kpiStats.transaksi} Struk
                   </h3>
                 </div>
                 <div className="text-[11px] text-gray-400 font-medium">
@@ -1880,43 +2011,61 @@ export default function DashboardPage({ onLogout }) {
                   <span className="text-xs font-medium text-gray-500 block mb-1">
                     Kesehatan Usaha
                   </span>
-                  <div className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-1">
-                    {kpiStats.kesehatan}<span className="text-xs font-medium text-gray-400">/100</span>
+                  <div className="flex items-baseline text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-1">
+                    <span>{kpiStats.kesehatan}</span>
+                    <span className="text-xs font-medium text-gray-400 ml-0.5">/100</span>
                   </div>
-                  <span className="inline-block bg-[#009B5B] text-white text-[10px] font-bold px-3 py-0.5 rounded-full mt-1">
-                    {kpiStats.kesehatanLabel}
-                  </span>
+                  <div className="mt-1">
+                    <span className="inline-flex items-center bg-[#009B5B] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                      {kpiStats.kesehatanLabel}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Semi-Circle Speedometer Gauge */}
-                <div className="relative w-24 h-14 flex items-end justify-center">
-                  <svg className="w-24 h-14" viewBox="0 0 100 55">
-                    <path
-                      d="M 10 50 A 40 40 0 0 1 90 50"
-                      fill="none"
-                      stroke="#E5E7EB"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M 10 50 A 40 40 0 0 1 76 18"
-                      fill="none"
-                      stroke="#009B5B"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="50"
-                      y1="50"
-                      x2="72"
-                      y2="24"
-                      stroke="#1F2937"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="50" cy="50" r="4" fill="#1F2937" />
-                  </svg>
-                </div>
+                {/* Semi-Circle Speedometer Gauge with Animated Needle & Arc */}
+                {(() => {
+                  const score = Math.min(100, Math.max(0, kpiStats.kesehatan || 80))
+                  const angleDeg = 180 - (score / 100) * 180
+                  const angleRad = (angleDeg * Math.PI) / 180
+                  const nx = (50 + 26 * Math.cos(angleRad)).toFixed(1)
+                  const ny = (50 - 26 * Math.sin(angleRad)).toFixed(1)
+                  const arcLength = 125.6
+                  const arcOffset = (arcLength * (1 - score / 100)).toFixed(1)
+                  return (
+                    <div className="relative w-24 h-14 flex items-end justify-center">
+                      <svg className="w-24 h-14" viewBox="0 0 100 55">
+                        <path
+                          d="M 10 50 A 40 40 0 0 1 90 50"
+                          fill="none"
+                          stroke="#E5E7EB"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M 10 50 A 40 40 0 0 1 90 50"
+                          fill="none"
+                          stroke="#009B5B"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={arcLength}
+                          strokeDashoffset={arcOffset}
+                          style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        />
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2={nx}
+                          y2={ny}
+                          stroke="#1F2937"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          style={{ transition: 'x2 0.8s cubic-bezier(0.16, 1, 0.3, 1), y2 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        />
+                        <circle cx="50" cy="50" r="4" fill="#1F2937" />
+                      </svg>
+                    </div>
+                  )
+                })()}
               </div>
 
             </div>
@@ -2603,8 +2752,8 @@ export default function DashboardPage({ onLogout }) {
                 </div>
 
                 {/* Table: Evaluasi Keuntungan Produk */}
-                <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                  <div className="mb-5">
+                <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                  <div className="mb-4 sm:mb-5">
                     <h2 className="text-sm sm:text-base font-bold text-gray-900">
                       Evaluasi Keuntungan Produk (Rugi & Tipis)
                     </h2>
@@ -2613,28 +2762,112 @@ export default function DashboardPage({ onLogout }) {
                     </p>
                   </div>
 
-                  {/* Table Wrapper */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[560px]">
+                  {/* MOBILE VIEW (< sm): Clean Native Cards (Tanpa scrollbar horizontal) */}
+                  <div className="space-y-3 sm:hidden">
+                    {products.map((item) => {
+                      const margin = item.price - item.hpp
+                      const percent = Math.round((margin / item.price) * 100)
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3.5 bg-gray-50/70 hover:bg-gray-50 rounded-2xl border border-gray-100/90 transition-colors"
+                        >
+                          {/* Header: Icon, Name, Category & Status Badge */}
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
+                                {item.icon === 'croissant' ? (
+                                  <Croissant className="w-4 h-4 stroke-[1.8]" />
+                                ) : (
+                                  <Coffee className="w-4 h-4 stroke-[1.8]" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-gray-900 truncate leading-snug">
+                                  {item.name}
+                                </p>
+                                <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                                  {item.category}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status Badge */}
+                            {item.status === 'Rugi' && (
+                              <span className="inline-block bg-rose-50 text-rose-600 border border-rose-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Rugi
+                              </span>
+                            )}
+                            {item.status === 'Tipis' && (
+                              <span className="inline-block bg-amber-50 text-amber-600 border border-amber-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Tipis
+                              </span>
+                            )}
+                            {item.status === 'Sehat' && (
+                              <span className="inline-block bg-emerald-50 text-[#009B5B] border border-emerald-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Sehat
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 3 Metrics: HPP Modal | Harga Jual | Margin Real */}
+                          <div className="grid grid-cols-3 gap-2 py-2 px-2.5 bg-white rounded-xl border border-gray-100 text-center mb-3">
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-medium block">HPP Modal</span>
+                              <span className="text-xs font-bold text-gray-800">
+                                Rp{item.hpp.toLocaleString('id-ID')}
+                              </span>
+                            </div>
+                            <div className="border-x border-gray-100 px-1">
+                              <span className="text-[10px] text-gray-400 font-medium block">Harga Jual</span>
+                              <span className="text-xs font-bold text-gray-800">
+                                Rp{item.price.toLocaleString('id-ID')}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-medium block">Margin Real</span>
+                              <span className={`text-xs font-bold ${margin < 0 ? 'text-rose-500' : item.status === 'Tipis' ? 'text-amber-600' : 'text-[#009B5B]'}`}>
+                                {margin < 0 ? `-Rp${Math.abs(margin).toLocaleString('id-ID')}` : `+Rp${margin.toLocaleString('id-ID')}`}
+                                <span className="text-[10px] font-medium ml-0.5">({percent}%)</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => setShowEditModal(item)}
+                            className="w-full py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-xl border border-gray-200 shadow-2xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <span>Edit HPP / Harga Jual</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* DESKTOP VIEW (>= sm): Full elegant table without ugly blue pills */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-100 pb-3">
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Nama Produk</span>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Nama Produk
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">HPP</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            HPP Modal
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Harga Jual</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Harga Jual
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Margin Real</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Margin Real
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Status</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Status
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700 text-center">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Aksi</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400 text-center">
+                            Aksi
                           </th>
                         </tr>
                       </thead>
@@ -2644,7 +2877,7 @@ export default function DashboardPage({ onLogout }) {
                           const percent = Math.round((margin / item.price) * 100)
                           return (
                             <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
-                              <td className="py-3.5 pr-3">
+                              <td className="py-3.5 px-2">
                                 <div className="flex items-center gap-3">
                                   <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
                                     {item.icon === 'croissant' ? (
@@ -2664,15 +2897,15 @@ export default function DashboardPage({ onLogout }) {
                                 </div>
                               </td>
 
-                              <td className="py-3.5 text-xs font-semibold text-gray-800">
+                              <td className="py-3.5 px-2 text-xs font-semibold text-gray-800">
                                 Rp{item.hpp.toLocaleString('id-ID')}
                               </td>
 
-                              <td className="py-3.5 text-xs font-medium text-gray-700">
+                              <td className="py-3.5 px-2 text-xs font-medium text-gray-700">
                                 Rp{item.price.toLocaleString('id-ID')}
                               </td>
 
-                              <td className="py-3.5 text-xs font-bold">
+                              <td className="py-3.5 px-2 text-xs font-bold">
                                 {margin < 0 ? (
                                   <span className="text-rose-500">
                                     -Rp{Math.abs(margin).toLocaleString('id-ID')} ({percent}%)
@@ -2684,7 +2917,7 @@ export default function DashboardPage({ onLogout }) {
                                 )}
                               </td>
 
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-2">
                                 {item.status === 'Rugi' && (
                                   <span className="inline-block bg-rose-50 text-rose-600 border border-rose-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                                     Rugi
@@ -2702,11 +2935,11 @@ export default function DashboardPage({ onLogout }) {
                                 )}
                               </td>
 
-                              <td className="py-3.5 text-center">
+                              <td className="py-3.5 px-2 text-center">
                                 <button
                                   type="button"
                                   onClick={() => setShowEditModal(item)}
-                                  className="text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 shadow-sm transition-all cursor-pointer"
+                                  className="text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 shadow-xs transition-all cursor-pointer"
                                 >
                                   Edit HPP / Harga
                                 </button>
