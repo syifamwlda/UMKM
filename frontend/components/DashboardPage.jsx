@@ -31,11 +31,40 @@ import {
   Clock,
   ArrowRight,
   ArrowUp,
-  Paperclip
+  Activity,
+  BarChart2,
+  MoreVertical,
+  Utensils,
+  Trash2,
+  RotateCcw,
+  Banknote,
+  QrCode,
+  CreditCard,
+  Package,
+  Star,
+  Printer,
+  Share2
 } from 'lucide-react'
 
-// Daily cafe performance records for October & November 2026
+// Daily cafe performance records for September, October & November 2026
 const DAILY_RECORDS = {
+  // September 2026 (for prior month comparison)
+  '2026-09-15': { omzet: 410000, laba: 160000, transaksi: 15 },
+  '2026-09-16': { omzet: 430000, laba: 170000, transaksi: 16 },
+  '2026-09-17': { omzet: 450000, laba: 180000, transaksi: 17 },
+  '2026-09-18': { omzet: 490000, laba: 195000, transaksi: 19 },
+  '2026-09-19': { omzet: 550000, laba: 225000, transaksi: 22 },
+  '2026-09-20': { omzet: 580000, laba: 240000, transaksi: 23 },
+  '2026-09-21': { omzet: 390000, laba: 150000, transaksi: 15 },
+  '2026-09-22': { omzet: 420000, laba: 165000, transaksi: 16 },
+  '2026-09-23': { omzet: 440000, laba: 175000, transaksi: 17 },
+  '2026-09-24': { omzet: 470000, laba: 190000, transaksi: 18 },
+  '2026-09-25': { omzet: 510000, laba: 205000, transaksi: 20 },
+  '2026-09-26': { omzet: 560000, laba: 230000, transaksi: 22 },
+  '2026-09-27': { omzet: 600000, laba: 250000, transaksi: 24 },
+  '2026-09-28': { omzet: 410000, laba: 160000, transaksi: 16 },
+  '2026-09-29': { omzet: 430000, laba: 170000, transaksi: 17 },
+  '2026-09-30': { omzet: 460000, laba: 185000, transaksi: 18 },
   // October 2026
   '2026-10-01': { omzet: 420000, laba: 170000, transaksi: 16 },
   '2026-10-02': { omzet: 460000, laba: 185000, transaksi: 18 },
@@ -72,6 +101,41 @@ const DAILY_RECORDS = {
   '2026-11-01': { omzet: 650000, laba: 250000, transaksi: 24 }
 }
 
+// Generate organic café rush patterns for any date
+const getHourlyPattern = (dateStr, totalOmzet, totalLaba) => {
+  const d = new Date(dateStr)
+  const dayOfWeek = d.getDay() // 0 = Sun, 6 = Sat
+  const dayNum = parseInt(dateStr.slice(-2), 10) || 1
+
+  // Natural coffee shop / cafe hourly volume weights:
+  // 08:00 (Breakfast/morning commute), 10:00 (Brunch/work), 12:00 (Lunch rush peak),
+  // 14:00 (Post-lunch lull), 16:00 (Tea/coffee break), 18:00 (Dinner hangout rush), 20:00 (Closing orders)
+  let baseWeights
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    // Weekend: slow morning, big lunch rush, consistent afternoon, high dinner hangout
+    baseWeights = [0.08, 0.16, 0.23, 0.11, 0.14, 0.21, 0.07]
+  } else if (dayOfWeek === 5) {
+    // Friday: quiet morning, strong lunch, big evening rush
+    baseWeights = [0.10, 0.13, 0.22, 0.12, 0.15, 0.21, 0.07]
+  } else {
+    // Weekday: morning rush, sharp lunch peak, afternoon coffee, moderate evening
+    baseWeights = [0.14, 0.13, 0.25, 0.11, 0.12, 0.18, 0.07]
+  }
+
+  const hours = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00']
+  const trend = hours.map((hour, idx) => {
+    // Natural deterministic variation (+/- 2%) so every single day is visually unique
+    const variation = Math.sin((dayNum * 3 + idx * 7) * 0.8) * 0.02
+    const w = Math.max(0.04, baseWeights[idx] + variation)
+    const omzetVal = Math.round((totalOmzet * w) / 5000) * 5000
+    const marginRatio = totalOmzet > 0 ? totalLaba / totalOmzet : 0.38
+    const labaVal = Math.round((omzetVal * marginRatio) / 1000) * 1000
+    return { day: hour, omzet: omzetVal, laba: labaVal }
+  })
+
+  return trend
+}
+
 const MONTH_NAMES_ID = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
@@ -90,22 +154,137 @@ const formatDayMonth = (dateStr) => {
   return `${d} ${MONTH_SHORT_ID[m - 1]}`
 }
 
+// ================= ROLLING ODOMETER / DIGIT REEL TICKER =================
+// 20 items: 0..9 then 0..9 for seamless vertical reel spinning
+const DIGIT_REEL = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+function SingleDigitReel({ digit, delay = 0 }) {
+  const [target, setTarget] = useState(0)
+
+  useEffect(() => {
+    // Delay rolling so on initial page mount it starts at 0 and rolls up to 10 + digit
+    const timer = setTimeout(() => {
+      setTarget(10 + digit)
+    }, 40 + delay)
+    return () => clearTimeout(timer)
+  }, [digit, delay])
+
+  return (
+    <span
+      className="inline-block relative overflow-hidden text-center select-none"
+      style={{
+        height: '1.45em',
+        width: '0.65em',
+        verticalAlign: 'middle'
+      }}
+    >
+      <span
+        className="block will-change-transform"
+        style={{
+          transform: `translateY(-${target * 5}%)`,
+          transition: 'transform 0.85s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}
+      >
+        {DIGIT_REEL.map((num, i) => (
+          <span
+            key={i}
+            className="flex items-center justify-center font-black"
+            style={{ height: '1.45em', lineHeight: 1 }}
+          >
+            {num}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
+function RollNumberTicker({ value, prefix = '', suffix = '', formatLocale = true, className = '' }) {
+  let numStr = ''
+  if (typeof value === 'number') {
+    numStr = formatLocale ? Math.abs(value).toLocaleString('id-ID') : String(Math.abs(value))
+  } else {
+    const match = String(value).match(/\d+/)
+    if (match) {
+      const n = parseInt(match[0], 10)
+      numStr = formatLocale ? n.toLocaleString('id-ID') : String(n)
+    } else {
+      numStr = String(value)
+    }
+  }
+
+  const isNeg = typeof value === 'number' && value < 0
+  const finalPrefix = isNeg ? `-${prefix}` : prefix
+
+  const chars = numStr.split('')
+  let digitCount = 0
+
+  return (
+    <span className={`inline-flex items-center tracking-tight ${className}`}>
+      {finalPrefix && (
+        <span
+          className="select-none font-black mr-0.5 inline-flex items-center justify-center"
+          style={{ height: '1.45em' }}
+        >
+          {finalPrefix}
+        </span>
+      )}
+      {chars.map((char, idx) => {
+        const isDigit = /\d/.test(char)
+        if (isDigit) {
+          const digit = parseInt(char, 10)
+          const delay = digitCount * 45
+          digitCount++
+          const keyFromRight = `d-${chars.length - 1 - idx}`
+          return (
+            <SingleDigitReel
+              key={keyFromRight}
+              digit={digit}
+              delay={delay}
+            />
+          )
+        }
+        return (
+          <span
+            key={`sep-${idx}`}
+            className="select-none font-black px-[1px] inline-flex items-center justify-center text-center"
+            style={{ height: '1.45em', width: '0.28em' }}
+          >
+            {char}
+          </span>
+        )
+      })}
+      {suffix && (
+        <span
+          className="select-none font-black ml-1.5 inline-flex items-center justify-center"
+          style={{ height: '1.45em' }}
+        >
+          {suffix}
+        </span>
+      )}
+    </span>
+  )
+}
+
 export default function DashboardPage({ onLogout }) {
   const [activeMenu, setActiveMenu] = useState('Dashboard')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [chartFilter, setChartFilter] = useState({ omzet: true, laba: true })
+  const [chartSeries, setChartSeries] = useState({ omzet: true, laba: true, costs: true })
+  const [comparePrevious, setComparePrevious] = useState(false)
+  const [chartMode, setChartMode] = useState('line') // 'line' or 'bar'
+  const [activeChartIndex, setActiveChartIndex] = useState(null)
   
   // ================= TOP BAR STATES =================
   // 1. Date Filter & Interactive Calendar States
   const [selectedDateFilter, setSelectedDateFilter] = useState('Hari ini, 1 Nov 2026')
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const [calMonth, setCalMonth] = useState({ year: 2026, month: 9 }) // 9 is October, 10 is November
-  const [selectedStartDate, setSelectedStartDate] = useState('2026-10-25')
+  const [calMonth, setCalMonth] = useState({ year: 2026, month: 10 }) // 10 is November (current today date)
+  const [selectedStartDate, setSelectedStartDate] = useState('2026-11-01')
   const [selectedEndDate, setSelectedEndDate] = useState('2026-11-01')
-  const [tempStart, setTempStart] = useState('2026-10-25')
+  const [tempStart, setTempStart] = useState('2026-11-01')
   const [tempEnd, setTempEnd] = useState('2026-11-01')
-  const [chartTitle, setChartTitle] = useState('Analisis Omzet & Laba Bersih (7 Hari Terakhir)')
-  const [chartSubtitle, setChartSubtitle] = useState('Perkembangan arus omzet dan laba bersih usaha selama satu minggu terakhir.')
+  const [chartTitle, setChartTitle] = useState('Performa Jam Operasional Hari Ini (08:00 - 20:00)')
+  const [chartSubtitle, setChartSubtitle] = useState('Pantau tren omzet, modal bahan baku (HPP), dan laba bersih usaha secara real-time.')
   
   // 2. Search Autocomplete
   const [searchQuery, setSearchQuery] = useState('')
@@ -158,8 +337,8 @@ export default function DashboardPage({ onLogout }) {
     untungGrowth: '12% dari kemarin',
     omzet: 650000,
     omzetGrowth: '+8% rata-rata harian',
-    transaksi: '24 Struk',
-    transaksiSub: 'Rata-rata Rp27.800/struk',
+    transaksi: 24,
+    transaksiSub: 'Rata-rata Rp27.083/struk',
     kesehatan: 82,
     kesehatanLabel: 'Sehat'
   })
@@ -174,6 +353,17 @@ export default function DashboardPage({ onLogout }) {
     { day: '29 Okt', omzet: 490000, laba: 200000 },
     { day: '30 Okt', omzet: 460000, laba: 190000 },
     { day: '01 Nov', omzet: 650000, laba: 250000 }
+  ])
+
+  // Corresponding actual historical previous 7 days dataset (18 Okt - 24 Okt)
+  const [prevTrendData, setPrevTrendData] = useState([
+    { day: '18 Okt', omzet: 630000, laba: 260000 },
+    { day: '19 Okt', omzet: 440000, laba: 170000 },
+    { day: '20 Okt', omzet: 460000, laba: 180000 },
+    { day: '21 Okt', omzet: 480000, laba: 190000 },
+    { day: '22 Okt', omzet: 510000, laba: 205000 },
+    { day: '23 Okt', omzet: 530000, laba: 215000 },
+    { day: '24 Okt', omzet: 570000, laba: 230000 }
   ])
 
   // Universal Real-time update function: immediately moves Chart lines up or down
@@ -204,11 +394,11 @@ export default function DashboardPage({ onLogout }) {
     }
   }
 
-  // Date range options with associated trend datasets
+  // Date range options with associated trend datasets & real previous periods
   const dateOptions = [
     {
       label: 'Hari ini, 1 Nov 2026',
-      sub: 'Data real-time hari berjalan',
+      sub: 'Tren 7 hari terkini (25 Okt - 1 Nov)',
       trend: [
         { day: '25 Okt', omzet: 450000, laba: 175000 },
         { day: '26 Okt', omzet: 410000, laba: 155000 },
@@ -217,6 +407,15 @@ export default function DashboardPage({ onLogout }) {
         { day: '29 Okt', omzet: 490000, laba: 200000 },
         { day: '30 Okt', omzet: 460000, laba: 190000 },
         { day: '01 Nov', omzet: 650000, laba: 250000 }
+      ],
+      prevTrend: [
+        { day: '18 Okt', omzet: 630000, laba: 260000 },
+        { day: '19 Okt', omzet: 440000, laba: 170000 },
+        { day: '20 Okt', omzet: 460000, laba: 180000 },
+        { day: '21 Okt', omzet: 480000, laba: 190000 },
+        { day: '22 Okt', omzet: 510000, laba: 205000 },
+        { day: '23 Okt', omzet: 530000, laba: 215000 },
+        { day: '24 Okt', omzet: 570000, laba: 230000 }
       ],
       stats: {
         untung: 250000,
@@ -231,15 +430,24 @@ export default function DashboardPage({ onLogout }) {
     },
     {
       label: 'Kemarin (31 Okt 2026)',
-      sub: 'Rekap harian kemarin',
+      sub: 'Tren 7 hari hingga 31 Okt',
       trend: [
+        { day: '24 Okt', omzet: 570000, laba: 230000 },
         { day: '25 Okt', omzet: 450000, laba: 175000 },
         { day: '26 Okt', omzet: 410000, laba: 155000 },
         { day: '27 Okt', omzet: 520000, laba: 220000 },
         { day: '28 Okt', omzet: 440000, laba: 180000 },
         { day: '29 Okt', omzet: 490000, laba: 200000 },
-        { day: '30 Okt', omzet: 460000, laba: 190000 },
         { day: '31 Okt', omzet: 580000, laba: 220000 }
+      ],
+      prevTrend: [
+        { day: '17 Okt', omzet: 610000, laba: 250000 },
+        { day: '18 Okt', omzet: 630000, laba: 260000 },
+        { day: '19 Okt', omzet: 440000, laba: 170000 },
+        { day: '20 Okt', omzet: 460000, laba: 180000 },
+        { day: '21 Okt', omzet: 480000, laba: 190000 },
+        { day: '22 Okt', omzet: 510000, laba: 205000 },
+        { day: '23 Okt', omzet: 530000, laba: 215000 }
       ],
       stats: {
         untung: 220000,
@@ -253,24 +461,33 @@ export default function DashboardPage({ onLogout }) {
       }
     },
     {
-      label: '7 Hari Terakhir (25 Okt - 1 Nov)',
+      label: '7 Hari Terakhir (26 Okt - 1 Nov)',
       sub: 'Tren 1 minggu ke belakang',
       trend: [
-        { day: '25 Okt', omzet: 450000, laba: 175000 },
         { day: '26 Okt', omzet: 410000, laba: 155000 },
         { day: '27 Okt', omzet: 520000, laba: 220000 },
         { day: '28 Okt', omzet: 440000, laba: 180000 },
         { day: '29 Okt', omzet: 490000, laba: 200000 },
         { day: '30 Okt', omzet: 460000, laba: 190000 },
+        { day: '31 Okt', omzet: 580000, laba: 220000 },
         { day: '01 Nov', omzet: 650000, laba: 250000 }
       ],
+      prevTrend: [
+        { day: '19 Okt', omzet: 440000, laba: 170000 },
+        { day: '20 Okt', omzet: 460000, laba: 180000 },
+        { day: '21 Okt', omzet: 480000, laba: 190000 },
+        { day: '22 Okt', omzet: 510000, laba: 205000 },
+        { day: '23 Okt', omzet: 530000, laba: 215000 },
+        { day: '24 Okt', omzet: 570000, laba: 230000 },
+        { day: '25 Okt', omzet: 450000, laba: 175000 }
+      ],
       stats: {
-        untung: 1540000,
-        untungGrowth: '+15% minggu lalu',
-        omzet: 3950000,
-        omzetGrowth: '+11% rata-rata mingguan',
-        transaksi: '142 Struk',
-        transaksiSub: 'Rata-rata Rp27.800/struk',
+        untung: 1515000,
+        untungGrowth: '+14% minggu lalu',
+        omzet: 3550000,
+        omzetGrowth: '+10% rata-rata mingguan',
+        transaksi: '128 Struk',
+        transaksiSub: 'Rata-rata Rp27.700/struk',
         kesehatan: 85,
         kesehatanLabel: 'Sangat Sehat'
       }
@@ -279,13 +496,22 @@ export default function DashboardPage({ onLogout }) {
       label: 'Bulan Ini (November 2026)',
       sub: 'Akumulasi bulan berjalan',
       trend: [
+        { day: '01 Nov', omzet: 650000, laba: 250000 },
         { day: 'Minggu 1', omzet: 650000, laba: 250000 },
         { day: 'Minggu 2', omzet: 0, laba: 0 },
         { day: 'Minggu 3', omzet: 0, laba: 0 },
         { day: 'Minggu 4', omzet: 0, laba: 0 },
         { day: 'Target', omzet: 750000, laba: 320000 },
-        { day: 'Estimasi', omzet: 780000, laba: 340000 },
-        { day: 'Hari Ini', omzet: 650000, laba: 250000 }
+        { day: 'Estimasi', omzet: 780000, laba: 340000 }
+      ],
+      prevTrend: [
+        { day: '01 Okt', omzet: 420000, laba: 170000 },
+        { day: 'Minggu 1', omzet: 480000, laba: 195000 },
+        { day: 'Minggu 2', omzet: 520000, laba: 210000 },
+        { day: 'Minggu 3', omzet: 540000, laba: 220000 },
+        { day: 'Minggu 4', omzet: 570000, laba: 230000 },
+        { day: 'Target', omzet: 700000, laba: 300000 },
+        { day: 'Estimasi', omzet: 720000, laba: 310000 }
       ],
       stats: {
         untung: 250000,
@@ -302,13 +528,22 @@ export default function DashboardPage({ onLogout }) {
       label: 'Bulan Lalu (Oktober 2026)',
       sub: 'Total performa 1 bulan penuh',
       trend: [
-        { day: 'Minggu 1', omzet: 580000, laba: 240000 },
-        { day: 'Minggu 2', omzet: 620000, laba: 255000 },
-        { day: 'Minggu 3', omzet: 710000, laba: 310000 },
-        { day: 'Minggu 4', omzet: 680000, laba: 290000 },
-        { day: 'Puncak', omzet: 790000, laba: 350000 },
-        { day: 'Akhir', omzet: 740000, laba: 320000 },
-        { day: 'Rekap', omzet: 760000, laba: 335000 }
+        { day: '01 Okt', omzet: 420000, laba: 170000 },
+        { day: '06 Okt', omzet: 410000, laba: 160000 },
+        { day: '11 Okt', omzet: 590000, laba: 245000 },
+        { day: '16 Okt', omzet: 540000, laba: 220000 },
+        { day: '21 Okt', omzet: 480000, laba: 190000 },
+        { day: '26 Okt', omzet: 410000, laba: 155000 },
+        { day: '31 Okt', omzet: 580000, laba: 220000 }
+      ],
+      prevTrend: [
+        { day: '15 Sep', omzet: 410000, laba: 160000 },
+        { day: '18 Sep', omzet: 490000, laba: 195000 },
+        { day: '21 Sep', omzet: 390000, laba: 150000 },
+        { day: '24 Sep', omzet: 470000, laba: 190000 },
+        { day: '27 Sep', omzet: 600000, laba: 250000 },
+        { day: '29 Sep', omzet: 430000, laba: 170000 },
+        { day: '30 Sep', omzet: 460000, laba: 185000 }
       ],
       stats: {
         untung: 6850000,
@@ -397,21 +632,154 @@ export default function DashboardPage({ onLogout }) {
   ])
 
   // ================= KASIR (POS) STATE =================
-  const [posCart, setPosCart] = useState([
-    { id: 1, name: 'Croissant Cokelat', price: 10000, qty: 1 },
-    { id: 2, name: 'Es Kopi Milkshake', price: 13000, qty: 1 }
+  const [posCatalog] = useState([
+    {
+      id: 1,
+      name: 'Cafe Latte Gayo',
+      category: 'Minuman',
+      desc: 'Espresso double shot..',
+      price: 22000,
+      hpp: 13900,
+      profit: 8100,
+      marginPct: 37,
+      image: '/assets/kasir/cafe-latte.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: true,
+    },
+    {
+      id: 2,
+      name: 'Kopi Susu Gula Aren',
+      category: 'Minuman',
+      desc: 'Espresso blend, gula..',
+      price: 18000,
+      hpp: 11800,
+      profit: 6200,
+      marginPct: 34,
+      image: '/assets/kasir/kopi-susu.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: true,
+      defaultNote: 'Level Gula: 50%',
+    },
+    {
+      id: 3,
+      name: 'Matcha Latte Kyoto',
+      category: 'Minuman',
+      desc: 'Pure Kyoto Matcha..',
+      price: 24000,
+      hpp: 15000,
+      profit: 9000,
+      marginPct: 38,
+      image: '/assets/kasir/matcha-latte.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: false,
+    },
+    {
+      id: 4,
+      name: 'Roti Bakar Coklat',
+      category: 'Makanan',
+      desc: 'Roti brioche panggang..',
+      price: 16000,
+      hpp: 10800,
+      profit: 5200,
+      marginPct: 32,
+      image: '/assets/kasir/roti-bakar.png',
+      tagColor: 'bg-purple-50 text-purple-700',
+      popular: true,
+    },
+    {
+      id: 5,
+      name: 'Croissant Cokelat',
+      category: 'Pastry & Bakery',
+      desc: 'French butter pastry..',
+      price: 15000,
+      hpp: 10500,
+      profit: 4500,
+      marginPct: 30,
+      image: '/assets/kasir/croissant.png',
+      tagColor: 'bg-orange-50 text-orange-700',
+      popular: true,
+      defaultNote: 'Penyajian: Dihangatkan',
+    },
+    {
+      id: 6,
+      name: 'Spaghetti Aglio Olio',
+      category: 'Makanan',
+      desc: 'Tumisan smoked beef..',
+      price: 28000,
+      hpp: 16800,
+      profit: 11200,
+      marginPct: 40,
+      image: '/assets/kasir/spaghetti.png',
+      tagColor: 'bg-purple-50 text-purple-700',
+      popular: false,
+    },
+    {
+      id: 7,
+      name: 'Cold Brew Coffee',
+      category: 'Minuman',
+      desc: 'Kopi Arabica steeped..',
+      price: 20000,
+      hpp: 12600,
+      profit: 7400,
+      marginPct: 37,
+      image: '/assets/kasir/cold-brew.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: false,
+    },
+    {
+      id: 8,
+      name: 'Almond Croissant',
+      category: 'Pastry & Bakery',
+      desc: 'Flaky crust pastry..',
+      price: 18000,
+      hpp: 12200,
+      profit: 5800,
+      marginPct: 32,
+      image: '/assets/kasir/almond-croissant.png',
+      tagColor: 'bg-orange-50 text-orange-700',
+      popular: false,
+    },
   ])
 
-  const posCatalog = [
-    { id: 1, name: 'Croissant Cokelat', price: 10000, category: 'Pastry', icon: 'croissant' },
-    { id: 2, name: 'Es Kopi Milkshake', price: 13000, category: 'Minuman', icon: 'coffee' },
-    { id: 3, name: 'Kopi Susu Aren', price: 15000, category: 'Minuman', icon: 'coffee' },
-    { id: 4, name: 'Matcha Latte', price: 18000, category: 'Minuman', icon: 'coffee' },
-    { id: 5, name: 'Roti Bakar Srikaya', price: 12000, category: 'Makanan', icon: 'croissant' },
-    { id: 6, name: 'Kentang Goreng Keju', price: 14000, category: 'Snack', icon: 'croissant' },
-  ]
+  // Cart matches the user's mockup:
+  // Kopi Susu Gula Aren x2 (36.000) + Croissant Cokelat x1 (15.000) + Cafe Latte Gayo x1 (22.000) = Rp 73.000
+  const [posCart, setPosCart] = useState([
+    {
+      id: 2,
+      name: 'Kopi Susu Gula Aren',
+      price: 18000,
+      hpp: 11800,
+      qty: 2,
+      note: 'Level Gula: 50%',
+      image: '/assets/kasir/kopi-susu.png'
+    },
+    {
+      id: 5,
+      name: 'Croissant Cokelat',
+      price: 15000,
+      hpp: 10500,
+      qty: 1,
+      note: 'Penyajian: Dihangatkan',
+      image: '/assets/kasir/croissant.png'
+    },
+    {
+      id: 1,
+      name: 'Cafe Latte Gayo',
+      price: 22000,
+      hpp: 10000,
+      qty: 1,
+      note: 'Normal ice & sweet',
+      image: '/assets/kasir/cafe-latte.png'
+    }
+  ])
 
   const [posCategory, setPosCategory] = useState('Semua')
+  const [posSearch, setPosSearch] = useState('')
+  const [posTable, setPosTable] = useState('Meja 04')
+  const [posOrderType, setPosOrderType] = useState('Dine-in')
+  const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
+  const [posShiftProfit, setPosShiftProfit] = useState(482500)
+  const [posReceiptModal, setPosReceiptModal] = useState(null)
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -435,64 +803,47 @@ export default function DashboardPage({ onLogout }) {
     setSelectedEndDate(end)
 
     if (isSingleDay) {
-      if (start === '2026-11-01') {
-        // Today
-        setSelectedDateFilter('Hari ini, 1 Nov 2026')
-        setChartTitle('Analisis Omzet & Laba Bersih (7 Hari Terakhir)')
-        setChartSubtitle('Perkembangan arus omzet dan laba bersih usaha selama satu minggu terakhir.')
-        const trend = [
-          { day: '25 Okt', omzet: 450000, laba: 175000 },
-          { day: '26 Okt', omzet: 410000, laba: 155000 },
-          { day: '27 Okt', omzet: 520000, laba: 220000 },
-          { day: '28 Okt', omzet: 440000, laba: 180000 },
-          { day: '29 Okt', omzet: 490000, laba: 200000 },
-          { day: '30 Okt', omzet: 460000, laba: 190000 },
-          { day: '01 Nov', omzet: 650000, laba: 250000 }
-        ]
-        setTrendData(trend)
-        setKpiStats({
-          untung: 250000,
-          untungGrowth: '12% dari kemarin',
-          omzet: 650000,
-          omzetGrowth: '+8% rata-rata harian',
-          transaksi: '24 Struk',
-          transaksiSub: 'Rata-rata Rp27.800/struk',
-          kesehatan: 82,
-          kesehatanLabel: 'Sehat'
-        })
-        showToast('Menampilkan data real-time Hari Ini (1 Nov 2026)')
-      } else {
-        // Another single day (e.g. 28 Okt 2026)
-        const dData = DAILY_RECORDS[start] || { omzet: 440000, laba: 180000, transaksi: 17 }
-        const label = `${formatDayMonth(start)} 2026`
-        setSelectedDateFilter(label)
-        setChartTitle(`Analisis Jam Sibuk & Arus Kas (${label})`)
-        setChartSubtitle(`Rincian pertumbuhan omzet dan laba sepanjang jam operasional toko pada ${label}.`)
-        
-        const hourlyTrend = [
-          { day: '08:00', omzet: Math.round(dData.omzet * 0.12), laba: Math.round(dData.laba * 0.12) },
-          { day: '10:00', omzet: Math.round(dData.omzet * 0.25), laba: Math.round(dData.laba * 0.25) },
-          { day: '12:00', omzet: Math.round(dData.omzet * 0.48), laba: Math.round(dData.laba * 0.48) },
-          { day: '14:00', omzet: Math.round(dData.omzet * 0.68), laba: Math.round(dData.laba * 0.68) },
-          { day: '16:00', omzet: Math.round(dData.omzet * 0.82), laba: Math.round(dData.laba * 0.82) },
-          { day: '18:00', omzet: Math.round(dData.omzet * 0.93), laba: Math.round(dData.laba * 0.93) },
-          { day: '20:00', omzet: dData.omzet, laba: dData.laba }
-        ]
-        setTrendData(hourlyTrend)
-        setKpiStats({
-          untung: dData.laba,
-          untungGrowth: 'Rekap Harian',
-          omzet: dData.omzet,
-          omzetGrowth: 'Total 1 Hari',
-          transaksi: `${dData.transaksi} Struk`,
-          transaksiSub: `Rata-rata Rp${Math.round(dData.omzet / dData.transaksi).toLocaleString('id-ID')}/struk`,
-          kesehatan: 80,
-          kesehatanLabel: 'Sehat'
-        })
-        showToast(`Data dashboard disesuaikan: ${label}`)
+      const dData = DAILY_RECORDS[start] || { omzet: 450000, laba: 180000, transaksi: 18 }
+      const isToday = start === '2026-11-01'
+      const label = isToday ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(start)} 2026`
+      
+      setSelectedDateFilter(label)
+      setChartTitle(isToday ? 'Performa Jam Operasional Hari Ini (08:00 - 20:00)' : `Performa Jam Sibuk & Arus Kas (${label})`)
+      setChartSubtitle(`Pantau pola lonjakan transaksi dan laba bersih sepanjang jam buka toko pada ${label}.`)
+
+      // Generate realistic dynamic hourly curve for selected day
+      const currentHourly = getHourlyPattern(start, dData.omzet, dData.laba)
+      setTrendData(currentHourly)
+
+      // Calculate real comparison period: Previous Day
+      const prevDateObj = new Date(start)
+      prevDateObj.setDate(prevDateObj.getDate() - 1)
+      const yPrev = prevDateObj.getFullYear()
+      const mPrev = String(prevDateObj.getMonth() + 1).padStart(2, '0')
+      const dPrev = String(prevDateObj.getDate()).padStart(2, '0')
+      const prevDateStr = `${yPrev}-${mPrev}-${dPrev}`
+
+      const prevData = DAILY_RECORDS[prevDateStr] || {
+        omzet: Math.round(dData.omzet * 0.9),
+        laba: Math.round(dData.laba * 0.9),
+        transaksi: Math.round(dData.transaksi * 0.9)
       }
+      const prevHourly = getHourlyPattern(prevDateStr, prevData.omzet, prevData.laba)
+      setPrevTrendData(prevHourly)
+
+      setKpiStats({
+        untung: dData.laba,
+        untungGrowth: isToday ? '12% dari kemarin' : `${formatDayMonth(prevDateStr)}: Rp${prevData.laba.toLocaleString('id-ID')}`,
+        omzet: dData.omzet,
+        omzetGrowth: isToday ? '+8% rata-rata harian' : `Total 1 Hari (${formatDayMonth(start)})`,
+        transaksi: dData.transaksi,
+        transaksiSub: `Rata-rata Rp${Math.round(dData.omzet / dData.transaksi).toLocaleString('id-ID')}/struk`,
+        kesehatan: 82,
+        kesehatanLabel: 'Sehat'
+      })
+      showToast(isToday ? 'Menampilkan data real-time Hari Ini (1 Nov 2026)' : `Data dashboard disesuaikan: ${label}`)
     } else {
-      // Date range from start to end (e.g. 26 Okt - 31 Okt)
+      // Date range from start to end (e.g. 26 Okt - 1 Nov, or 10 Okt - 17 Okt)
       const dates = []
       let curr = new Date(start)
       const endObj = new Date(end)
@@ -520,10 +871,38 @@ export default function DashboardPage({ onLogout }) {
         }
       })
 
+      // Sample down to 7 points if more than 7 days
       let chartTrend = fullTrend
-      if (dates.length > 8) {
+      if (dates.length > 7) {
         const step = (dates.length - 1) / 6
         chartTrend = [0, 1, 2, 3, 4, 5, 6].map((i) => fullTrend[Math.round(i * step)])
+      }
+
+      // Calculate real preceding range of equal duration
+      const rangeLen = dates.length
+      const prevDates = []
+      for (let i = rangeLen; i >= 1; i--) {
+        const pObj = new Date(start)
+        pObj.setDate(pObj.getDate() - i)
+        const yP = pObj.getFullYear()
+        const mP = String(pObj.getMonth() + 1).padStart(2, '0')
+        const dP = String(pObj.getDate()).padStart(2, '0')
+        prevDates.push(`${yP}-${mP}-${dP}`)
+      }
+
+      const fullPrevTrend = prevDates.map((dateStr) => {
+        const d = DAILY_RECORDS[dateStr] || { omzet: 420000, laba: 170000, transaksi: 16 }
+        return {
+          day: formatDayMonth(dateStr),
+          omzet: d.omzet,
+          laba: d.laba
+        }
+      })
+
+      let chartPrevTrend = fullPrevTrend
+      if (prevDates.length > 7) {
+        const step = (prevDates.length - 1) / 6
+        chartPrevTrend = [0, 1, 2, 3, 4, 5, 6].map((i) => fullPrevTrend[Math.round(i * step)])
       }
 
       const label = `${formatDayMonth(start)} - ${formatDayMonth(end)} 2026`
@@ -531,6 +910,7 @@ export default function DashboardPage({ onLogout }) {
       setChartTitle(`Analisis Omzet & Laba Bersih (${label})`)
       setChartSubtitle(`Akumulasi performa finansial usaha selama ${dates.length} hari operasional.`)
       setTrendData(chartTrend)
+      setPrevTrendData(chartPrevTrend)
 
       const avgPerStruk = totalTransaksi > 0 ? Math.round(totalOmzet / totalTransaksi) : 0
       const marginPct = totalOmzet > 0 ? Math.round((totalLaba / totalOmzet) * 100) : 38
@@ -540,7 +920,7 @@ export default function DashboardPage({ onLogout }) {
         untungGrowth: `Akumulasi ${dates.length} Hari`,
         omzet: totalOmzet,
         omzetGrowth: `Rata-rata Rp${Math.round(totalOmzet / dates.length).toLocaleString('id-ID')}/hari`,
-        transaksi: `${totalTransaksi} Struk`,
+        transaksi: totalTransaksi,
         transaksiSub: `Rata-rata Rp${avgPerStruk.toLocaleString('id-ID')}/struk`,
         kesehatan: Math.min(96, Math.max(72, Math.round(72 + marginPct * 0.4))),
         kesehatanLabel: marginPct >= 35 ? 'Sangat Sehat' : 'Sehat'
@@ -556,6 +936,9 @@ export default function DashboardPage({ onLogout }) {
     setKpiStats(option.stats)
     if (option.trend) {
       setTrendData(option.trend)
+    }
+    if (option.prevTrend) {
+      setPrevTrendData(option.prevTrend)
     }
     setIsDatePickerOpen(false)
     showToast(`Data dashboard disesuaikan: ${option.label}`)
@@ -624,10 +1007,11 @@ export default function DashboardPage({ onLogout }) {
     showToast('Semua notifikasi telah ditandai dibaca.')
   }
 
-  // POS Cart Calculations
+  // POS Cart Calculations (Real-time live calculation)
   const cartSubtotal = posCart.reduce((sum, item) => sum + item.price * item.qty, 0)
-  const cartTax = Math.round(cartSubtotal * 0.1)
-  const cartTotal = cartSubtotal + cartTax
+  const cartHpp = posCart.reduce((sum, item) => sum + (item.hpp || Math.round(item.price * 0.6)) * item.qty, 0)
+  const cartProfit = Math.max(0, cartSubtotal - cartHpp)
+  const cartMarginPct = cartSubtotal > 0 ? ((cartProfit / cartSubtotal) * 100).toFixed(1) : '0'
 
   const handleAddToCart = (product) => {
     setPosCart((prev) => {
@@ -637,9 +1021,20 @@ export default function DashboardPage({ onLogout }) {
           item.id === product.id ? { ...item, qty: item.qty + 1 } : item
         )
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, qty: 1 }]
+      return [
+        ...prev,
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          hpp: product.hpp,
+          qty: 1,
+          note: product.defaultNote || '',
+          image: product.image,
+        }
+      ]
     })
-    showToast(`${product.name} ditambahkan ke struk!`)
+    showToast(`${product.name} ditambahkan ke pesanan`)
   }
 
   const handleUpdateQty = (id, delta) => {
@@ -650,20 +1045,43 @@ export default function DashboardPage({ onLogout }) {
     )
   }
 
+  const handleRemoveFromCart = (id) => {
+    setPosCart((prev) => prev.filter((item) => item.id !== id))
+    showToast('Menu dihapus dari pesanan')
+  }
+
+  const handleResetCart = () => {
+    setPosCart([])
+    showToast('Pesanan telah di-reset')
+  }
+
   const handleCompletePayment = (method) => {
     if (posCart.length === 0) return
-    const totalTrx = cartTotal
-    const profitEst = Math.round(totalTrx * 0.38)
+    const totalTrx = cartSubtotal
+    const profitEst = cartProfit
+    const receiptData = {
+      txId: '#TX-' + Math.floor(100 + Math.random() * 900),
+      table: posTable,
+      orderType: posOrderType,
+      method: method,
+      items: [...posCart],
+      subtotal: totalTrx,
+      hpp: cartHpp,
+      profit: profitEst,
+      margin: cartMarginPct,
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    }
+    setPosShiftProfit((prev) => prev + profitEst)
     setPosCart([])
+    setPosReceiptModal(receiptData)
     updateRealtimeData(totalTrx, profitEst, `Kasir: ${method}`)
     showToast(`Transaksi berhasil via ${method}! Struk tercetak.`)
-    setActiveMenu('Dashboard')
   }
 
   const menuUtama = [
     { name: 'Dashboard', icon: LayoutGrid },
     { name: 'Kasir', icon: Store },
-    { name: 'Kalkulator HPP', icon: Calculator },
+    { name: 'Katalog & HPP', icon: Calculator },
     { name: 'Laporan Keuangan', icon: BarChart3 },
     { name: 'Asisten AI', icon: Sparkles },
   ]
@@ -673,44 +1091,87 @@ export default function DashboardPage({ onLogout }) {
     { name: 'Help', icon: HelpCircle },
   ]
 
-  // ================= REAL-TIME CHART DYNAMIC COORDINATES =================
+  // ================= UNTUNGJELAS REAL-TIME DYNAMIC COORDINATES & CURVES =================
   const nPoints = trendData.length
-  const startX = 60
-  const endX = 650
+  const startX = 24
+  const endX = 676
   const xCoords = trendData.map((_, i) =>
-    nPoints > 1 ? Math.round(startX + (i * (endX - startX)) / (nPoints - 1)) : 355
+    nPoints > 1 ? Math.round(startX + (i * (endX - startX)) / (nPoints - 1)) : 350
   )
-  const maxDataVal = Math.max(
-    ...trendData.map((d) => Math.max(d.omzet || 0, d.laba || 0)),
+
+  // Unified Max Scale for Omzet, Laba, Biaya, and Real Previous Period
+  const maxVal = Math.max(
+    ...trendData.map((d) => Math.max(d.omzet || 0, d.laba || 0, d.costs ?? Math.max(0, d.omzet - d.laba))),
+    ...(comparePrevious ? prevTrendData.map((d) => d.omzet || 0) : []),
     500000
   )
-  const chartMaxY = Math.max(400000, Math.ceil(maxDataVal / 100000) * 100000)
+  const chartMaxY = Math.max(400000, Math.ceil(maxVal / 100000) * 100000)
 
-  // getY mapping: val 0 -> 200, val chartMaxY -> 20 (height range = 180px)
+  // getY mapping: val 0 -> 180 (baseline), val max -> 16 (top line) (height range = 164px)
   const getY = (val) => {
     const clamped = Math.max(0, val)
-    return 200 - (clamped / chartMaxY) * 180
+    return 180 - (clamped / chartMaxY) * 164
   }
 
-  const omzetPoints = trendData.map((d, i) => `${xCoords[i]},${getY(d.omzet).toFixed(1)}`).join(' ')
-  const omzetPolygon = `${xCoords[0]},200 ${omzetPoints} ${xCoords[trendData.length - 1]},200`
+  // Smooth Bezier Spline Path Generator
+  const getSmoothSvgPath = (coords) => {
+    if (!coords || coords.length === 0) return ''
+    if (coords.length === 1) return `M ${coords[0][0]},${coords[0][1]}`
+    
+    let d = `M ${coords[0][0]},${coords[0][1]}`
+    for (let i = 0; i < coords.length - 1; i++) {
+      const p0 = coords[i === 0 ? i : i - 1]
+      const p1 = coords[i]
+      const p2 = coords[i + 1]
+      const p3 = coords[i + 2] || p2
 
-  const labaPoints = trendData.map((d, i) => `${xCoords[i]},${getY(d.laba).toFixed(1)}`).join(' ')
-  const labaPolygon = `${xCoords[0]},200 ${labaPoints} ${xCoords[trendData.length - 1]},200`
+      const cp1x = p1[0] + (p2[0] - p0[0]) / 5
+      const cp1y = p1[1] + (p2[1] - p0[1]) / 5
+      const cp2x = p2[0] - (p3[0] - p1[0]) / 5
+      const cp2y = p2[1] - (p3[1] - p1[1]) / 5
 
-  const todayData = trendData[trendData.length - 1] || { day: '01 Nov', omzet: 650000, laba: 250000 }
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2[0]},${p2[1]}`
+    }
+    return d
+  }
+
+  const omzetCoords = trendData.map((d, i) => [xCoords[i], getY(d.omzet)])
+  const labaCoords = trendData.map((d, i) => [xCoords[i], getY(d.laba)])
+  const costCoords = trendData.map((d, i) => [xCoords[i], getY(d.costs ?? Math.max(0, d.omzet - d.laba))])
+  const prevCoords = prevTrendData.map((d, i) => [xCoords[i] || 350, getY(d.omzet)])
+
+  const omzetPath = getSmoothSvgPath(omzetCoords)
+  const labaPath = getSmoothSvgPath(labaCoords)
+  const labaArea = labaCoords.length > 0 ? `${labaPath} L ${xCoords[nPoints - 1]},180 L ${xCoords[0]},180 Z` : ''
+  const costPath = getSmoothSvgPath(costCoords)
+  const prevPath = getSmoothSvgPath(prevCoords)
+
+  const activeIdx = activeChartIndex !== null && activeChartIndex < trendData.length ? activeChartIndex : trendData.length - 1
+  const activePointData = trendData[activeIdx] || { day: '01 Nov', omzet: 650000, laba: 250000 }
+  const activePointCosts = activePointData.costs ?? Math.max(0, activePointData.omzet - activePointData.laba)
+  const prevPointData = prevTrendData[activeIdx] || { day: 'Lalu', omzet: Math.round(activePointData.omzet * 0.9), laba: Math.round(activePointData.laba * 0.9) }
+  const prevDiffOmzet = activePointData.omzet - prevPointData.omzet
+  const prevDiffPct = prevPointData.omzet > 0 ? ((prevDiffOmzet / prevPointData.omzet) * 100).toFixed(1) : '0'
+  const isLatestPoint = activeIdx === trendData.length - 1
+  const activePointDateStr = activePointData.day.includes(':')
+    ? `${activePointData.day} • ${selectedDateFilter.split('(')[0].trim()}`
+    : (activePointData.day.includes('2026') ? activePointData.day : `${activePointData.day} 2026`)
+
+  const formatShortVal = (val, isCompact = false) => {
+    if (val === 0) return 'Rp0'
+    if (val >= 1000000) {
+      const jt = val / 1000000
+      return `Rp${jt % 1 === 0 ? jt : jt.toFixed(1)}jt`
+    }
+    if (val >= 1000) {
+      return `Rp${Math.round(val / 1000)}rb`
+    }
+    return `Rp${val}`
+  }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] font-sans text-gray-900 flex antialiased selection:bg-[#009B5B]/15">
+    <div className="min-h-screen bg-[#F4F6F8] font-sans text-gray-900 flex antialiased">
       
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-gray-900/95 backdrop-blur-md text-white text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 animate-fade-in border border-white/10">
-          <CheckCircle2 className="w-4 h-4 text-[#009B5B] flex-shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* ================= SIDEBAR (DESKTOP) ================= */}
       <aside className="hidden lg:flex flex-col w-64 xl:w-72 bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] m-4 mr-0 p-6 justify-between flex-shrink-0 min-h-[calc(100vh-2rem)] sticky top-4 self-start">
         {/* Top: Logo & Menu Utama */}
@@ -1165,192 +1626,440 @@ export default function DashboardPage({ onLogout }) {
 
         {/* ================= IF ACTIVE MENU IS KASIR (POS) ================= */}
         {activeMenu === 'Kasir' ? (
-          <div className="space-y-5 animate-fade-in">
-            {/* POS Top Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu('Dashboard')}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#009B5B] hover:underline mb-1 cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Kembali ke Dashboard</span>
-                </button>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                  Kasir POS (Point of Sale)
-                </h1>
-                <p className="text-xs text-gray-500">
-                  Layani transaksi pelanggan cepat dan otomatis catat laba bersih.
-                </p>
-              </div>
+          <div className="space-y-4 animate-fade-in">
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-200">
-                  Laci Kasir: <strong>Rp850.000</strong>
-                </span>
-              </div>
-            </div>
-
-            {/* POS Grid: Catalog Left (8 cols) & Cart Right (4 cols) */}
+            {/* Main Dual-Pane POS Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
               
-              {/* Product Catalog (8 cols) */}
-              <div className="xl:col-span-8 space-y-4">
-                {/* Category Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  {['Semua', 'Minuman', 'Pastry', 'Makanan', 'Snack'].map((cat) => (
+              {/* ================= LEFT PANE: PRODUCT CATALOG (8 COLS) ================= */}
+              <div className="xl:col-span-8 bg-white rounded-3xl border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)] p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                
+                {/* Search Bar Input */}
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={posSearch}
+                    onChange={(e) => setPosSearch(e.target.value)}
+                    placeholder="Cari nama produk, SKU, atau bahan baku kopi..."
+                    className="w-full pl-10 pr-9 py-2.5 bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-200/90 rounded-2xl text-xs sm:text-[13px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#009B5B]/20 focus:border-[#009B5B] transition-all"
+                  />
+                  {posSearch && (
                     <button
-                      key={cat}
                       type="button"
-                      onClick={() => setPosCategory(cat)}
-                      className={`text-xs px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                        posCategory === cat
-                          ? 'bg-[#009B5B] text-white shadow-sm'
-                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
-                      }`}
+                      onClick={() => setPosSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
                     >
-                      {cat}
+                      <X className="w-3.5 h-3.5" />
                     </button>
-                  ))}
+                  )}
                 </div>
 
-                {/* Product Grid Cards */}
+                {/* Category Filter Pills Row */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {[
+                    { id: 'Semua', label: 'Semua (24)', icon: LayoutGrid },
+                    { id: 'Minuman', label: 'Minuman (12)', icon: Coffee },
+                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery (6)', icon: Croissant },
+                    { id: 'Makanan', label: 'Makanan (6)', icon: Utensils },
+                  ].map((cat) => {
+                    const CatIcon = cat.icon
+                    const isSelected = posCategory === cat.id
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setPosCategory(cat.id)}
+                        className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#1E88E5] text-white shadow-xs'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/90'
+                        }`}
+                      >
+                        <CatIcon className="w-3.5 h-3.5" />
+                        <span>{cat.label}</span>
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setPosCategory(posCategory === 'Favorit' ? 'Semua' : 'Favorit')}
+                    title="Menu Favorit"
+                    className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                      posCategory === 'Favorit'
+                        ? 'bg-amber-400 text-white border-amber-400 shadow-xs'
+                        : 'bg-white hover:bg-gray-50 text-gray-400 hover:text-amber-500 border-gray-200/90'
+                    }`}
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                </div>
+
+                {/* Product Cards Grid (3 Columns) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
                   {posCatalog
-                    .filter((p) => posCategory === 'Semua' || p.category === posCategory)
+                    .filter((p) => {
+                      const matchesCategory =
+                        posCategory === 'Semua'
+                          ? true
+                          : posCategory === 'Favorit'
+                          ? p.popular
+                          : p.category === posCategory
+                      const matchesSearch =
+                        !posSearch ||
+                        p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
+                        p.desc.toLowerCase().includes(posSearch.toLowerCase())
+                      return matchesCategory && matchesSearch
+                    })
                     .map((item) => (
                       <div
                         key={item.id}
                         onClick={() => handleAddToCart(item)}
-                        className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-[#009B5B] shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
+                        className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-[#009B5B] mb-3 group-hover:scale-110 transition-transform">
-                          {item.icon === 'croissant' ? (
-                            <Croissant className="w-5 h-5 stroke-[1.8]" />
-                          ) : (
-                            <Coffee className="w-5 h-5 stroke-[1.8]" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug">
-                            {item.name}
-                          </p>
-                          <span className="text-[10px] text-gray-400 font-medium block mt-0.5">
-                            {item.category}
+                        {/* Top Margin Badge (UntungJelas Smart Tag) */}
+                        <div className="flex items-center justify-end mb-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                            <TrendingUp className="w-3 h-3 stroke-[2.2]" />
+                            <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
                           </span>
-                          <p className="text-xs font-extrabold text-gray-800 mt-2">
-                            Rp{item.price.toLocaleString('id-ID')}
-                          </p>
                         </div>
-                        <button
-                          type="button"
-                          className="mt-3 w-full py-1.5 bg-gray-50 hover:bg-[#009B5B] hover:text-white text-gray-700 text-[11px] font-semibold rounded-lg transition-colors flex items-center justify-center gap-1"
-                        >
-                          <Plus className="w-3 h-3 stroke-[2.5]" />
-                          <span>Tambah</span>
-                        </button>
+
+                        {/* Product Image */}
+                        <div className="h-24 sm:h-28 w-full flex items-center justify-center my-1 relative">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-300 drop-shadow-xs"
+                          />
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="mt-1">
+                          <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
+                            {item.name}
+                          </h4>
+                          <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">
+                            {item.desc}
+                          </p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-xs sm:text-sm font-black text-[#1E88E5]">
+                              Rp{item.price.toLocaleString('id-ID')}
+                            </span>
+                            <span className="w-6 h-6 rounded-lg bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-600 flex items-center justify-center text-xs font-bold transition-all shadow-2xs">
+                              +
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     ))}
                 </div>
+
+                {/* Bottom Bar: Akumulasi Untung Bersih Shift */}
+                <div className="pt-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                  <div className="flex items-center gap-2 text-gray-700 font-medium">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-50 text-[#009B5B] flex items-center justify-center font-bold text-base flex-shrink-0">
+                      💰
+                    </span>
+                    <span>
+                      Akumulasi Untung Bersih Shift Ini: <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong> <span className="text-gray-400">/ Target Rp600.000</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 sm:w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#009B5B] rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.round((posShiftProfit / 600000) * 100))}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-bold text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded">
+                      {((posShiftProfit / 600000) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+
               </div>
 
-              {/* Struk / Cart Right (4 cols) */}
-              <div className="xl:col-span-4 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-gray-600" />
-                    <h3 className="text-xs font-bold text-gray-900">Struk Transaksi Baru</h3>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-medium">
-                    {posCart.length} Menu
+              {/* ================= RIGHT PANE: ORDER / CART PANEL (4 COLS) ================= */}
+              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-4">
+                
+                {/* Header: Pesanan Saat Ini + #TX-554 */}
+                <div className="flex items-center justify-between pb-1">
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
+                    Pesanan Saat Ini
+                  </h3>
+                  <span className="text-[11px] font-extrabold text-[#009B5B] bg-emerald-100/80 px-2.5 py-1 rounded-xl">
+                    #TX-554
                   </span>
                 </div>
 
-                {/* Cart Items */}
-                <div className="space-y-3 max-h-72 overflow-y-auto my-2">
+                {/* Table & Order Settings Buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
+                      const curIdx = tables.indexOf(posTable)
+                      const nextTable = tables[(curIdx + 1) % tables.length]
+                      setPosTable(nextTable)
+                      showToast(`Pindah ke ${nextTable}`)
+                    }}
+                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <Store className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{posTable}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextType = posOrderType === 'Dine-in' ? 'Take-away' : 'Dine-in'
+                      setPosOrderType(nextType)
+                      showToast(`Pesanan diset: ${nextType}`)
+                    }}
+                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <Utensils className="w-3.5 h-3.5 text-gray-500" />
+                    <span>{posOrderType}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetCart}
+                    className="py-1.5 px-2 bg-white hover:bg-rose-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-rose-600 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Reset</span>
+                  </button>
+                </div>
+
+                {/* Cart Items List */}
+                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
                   {posCart.length > 0 ? (
                     posCart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between text-xs py-1">
-                        <div className="flex-1 pr-2">
-                          <p className="font-semibold text-gray-800 leading-tight">{item.name}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            @Rp{item.price.toLocaleString('id-ID')}
-                          </p>
+                      <div
+                        key={item.id}
+                        className="bg-white rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center gap-3 transition-all"
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
+                          <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
                         </div>
 
-                        {/* Qty +/- */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, -1)}
-                            className="w-6 h-6 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs"
-                          >
-                            -
-                          </button>
-                          <span className="text-xs font-bold text-gray-900 w-4 text-center">
-                            {item.qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, 1)}
-                            className="w-6 h-6 rounded-md bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] flex items-center justify-center font-bold text-xs"
-                          >
-                            +
-                          </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <h5 className="text-xs font-bold text-gray-900 truncate">{item.name}</h5>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFromCart(item.id)}
+                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer"
+                              title="Hapus menu"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note || item.desc}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-lg p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, -1)}
+                                className="w-5 h-5 rounded-md bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-bold text-gray-900 w-5 text-center">{item.qty}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, 1)}
+                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-black text-gray-900">
+                              Rp{(item.price * item.qty).toLocaleString('id-ID')}
+                            </span>
+                          </div>
                         </div>
-
-                        <span className="text-xs font-bold text-gray-900 ml-3 min-w-[60px] text-right">
-                          Rp{(item.price * item.qty).toLocaleString('id-ID')}
-                        </span>
                       </div>
                     ))
                   ) : (
-                    <div className="py-10 text-center text-xs text-gray-400">
-                      Struk masih kosong. Klik menu di katalog untuk menambahkan pesanan.
+                    <div className="py-8 text-center text-xs text-gray-400 bg-white/70 rounded-2xl border border-dashed border-emerald-200 p-4">
+                      Keranjang kosong. Pilih menu di sebelah kiri untuk menambah pesanan.
                     </div>
                   )}
                 </div>
 
-                {/* Calculation Summary */}
-                <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span className="font-semibold text-gray-800">Rp{cartSubtotal.toLocaleString('id-ID')}</span>
+                {/* Subtotal & Pajak */}
+                <div className="pt-2 border-t border-emerald-200/60 flex items-baseline justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-gray-700 block">Subtotal Pesanan</span>
+                    <span className="text-[10px] text-gray-400 font-medium">Pajak Restoran / PB1 (0% UMKM)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Pajak Resto (10%)</span>
-                    <span className="font-semibold text-gray-800">Rp{cartTax.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-100">
-                    <span>Total Bayar</span>
-                    <span className="text-[#009B5B]">Rp{cartTotal.toLocaleString('id-ID')}</span>
+                  <div className="text-right">
+                    <span className="text-lg sm:text-xl font-black text-[#009B5B] block">
+                      Rp{cartSubtotal.toLocaleString('id-ID')}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">Rp0</span>
                   </div>
                 </div>
 
-                {/* Payment Action Buttons */}
-                <div className="mt-5 space-y-2">
-                  <button
-                    type="button"
-                    disabled={posCart.length === 0}
-                    onClick={() => handleCompletePayment('Tunai (Cash)')}
-                    className="w-full py-2.5 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                  >
-                    Bayar Tunai (Cash)
-                  </button>
+                {/* Real-time HPP & Profit Card (UntungJelas Exclusive Feature) */}
+                <div className="bg-[#009B5B] text-white rounded-2xl p-3.5 space-y-2 shadow-sm">
+                  <div className="flex items-center justify-between text-xs text-emerald-100">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <Package className="w-3.5 h-3.5" />
+                      <span>Modal Bahan Baku (HPP)</span>
+                    </div>
+                    <span className="font-semibold text-white">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                  </div>
 
-                  <button
-                    type="button"
-                    disabled={posCart.length === 0}
-                    onClick={() => handleCompletePayment('QRIS / E-Wallet')}
-                    className="w-full py-2.5 bg-[#1E88E5] hover:bg-[#1976D2] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                  >
-                    Bayar QRIS / Transfer
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-100">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                      <span>Untung Bersih (Estimasi):</span>
+                    </div>
+                    <span className="text-base sm:text-lg font-black text-white">
+                      +Rp{cartProfit.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  {/* Inner White Margin Pill */}
+                  <div className="bg-white rounded-xl p-2 text-gray-800 flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#009B5B]">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>Margin {cartMarginPct}%</span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-medium truncate">
+                      Langsung sinkron ke Kas Untung Bersih hari ini
+                    </span>
+                  </div>
                 </div>
+
+                {/* Payment Methods Selector */}
+                <div>
+                  <span className="text-[11px] font-bold text-gray-700 block mb-1.5">Pilih Metode Pembayaran</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'Tunai', icon: Banknote, label: 'Tunai' },
+                      { id: 'QRIS', icon: QrCode, label: 'QRIS' },
+                      { id: 'Kartu/Debit', icon: CreditCard, label: 'Kartu/Debit' },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPosPaymentMethod(m.id)}
+                        className={`py-2 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          posPaymentMethod === m.id
+                            ? 'bg-[#1E88E5] text-white shadow-sm ring-2 ring-blue-300'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/80 shadow-2xs'
+                        }`}
+                      >
+                        <m.icon className="w-4 h-4" />
+                        <span className="text-[10px]">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Checkout & Submit Button */}
+                <button
+                  type="button"
+                  disabled={posCart.length === 0}
+                  onClick={() => handleCompletePayment(posPaymentMethod)}
+                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2 text-left">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold block leading-tight">Bayar & Catat Untung</span>
+                      <span className="text-[9px] text-emerald-100/90 font-medium block">HPP & Laba otomatis dibukukan</span>
+                    </div>
+                  </div>
+                  <span className="text-sm sm:text-base font-black">
+                    Rp{cartSubtotal.toLocaleString('id-ID')}
+                  </span>
+                </button>
+
               </div>
 
             </div>
+
+            {/* Modal: Struk Transaksi Selesai */}
+            {posReceiptModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+                <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-scale-up relative">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                    Pembayaran Berhasil!
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Transaksi {posReceiptModal.txId} telah dibukukan ke kasir.
+                  </p>
+
+                  {/* Struk Paper Preview */}
+                  <div className="my-4 p-4 bg-gray-50 rounded-2xl border border-gray-200/80 text-left text-xs space-y-2">
+                    <div className="flex justify-between font-bold text-gray-900 pb-2 border-b border-gray-200">
+                      <span>Kedai Kopi Nabila</span>
+                      <span>{posReceiptModal.time}</span>
+                    </div>
+                    <div className="text-[11px] text-gray-500">
+                      <span>{posReceiptModal.table} • {posReceiptModal.orderType} • {posReceiptModal.method}</span>
+                    </div>
+
+                    <div className="py-2 border-y border-dashed border-gray-200 space-y-1">
+                      {posReceiptModal.items.map((it, idx) => (
+                        <div key={idx} className="flex justify-between">
+                          <span className="text-gray-700">{it.qty}x {it.name}</span>
+                          <span className="font-semibold text-gray-900">Rp{(it.price * it.qty).toLocaleString('id-ID')}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-1 pt-1 text-[11px]">
+                      <div className="flex justify-between text-gray-600">
+                        <span>Total Penjualan:</span>
+                        <span className="font-bold text-gray-900">Rp{posReceiptModal.subtotal.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500">
+                        <span>Modal Bahan (HPP):</span>
+                        <span>Rp{posReceiptModal.hpp.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-[#009B5B]">
+                        <span>Untung Bersih ({posReceiptModal.margin}%):</span>
+                        <span>+Rp{posReceiptModal.profit.toLocaleString('id-ID')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        showToast('Mencetak struk kasir thermal 58mm...')
+                        setPosReceiptModal(null)
+                      }}
+                      className="w-full py-2.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Cetak Struk Thermal</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPosReceiptModal(null)}
+                      className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                    >
+                      Tutup & Pesanan Baru
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
@@ -1373,253 +2082,272 @@ export default function DashboardPage({ onLogout }) {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsDatePickerOpen(!isDatePickerOpen)
-                      setTempStart(selectedStartDate)
-                      setTempEnd(selectedEndDate)
+                      const nextOpen = !isDatePickerOpen
+                      setIsDatePickerOpen(nextOpen)
+                      if (nextOpen) {
+                        setTempStart(selectedStartDate)
+                        setTempEnd(selectedEndDate)
+                        if (selectedStartDate) {
+                          const [y, m] = selectedStartDate.split('-').map(Number)
+                          setCalMonth({ year: y, month: m - 1 })
+                        }
+                      }
                     }}
-                    className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200/90 rounded-xl px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors cursor-pointer select-none"
+                    className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-200/90 rounded-xl px-3 sm:px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm transition-colors cursor-pointer select-none"
                   >
                     <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{selectedDateFilter}</span>
+                    <span className="truncate max-w-[130px] sm:max-w-none">{selectedDateFilter}</span>
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isDatePickerOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Calendar / Date Filter Dropdown */}
                   {isDatePickerOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-80 sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-40 animate-fade-in select-none">
-                      
-                      {/* Dropdown Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                        <div>
-                          <p className="text-xs font-bold text-gray-900">Pilih Tanggal / Rentang</p>
-                          <p className="text-[10px] text-gray-400">Pilih 1 hari atau rentang tanggal (A - Z)</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-11-01')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-11-01', '2026-11-01')
-                          }}
-                          className="text-[11px] font-bold text-[#009B5B] hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Hari Ini
-                        </button>
-                      </div>
+                    <>
+                      {/* Mobile Backdrop Overlay */}
+                      <div
+                        className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 sm:hidden"
+                        onClick={() => setIsDatePickerOpen(false)}
+                      />
 
-                      {/* Quick Presets row */}
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-11-01')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-11-01', '2026-11-01')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-11-01' && selectedEndDate === '2026-11-01'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Hari Ini
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-31')
-                            setTempEnd('2026-10-31')
-                            applyDateSelection('2026-10-31', '2026-10-31')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-31' && selectedEndDate === '2026-10-31'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Kemarin
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-26')
-                            setTempEnd('2026-11-01')
-                            applyDateSelection('2026-10-26', '2026-11-01')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-26' && selectedEndDate === '2026-11-01'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          7 Hari Terakhir
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTempStart('2026-10-01')
-                            setTempEnd('2026-10-31')
-                            applyDateSelection('2026-10-01', '2026-10-31')
-                          }}
-                          className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                            selectedStartDate === '2026-10-01' && selectedEndDate === '2026-10-31'
-                              ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          Bulan Lalu (Okt)
-                        </button>
-                      </div>
-
-                      {/* Month Navigation */}
-                      <div className="flex items-center justify-between px-1 py-1.5 mb-1 bg-gray-50/80 rounded-xl">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (calMonth.month === 9) {
-                              setCalMonth({ year: 2026, month: 8 })
-                            } else if (calMonth.month === 10) {
-                              setCalMonth({ year: 2026, month: 9 })
-                            }
-                          }}
-                          disabled={calMonth.month <= 8}
-                          className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs font-bold text-gray-800">
-                          {MONTH_NAMES_ID[calMonth.month]} {calMonth.year}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (calMonth.month === 8) {
-                              setCalMonth({ year: 2026, month: 9 })
-                            } else if (calMonth.month === 9) {
-                              setCalMonth({ year: 2026, month: 10 })
-                            }
-                          }}
-                          disabled={calMonth.month >= 10}
-                          className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Day of Week Headers */}
-                      <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 py-1">
-                        <span>Min</span>
-                        <span>Sen</span>
-                        <span>Sel</span>
-                        <span>Rab</span>
-                        <span>Kam</span>
-                        <span>Jum</span>
-                        <span>Sab</span>
-                      </div>
-
-                      {/* Days Grid */}
-                      <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
-                        {Array.from({ length: new Date(calMonth.year, calMonth.month, 1).getDay() }).map((_, i) => (
-                          <div key={`pad-${i}`} className="h-8" />
-                        ))}
-
-                        {Array.from({
-                          length: new Date(calMonth.year, calMonth.month + 1, 0).getDate()
-                        }).map((_, i) => {
-                          const d = i + 1
-                          const dStr = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-                          const isToday = dStr === '2026-11-01'
-                          const isFuture = dStr > '2026-11-01'
-                          const isStart = tempStart === dStr
-                          const isEnd = tempEnd === dStr
-                          const isInRange = tempStart && tempEnd && dStr >= tempStart && dStr <= tempEnd
-
-                          return (
+                      {/* Modal Card: Centered on mobile (< sm), dropdown below button on desktop (>= sm) */}
+                      <div className="fixed inset-x-3 top-20 sm:top-full max-w-[360px] mx-auto z-50 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-[360px] bg-white rounded-3xl sm:rounded-2xl shadow-2xl border border-gray-100 p-4 select-none animate-fade-in">
+                        
+                        {/* Dropdown Header */}
+                        <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-gray-900">Pilih Tanggal</p>
+                            <p className="text-[10px] text-gray-400">Pilih 1 hari atau rentang tanggal</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
                             <button
-                              key={d}
                               type="button"
-                              disabled={isFuture}
                               onClick={() => {
-                                if (isFuture) return
-                                if (!tempStart || (tempStart && tempEnd)) {
-                                  setTempStart(dStr)
-                                  setTempEnd(null)
-                                } else if (tempStart && !tempEnd) {
-                                  if (dStr < tempStart) {
-                                    setTempEnd(tempStart)
-                                    setTempStart(dStr)
-                                  } else {
-                                    setTempEnd(dStr)
-                                  }
-                                }
+                                applyDateSelection('2026-11-01', '2026-11-01')
                               }}
-                              className={`h-8 text-xs font-medium transition-all relative flex items-center justify-center ${
-                                isFuture
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : isStart && isEnd
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-xl shadow-sm'
-                                  : isStart
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-l-xl'
-                                  : isEnd
-                                  ? 'bg-[#009B5B] text-white font-bold rounded-r-xl'
-                                  : isInRange
-                                  ? 'bg-emerald-50 text-emerald-900 font-semibold'
-                                  : isToday
-                                  ? 'border border-[#009B5B] text-[#009B5B] font-bold rounded-xl hover:bg-emerald-50/50'
-                                  : 'text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer'
-                              }`}
+                              className="text-[11px] font-bold text-[#009B5B] hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                             >
-                              <span>{d}</span>
-                              {isToday && !isStart && !isEnd && (
-                                <span className="absolute bottom-0.5 w-1 h-1 bg-[#009B5B] rounded-full" />
-                              )}
+                              Hari Ini
                             </button>
-                          )
-                        })}
-                      </div>
-
-                      {/* Footer: Preview & Action Buttons */}
-                      <div className="pt-3 border-t border-gray-100 mt-3 flex items-center justify-between">
-                        <div className="text-[11px] text-gray-500">
-                          {tempStart && tempEnd && tempStart !== tempEnd ? (
-                            <span>
-                              <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} 2026</strong>
-                              <span className="text-[10px] text-gray-400 ml-1">({countDays(tempStart, tempEnd)} hari)</span>
-                            </span>
-                          ) : tempStart ? (
-                            <span>
-                              <strong className="text-gray-900">{tempStart === '2026-11-01' ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(tempStart)} 2026`}</strong>
-                              <span className="text-[10px] text-gray-400 ml-1">(1 hari)</span>
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">Pilih tanggal pada kalender</span>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => setIsDatePickerOpen(false)}
+                              className="sm:hidden p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                              title="Tutup"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        {/* Quick Presets row without ugly scrollbar */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                           <button
                             type="button"
-                            onClick={() => setIsDatePickerOpen(false)}
-                            className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            onClick={() => {
+                              applyDateSelection('2026-11-01', '2026-11-01')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-11-01' && selectedEndDate === '2026-11-01'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                           >
-                            Batal
+                            Hari Ini
                           </button>
                           <button
                             type="button"
                             onClick={() => {
-                              if (tempStart) {
-                                applyDateSelection(tempStart, tempEnd || tempStart)
-                              }
+                              applyDateSelection('2026-10-31', '2026-10-31')
                             }}
-                            disabled={!tempStart}
-                            className="px-3.5 py-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-31' && selectedEndDate === '2026-10-31'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                           >
-                            Terapkan
+                            Kemarin
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyDateSelection('2026-10-26', '2026-11-01')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-26' && selectedEndDate === '2026-11-01'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            7 Hari Terakhir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyDateSelection('2026-10-01', '2026-10-31')
+                            }}
+                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                              selectedStartDate === '2026-10-01' && selectedEndDate === '2026-10-31'
+                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            Bulan Lalu (Okt)
                           </button>
                         </div>
-                      </div>
 
-                    </div>
+                        {/* Month Navigation */}
+                        <div className="flex items-center justify-between px-1 py-1.5 mb-1 bg-gray-50/80 rounded-xl">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth.month === 9) {
+                                setCalMonth({ year: 2026, month: 8 })
+                              } else if (calMonth.month === 10) {
+                                setCalMonth({ year: 2026, month: 9 })
+                              }
+                            }}
+                            disabled={calMonth.month <= 8}
+                            className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-xs font-bold text-gray-800">
+                            {MONTH_NAMES_ID[calMonth.month]} {calMonth.year}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (calMonth.month === 8) {
+                                setCalMonth({ year: 2026, month: 9 })
+                              } else if (calMonth.month === 9) {
+                                setCalMonth({ year: 2026, month: 10 })
+                              }
+                            }}
+                            disabled={calMonth.month >= 10}
+                            className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Day of Week Headers */}
+                        <div className="grid grid-cols-7 text-center text-[10px] font-semibold text-gray-400 py-1">
+                          <span>Min</span>
+                          <span>Sen</span>
+                          <span>Sel</span>
+                          <span>Rab</span>
+                          <span>Kam</span>
+                          <span>Jum</span>
+                          <span>Sab</span>
+                        </div>
+
+                        {/* Days Grid */}
+                        <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+                          {Array.from({ length: new Date(calMonth.year, calMonth.month, 1).getDay() }).map((_, i) => (
+                            <div key={`pad-${i}`} className="h-8" />
+                          ))}
+
+                          {Array.from({
+                            length: new Date(calMonth.year, calMonth.month + 1, 0).getDate()
+                          }).map((_, i) => {
+                            const d = i + 1
+                            const dStr = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                            const isToday = dStr === '2026-11-01'
+                            const isFuture = dStr > '2026-11-01'
+                            const isStart = tempStart === dStr
+                            const isEnd = tempEnd === dStr
+                            const isInRange = tempStart && tempEnd && dStr >= tempStart && dStr <= tempEnd
+
+                            return (
+                              <button
+                                key={d}
+                                type="button"
+                                disabled={isFuture}
+                                onClick={() => {
+                                  if (isFuture) return
+                                  if (!tempStart || (tempStart && tempEnd && tempStart !== tempEnd)) {
+                                    // Single click selects this day
+                                    setTempStart(dStr)
+                                    setTempEnd(dStr)
+                                  } else if (tempStart && tempEnd && tempStart === tempEnd) {
+                                    if (dStr === tempStart) {
+                                      setTempEnd(dStr)
+                                    } else if (dStr < tempStart) {
+                                      setTempEnd(tempStart)
+                                      setTempStart(dStr)
+                                    } else {
+                                      setTempEnd(dStr)
+                                    }
+                                  }
+                                }}
+                                className={`h-8 text-xs font-medium transition-all relative flex items-center justify-center ${
+                                  isFuture
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : isStart && isEnd
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-xl shadow-sm'
+                                    : isStart
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-l-xl'
+                                    : isEnd
+                                    ? 'bg-[#009B5B] text-white font-bold rounded-r-xl'
+                                    : isInRange
+                                    ? 'bg-emerald-50 text-emerald-900 font-semibold'
+                                    : isToday
+                                    ? 'border border-[#009B5B] text-[#009B5B] font-bold rounded-xl hover:bg-emerald-50/50'
+                                    : 'text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer'
+                                }`}
+                              >
+                                <span>{d}</span>
+                                {isToday && !isStart && !isEnd && (
+                                  <span className="absolute bottom-0.5 w-1 h-1 bg-[#009B5B] rounded-full" />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Footer: Preview & Action Buttons */}
+                        <div className="pt-3 border-t border-gray-100 mt-3 flex items-center justify-between gap-2">
+                          <div className="text-[11px] text-gray-600 font-medium truncate min-w-0">
+                            {tempStart && tempEnd && tempStart !== tempEnd ? (
+                              <span className="truncate block">
+                                <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} 2026</strong>
+                                <span className="text-[10px] text-gray-400 ml-1">({countDays(tempStart, tempEnd)} hari)</span>
+                              </span>
+                            ) : tempStart ? (
+                              <span className="truncate block">
+                                <strong className="text-gray-900">{tempStart === '2026-11-01' ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(tempStart)} 2026`}</strong>
+                                <span className="text-[10px] text-gray-400 ml-1">(1 hari)</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Pilih tanggal pada kalender</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setIsDatePickerOpen(false)}
+                              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (tempStart) {
+                                  applyDateSelection(tempStart, tempEnd || tempStart)
+                                }
+                              }}
+                              disabled={!tempStart}
+                              className="px-3.5 py-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+                            >
+                              Terapkan
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1654,7 +2382,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black tracking-tight">
-                    Rp{kpiStats.untung.toLocaleString('id-ID')}
+                    <RollNumberTicker value={kpiStats.untung} prefix="Rp" />
                   </h3>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-emerald-100 font-medium">
@@ -1675,7 +2403,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    Rp{kpiStats.omzet.toLocaleString('id-ID')}
+                    <RollNumberTicker value={kpiStats.omzet} prefix="Rp" />
                   </h3>
                 </div>
                 <div className="text-[11px] text-[#009B5B] font-semibold">
@@ -1695,7 +2423,7 @@ export default function DashboardPage({ onLogout }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    {kpiStats.transaksi}
+                    {kpiStats.transaksi} Struk
                   </h3>
                 </div>
                 <div className="text-[11px] text-gray-400 font-medium">
@@ -1709,43 +2437,61 @@ export default function DashboardPage({ onLogout }) {
                   <span className="text-xs font-medium text-gray-500 block mb-1">
                     Kesehatan Usaha
                   </span>
-                  <div className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-1">
-                    {kpiStats.kesehatan}<span className="text-xs font-medium text-gray-400">/100</span>
+                  <div className="flex items-baseline text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-1">
+                    <span>{kpiStats.kesehatan}</span>
+                    <span className="text-xs font-medium text-gray-400 ml-0.5">/100</span>
                   </div>
-                  <span className="inline-block bg-[#009B5B] text-white text-[10px] font-bold px-3 py-0.5 rounded-full mt-1">
-                    {kpiStats.kesehatanLabel}
-                  </span>
+                  <div className="mt-1">
+                    <span className="inline-flex items-center bg-[#009B5B] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                      {kpiStats.kesehatanLabel}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Semi-Circle Speedometer Gauge */}
-                <div className="relative w-24 h-14 flex items-end justify-center">
-                  <svg className="w-24 h-14" viewBox="0 0 100 55">
-                    <path
-                      d="M 10 50 A 40 40 0 0 1 90 50"
-                      fill="none"
-                      stroke="#E5E7EB"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M 10 50 A 40 40 0 0 1 76 18"
-                      fill="none"
-                      stroke="#009B5B"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="50"
-                      y1="50"
-                      x2="72"
-                      y2="24"
-                      stroke="#1F2937"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="50" cy="50" r="4" fill="#1F2937" />
-                  </svg>
-                </div>
+                {/* Semi-Circle Speedometer Gauge with Animated Needle & Arc */}
+                {(() => {
+                  const score = Math.min(100, Math.max(0, kpiStats.kesehatan || 80))
+                  const angleDeg = 180 - (score / 100) * 180
+                  const angleRad = (angleDeg * Math.PI) / 180
+                  const nx = (50 + 26 * Math.cos(angleRad)).toFixed(1)
+                  const ny = (50 - 26 * Math.sin(angleRad)).toFixed(1)
+                  const arcLength = 125.6
+                  const arcOffset = (arcLength * (1 - score / 100)).toFixed(1)
+                  return (
+                    <div className="relative w-24 h-14 flex items-end justify-center">
+                      <svg className="w-24 h-14" viewBox="0 0 100 55">
+                        <path
+                          d="M 10 50 A 40 40 0 0 1 90 50"
+                          fill="none"
+                          stroke="#E5E7EB"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M 10 50 A 40 40 0 0 1 90 50"
+                          fill="none"
+                          stroke="#009B5B"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={arcLength}
+                          strokeDashoffset={arcOffset}
+                          style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        />
+                        <line
+                          x1="50"
+                          y1="50"
+                          x2={nx}
+                          y2={ny}
+                          stroke="#1F2937"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          style={{ transition: 'x2 0.8s cubic-bezier(0.16, 1, 0.3, 1), y2 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        />
+                        <circle cx="50" cy="50" r="4" fill="#1F2937" />
+                      </svg>
+                    </div>
+                  )
+                })()}
               </div>
 
             </div>
@@ -1756,12 +2502,13 @@ export default function DashboardPage({ onLogout }) {
               {/* ================= LEFT 8 COLS: CHART & TABLE ================= */}
               <div className="xl:col-span-8 space-y-5">
                 
-                {/* Chart: Analisis Omzet & Laba Bersih (REAL-TIME REACTIVE) */}
-                <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                  {/* Chart Header (Clean Figma Style) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                {/* ================= UNTUNGJELAS: ARUS KAS & KEUNTUNGAN CARD ================= */}
+                <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+                  
+                  {/* Header Row: Title on Left, View Switcher & Options on Right */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
-                      <h2 className="text-sm sm:text-base font-bold text-gray-900">
+                      <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
                         {chartTitle}
                       </h2>
                       <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
@@ -1769,172 +2516,667 @@ export default function DashboardPage({ onLogout }) {
                       </p>
                     </div>
 
-                    {/* Filter Pills */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      {/* Segmented Line / Bar Switcher */}
+                      <div className="bg-gray-100/80 p-0.5 sm:p-1 rounded-xl flex items-center gap-0.5 border border-gray-200/50">
+                        <button
+                          type="button"
+                          onClick={() => setChartMode('line')}
+                          title="Tampilan Grafik Garis Tren"
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            chartMode === 'line'
+                              ? 'bg-white text-gray-900 shadow-xs'
+                              : 'text-gray-400 hover:text-gray-600'
+                          }`}
+                        >
+                          <Activity className="w-3.5 h-3.5 stroke-[2.2] text-[#009B5B]" />
+                          <span className="hidden xs:inline">Garis</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setChartMode('bar')}
+                          title="Tampilan Grafik Batang Komparasi"
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            chartMode === 'bar'
+                              ? 'bg-white text-gray-900 shadow-xs'
+                              : 'text-gray-400 hover:text-gray-600'
+                          }`}
+                        >
+                          <BarChart2 className="w-3.5 h-3.5 stroke-[2.2] text-gray-500" />
+                          <span className="hidden xs:inline">Batang</span>
+                        </button>
+                      </div>
+
+                      {/* More Options Button */}
                       <button
                         type="button"
-                        onClick={() => setChartFilter((prev) => ({ ...prev, omzet: !prev.omzet }))}
-                        className={`text-xs px-3.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
-                          chartFilter.omzet
-                            ? 'bg-[#1E88E5] text-white shadow-sm'
-                            : 'bg-gray-100 text-gray-400'
-                        }`}
+                        onClick={() => showToast('Mempersiapkan ekspor laporan grafik & arus kas...')}
+                        className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all cursor-pointer"
+                        title="Opsi Laporan"
                       >
-                        Omzet
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setChartFilter((prev) => ({ ...prev, laba: !prev.laba }))}
-                        className={`text-xs px-3.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
-                          chartFilter.laba
-                            ? 'bg-[#009B5B] text-white shadow-sm'
-                            : 'bg-gray-100 text-gray-400'
-                        }`}
-                      >
-                        Laba Bersih
+                        <MoreVertical className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
 
-                  {/* Chart Container */}
-                  <div className="relative w-full h-64 sm:h-72">
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 700 240" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="omzetGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#1E88E5" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#1E88E5" stopOpacity="0.0" />
-                        </linearGradient>
+                  {/* Sub-label Y-Axis */}
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 font-medium mb-2 px-1 select-none">
+                    <span>Nominal (Rp)</span>
+                  </div>
 
-                        <linearGradient id="labaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#009B5B" stopOpacity="0.3" />
-                          <stop offset="100%" stopColor="#009B5B" stopOpacity="0.02" />
-                        </linearGradient>
-                      </defs>
+                  {/* Mobile Interactive Data Bar - Clean 2-Row Flat Style (No nested cards) */}
+                  <div className="lg:hidden mb-4 bg-gray-50/80 border border-gray-200/70 rounded-2xl p-3 sm:p-3.5 shadow-2xs select-none">
+                    {/* Top Row: Date & Margin (Flat typography, no green card or badge) */}
+                    <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-gray-200/60 select-none">
+                      <div className="flex items-center gap-1.5 select-none">
+                        <span className="text-xs sm:text-[13px] font-bold text-gray-900 select-none">
+                          {activePointDateStr}
+                        </span>
+                      </div>
 
-                      {/* Horizontal Grid Lines */}
-                      {[0, 50, 100, 150, 200].map((y, idx) => (
-                        <line
-                          key={idx}
-                          x1="60"
-                          y1={y}
-                          x2="680"
-                          y2={y}
-                          stroke="#F3F4F6"
-                          strokeDasharray="4 4"
-                        />
-                      ))}
+                      {/* Flat Margin readout (tanpa card/badge) */}
+                      <div className="text-xs select-none">
+                        <span className="text-gray-400 font-medium">Margin: </span>
+                        <span className="font-extrabold text-[#009B5B]">
+                          {activePointData.omzet > 0 ? ((activePointData.laba / activePointData.omzet) * 100).toFixed(1) : '0'}%
+                        </span>
+                      </div>
+                    </div>
 
-                      {/* Omzet Area & Line */}
-                      {chartFilter.omzet && (
-                        <>
-                          <polygon
-                            points={omzetPolygon}
-                            fill="url(#omzetGradient)"
-                            className="transition-all duration-700 ease-out"
-                          />
-                          <polyline
-                            points={omzetPoints}
-                            fill="none"
-                            stroke="#1E88E5"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="transition-all duration-700 ease-out"
-                          />
-                          {trendData.map((d, i) => (
-                            <circle
-                              key={i}
-                              cx={xCoords[i]}
-                              cy={getY(d.omzet)}
-                              r={i === trendData.length - 1 ? 5 : 4}
-                              fill="#FFFFFF"
-                              stroke="#1E88E5"
-                              strokeWidth="2.5"
-                              className="transition-all duration-700 ease-out"
-                            />
-                          ))}
-                        </>
-                      )}
+                    {/* Bottom Row: 3 Columns Flat Grid (tanpa card/box untuk Omzet, Untung, dan Biaya HPP) */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      {/* Omzet Column */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mb-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1E88E5] flex-shrink-0" />
+                          <span className="truncate">Omzet</span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                          Rp{activePointData.omzet.toLocaleString('id-ID')}
+                        </p>
+                      </div>
 
-                      {/* Laba Bersih Area & Line */}
-                      {chartFilter.laba && (
-                        <>
-                          <polygon
-                            points={labaPolygon}
-                            fill="url(#labaGradient)"
-                            className="transition-all duration-700 ease-out"
-                          />
-                          <polyline
-                            points={labaPoints}
-                            fill="none"
-                            stroke="#009B5B"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="transition-all duration-700 ease-out"
-                          />
-                          {trendData.map((d, i) => (
-                            <circle
-                              key={i}
-                              cx={xCoords[i]}
-                              cy={getY(d.laba)}
-                              r={i === trendData.length - 1 ? 5 : 4}
-                              fill="#FFFFFF"
-                              stroke="#009B5B"
-                              strokeWidth="2.5"
-                              className="transition-all duration-700 ease-out"
-                            />
-                          ))}
-                        </>
-                      )}
-                    </svg>
+                      {/* Untung Column */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium mb-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#009B5B] flex-shrink-0" />
+                          <span className="truncate">Untung</span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-extrabold text-[#009B5B] truncate">
+                          Rp{activePointData.laba.toLocaleString('id-ID')}
+                        </p>
+                      </div>
 
-                    {/* Y-Axis Labels */}
-                    <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] text-gray-400 font-medium">
-                      <span>Rp{(chartMaxY).toLocaleString('id-ID')}</span>
-                      <span>Rp{Math.round(chartMaxY * 0.75).toLocaleString('id-ID')}</span>
-                      <span>Rp{Math.round(chartMaxY * 0.5).toLocaleString('id-ID')}</span>
-                      <span>Rp{Math.round(chartMaxY * 0.25).toLocaleString('id-ID')}</span>
+                      {/* Biaya HPP Column */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium mb-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#F43F5E] flex-shrink-0" />
+                          <span className="truncate">Biaya HPP</span>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-gray-800 truncate">
+                          Rp{activePointCosts.toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Previous Period Real Data Comparison (when enabled) */}
+                    {comparePrevious && prevPointData && (
+                      <div className="mt-2.5 pt-2 border-t border-dashed border-gray-200/80 flex items-center justify-between gap-3 text-[11px]">
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                          <span>Periode Lalu ({prevPointData.day}): <strong className="text-gray-700 font-semibold">Rp{prevPointData.omzet.toLocaleString('id-ID')}</strong></span>
+                        </div>
+                        <span className={`font-bold whitespace-nowrap ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
+                          {prevDiffOmzet >= 0 ? '+Rp' : '-Rp'}{Math.abs(prevDiffOmzet).toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Main Chart Canvas Area with Unified Left Y-Axis */}
+                  <div className="flex items-stretch gap-1 sm:gap-2.5 w-full">
+                    
+                    {/* Unified Left Y-Axis */}
+                    <div className="flex flex-col justify-between items-end pb-8 text-[10px] sm:text-[11px] text-gray-400 font-medium select-none flex-shrink-0 w-12 sm:w-16">
+                      <span>{formatShortVal(chartMaxY)}</span>
+                      <span>{formatShortVal(Math.round(chartMaxY * 0.75))}</span>
+                      <span>{formatShortVal(Math.round(chartMaxY * 0.5))}</span>
+                      <span>{formatShortVal(Math.round(chartMaxY * 0.25))}</span>
                       <span>Rp0</span>
                     </div>
 
-                    {/* X-Axis Labels */}
-                    <div className="absolute left-14 right-2 bottom-0 flex justify-between text-[11px] text-gray-400 font-medium pt-2 border-t border-gray-100">
-                      {trendData.map((d, i) => (
-                        <span
-                          key={i}
-                          className={i === trendData.length - 1 ? "font-bold text-gray-800" : ""}
+                    {/* Center Plot Area (SVG Canvas + X-Axis Row) */}
+                    <div className="flex-1 min-w-0 relative flex flex-col">
+                      <div className="relative w-full h-56 sm:h-64">
+                        <svg
+                          className="w-full h-full overflow-visible"
+                          viewBox="0 0 700 200"
+                          preserveAspectRatio="none"
                         >
-                          {d.day}
-                        </span>
-                      ))}
-                    </div>
+                          <defs>
+                            {/* UntungJelas Brand Emerald Gradient for Laba Area */}
+                            <linearGradient id="untungJelasLabaGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#009B5B" stopOpacity="0.16" />
+                              <stop offset="100%" stopColor="#009B5B" stopOpacity="0.01" />
+                            </linearGradient>
 
-                    {/* Floating Tooltip Callout on Today (Real-time Reactive) */}
-                    <div className="absolute right-2 top-8 bg-white/95 backdrop-blur-sm border border-emerald-500/30 rounded-xl p-2.5 shadow-lg text-left pointer-events-none transition-all duration-300">
-                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                        Hari ini
-                      </p>
-                      <div className="space-y-1">
-                        <span className="inline-block bg-blue-50 text-[#1E88E5] text-[11px] font-bold px-2 py-0.5 rounded transition-all">
-                          Omset: Rp{todayData.omzet.toLocaleString('id-ID')}
-                        </span>
-                        <br />
-                        <span className="inline-block bg-emerald-50 text-[#009B5B] text-[11px] font-bold px-2 py-0.5 rounded transition-all">
-                          Untung: Rp{todayData.laba.toLocaleString('id-ID')}
-                        </span>
+                            {/* Subtle Blue Gradient for Omzet Area */}
+                            <linearGradient id="untungJelasOmzetGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#1E88E5" stopOpacity="0.08" />
+                              <stop offset="100%" stopColor="#1E88E5" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Dotted Horizontal Grid Lines */}
+                          {[16, 57, 98, 139, 180].map((y, idx) => (
+                            <line
+                              key={idx}
+                              x1="0"
+                              y1={y}
+                              x2="700"
+                              y2={y}
+                              stroke="#E5E7EB"
+                              strokeDasharray="3 4"
+                            />
+                          ))}
+
+                          {/* Dotted Vertical Guide Lines at each X point (Clean, no origin ray) */}
+                          {xCoords.map((x, idx) => (
+                            <line
+                              key={idx}
+                              x1={x}
+                              y1="16"
+                              x2={x}
+                              y2="180"
+                              stroke="#F1F5F9"
+                              strokeDasharray="3 4"
+                            />
+                          ))}
+
+                          {/* Active Vertical Cursor Line (Smooth animated position) */}
+                          {activeIdx !== null && (
+                            <line
+                              x1={xCoords[activeIdx]}
+                              y1="16"
+                              x2={xCoords[activeIdx]}
+                              y2="180"
+                              stroke="#94A3B8"
+                              strokeWidth="1.5"
+                              strokeDasharray="3 3"
+                              style={{
+                                transition: 'x1 0.25s cubic-bezier(0.16, 1, 0.3, 1), x2 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+                              }}
+                            />
+                          )}
+
+                          {/* Previous Period Comparison Line (Dashed Gray - Smooth SVG Transition) */}
+                          {comparePrevious && chartMode === 'line' && (
+                            <path
+                              d={prevPath}
+                              fill="none"
+                              stroke="#94A3B8"
+                              strokeWidth="2"
+                              strokeDasharray="4 4"
+                              style={{
+                                transition: 'd 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease'
+                              }}
+                            />
+                          )}
+
+                          {/* ================= LINE CHART MODE ================= */}
+                          {chartMode === 'line' ? (
+                            <>
+                              {/* Untung Bersih Gradient Area (Hero Metric) */}
+                              {chartSeries.laba && labaArea && (
+                                <path
+                                  d={labaArea}
+                                  fill="url(#untungJelasLabaGrad)"
+                                  style={{
+                                    transition: 'd 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease'
+                                  }}
+                                />
+                              )}
+
+                              {/* Omzet Penjualan Curve (Blue #1E88E5) */}
+                              {chartSeries.omzet && (
+                                <path
+                                  d={omzetPath}
+                                  fill="none"
+                                  stroke="#1E88E5"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    transition: 'd 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease'
+                                  }}
+                                />
+                              )}
+
+                              {/* Biaya & HPP Curve (Coral/Red #F43F5E) */}
+                              {chartSeries.costs && (
+                                <path
+                                  d={costPath}
+                                  fill="none"
+                                  stroke="#F43F5E"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    transition: 'd 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease'
+                                  }}
+                                />
+                              )}
+
+                              {/* Untung Bersih Curve (UntungJelas Emerald #009B5B) */}
+                              {chartSeries.laba && (
+                                <path
+                                  d={labaPath}
+                                  fill="none"
+                                  stroke="#009B5B"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    transition: 'd 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease'
+                                  }}
+                                />
+                              )}
+
+                              {/* Interactive Dots & Touch Target on Points */}
+                              {trendData.map((d, i) => {
+                                const isSelected = activeIdx === i
+                                const cVal = d.costs ?? Math.max(0, d.omzet - d.laba)
+                                return (
+                                  <g
+                                    key={i}
+                                    className="cursor-pointer"
+                                    onClick={() => setActiveChartIndex(i)}
+                                    onTouchStart={() => setActiveChartIndex(i)}
+                                  >
+                                    {/* Invisible Hit Target for mobile tap */}
+                                    <circle cx={xCoords[i]} cy={getY(d.omzet)} r="18" fill="transparent" />
+
+                                    {/* Omzet Dot (Blue) */}
+                                    {chartSeries.omzet && isSelected && (
+                                      <circle
+                                        cx={xCoords[i]}
+                                        cy={getY(d.omzet)}
+                                        r="4.5"
+                                        fill="#1E88E5"
+                                        stroke="#FFFFFF"
+                                        strokeWidth="2.5"
+                                        style={{
+                                          transition: 'cx 0.25s cubic-bezier(0.16, 1, 0.3, 1), cy 0.25s cubic-bezier(0.16, 1, 0.3, 1), r 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Biaya & HPP Dot (Coral Red) */}
+                                    {chartSeries.costs && isSelected && (
+                                      <circle
+                                        cx={xCoords[i]}
+                                        cy={getY(cVal)}
+                                        r="4.5"
+                                        fill="#F43F5E"
+                                        stroke="#FFFFFF"
+                                        strokeWidth="2.5"
+                                        style={{
+                                          transition: 'cx 0.25s cubic-bezier(0.16, 1, 0.3, 1), cy 0.25s cubic-bezier(0.16, 1, 0.3, 1), r 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Untung Bersih Dot (Emerald Green) */}
+                                    {chartSeries.laba && isSelected && (
+                                      <circle
+                                        cx={xCoords[i]}
+                                        cy={getY(d.laba)}
+                                        r="5"
+                                        fill="#009B5B"
+                                        stroke="#FFFFFF"
+                                        strokeWidth="2.5"
+                                        style={{
+                                          transition: 'cx 0.25s cubic-bezier(0.16, 1, 0.3, 1), cy 0.25s cubic-bezier(0.16, 1, 0.3, 1), r 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+                                  </g>
+                                )
+                              })}
+                            </>
+                          ) : (
+                            /* ================= BAR CHART MODE ================= */
+                            <>
+                              {trendData.map((d, i) => {
+                                const cVal = d.costs ?? Math.max(0, d.omzet - d.laba)
+                                const cx = xCoords[i]
+                                const barWidth = 7
+                                const gap = 2
+                                const isSelected = activeIdx === i
+
+                                return (
+                                  <g
+                                    key={i}
+                                    className="cursor-pointer"
+                                    onClick={() => setActiveChartIndex(i)}
+                                    onTouchStart={() => setActiveChartIndex(i)}
+                                  >
+                                    {/* Omzet Bar (Blue) */}
+                                    {chartSeries.omzet && (
+                                      <rect
+                                        x={cx - barWidth * 1.5 - gap}
+                                        y={getY(d.omzet)}
+                                        width={barWidth}
+                                        height={Math.max(2, 180 - getY(d.omzet))}
+                                        rx="2.5"
+                                        fill="#1E88E5"
+                                        opacity={isSelected ? 1 : 0.85}
+                                        style={{
+                                          transition: 'y 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Untung Bersih Bar (Green) */}
+                                    {chartSeries.laba && (
+                                      <rect
+                                        x={cx - barWidth * 0.5}
+                                        y={getY(d.laba)}
+                                        width={barWidth}
+                                        height={Math.max(2, 180 - getY(d.laba))}
+                                        rx="2.5"
+                                        fill="#009B5B"
+                                        opacity={isSelected ? 1 : 0.85}
+                                        style={{
+                                          transition: 'y 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Biaya & HPP Bar (Coral Red) */}
+                                    {chartSeries.costs && (
+                                      <rect
+                                        x={cx + barWidth * 0.5 + gap}
+                                        y={getY(cVal)}
+                                        width={barWidth}
+                                        height={Math.max(2, 180 - getY(cVal))}
+                                        rx="2.5"
+                                        fill="#F43F5E"
+                                        opacity={isSelected ? 1 : 0.85}
+                                        style={{
+                                          transition: 'y 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease'
+                                        }}
+                                      />
+                                    )}
+                                  </g>
+                                )
+                              })}
+                            </>
+                          )}
+                        </svg>
+
+                        {/* Floating Tooltip Card (UntungJelas Modern Style) */}
+                        <div
+                          className="hidden sm:block absolute bg-white/98 backdrop-blur-md border border-gray-100 rounded-2xl p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] min-w-[270px] pointer-events-none transition-all duration-200 z-30 select-none"
+                          style={{
+                            top: '20px',
+                            ...(activeIdx < nPoints / 2
+                              ? { left: `min(calc(${((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 290px))` }
+                              : { right: `min(calc(${100 - ((xCoords[activeIdx]) / 700) * 100}% + 16px), calc(100% - 290px))` })
+                          }}
+                        >
+                          {/* Tooltip Header: Date & Margin */}
+                          <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-gray-100/90 select-none">
+                            <p className="text-xs font-bold text-gray-900 select-none">
+                              {activePointDateStr}
+                            </p>
+                            <div className="text-[11px] font-semibold text-gray-500 select-none">
+                              Margin: <span className="font-extrabold text-[#009B5B]">{activePointData.omzet > 0 ? ((activePointData.laba / activePointData.omzet) * 100).toFixed(1) : '0'}%</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 text-xs">
+                            {/* Omzet Penjualan */}
+                            {chartSeries.omzet && (
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#1E88E5] flex-shrink-0" />
+                                  <span>Omzet Penjualan</span>
+                                </div>
+                                <span className="font-bold text-gray-900 whitespace-nowrap">
+                                  Rp{activePointData.omzet.toLocaleString('id-ID')}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Untung Bersih */}
+                            {chartSeries.laba && (
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#009B5B] flex-shrink-0" />
+                                  <span>Untung Bersih</span>
+                                </div>
+                                <span className="font-extrabold text-[#009B5B] whitespace-nowrap">
+                                  Rp{activePointData.laba.toLocaleString('id-ID')}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Biaya & HPP */}
+                            {chartSeries.costs && (
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 text-gray-600 font-medium whitespace-nowrap">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E] flex-shrink-0" />
+                                  <span>Biaya & HPP</span>
+                                </div>
+                                <span className="font-bold text-gray-900 whitespace-nowrap">
+                                  Rp{activePointCosts.toLocaleString('id-ID')}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Previous Period Real Data Comparison in Tooltip */}
+                            {comparePrevious && prevPointData && (
+                              <div className="pt-2.5 mt-2.5 border-t border-gray-100/90 space-y-1.5 select-none">
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2 text-gray-500 font-medium whitespace-nowrap">
+                                    <span className="w-2.5 h-2.5 rounded-full border border-gray-300 bg-gray-100 flex-shrink-0" />
+                                    <span>Periode Lalu ({prevPointData.day})</span>
+                                  </div>
+                                  <span className="font-semibold text-gray-700 whitespace-nowrap">
+                                    Rp{prevPointData.omzet.toLocaleString('id-ID')}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2 text-gray-500 font-medium whitespace-nowrap">
+                                    <span className="w-2.5 h-2.5 flex items-center justify-center text-[10px] font-bold text-gray-400 flex-shrink-0">
+                                      {prevDiffOmzet >= 0 ? '▲' : '▼'}
+                                    </span>
+                                    <span>Pertumbuhan</span>
+                                  </div>
+                                  <span className={`font-bold whitespace-nowrap ${prevDiffOmzet >= 0 ? 'text-[#009B5B]' : 'text-rose-500'}`}>
+                                    {prevDiffOmzet >= 0 ? '+Rp' : '-Rp'}{Math.abs(prevDiffOmzet).toLocaleString('id-ID')} ({prevDiffPct >= 0 ? '+' : ''}{prevDiffPct}%)
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                       </div>
-                      <p className="text-[10px] font-bold text-emerald-700 mt-1.5">
-                        Margin Real: {todayData.omzet > 0 ? ((todayData.laba / todayData.omzet) * 100).toFixed(1) : '0'}%
-                      </p>
+
+                      {/* X-Axis Labels Row */}
+                      <div className="relative w-full h-8 pt-2.5 border-t border-gray-100 select-none">
+                        {trendData.map((d, i) => {
+                          const total = trendData.length
+                          let showOnMobile = true
+                          if (total > 14) {
+                            showOnMobile = i === 0 || i === Math.floor(total / 2) || i === total - 1
+                          } else if (total > 7) {
+                            showOnMobile = i % 2 === 0 || i === total - 1
+                          }
+
+                          const isFirst = i === 0
+                          const isLast = i === total - 1
+                          const isActive = activeIdx === i
+                          const pct = ((xCoords[i] / 700) * 100).toFixed(2)
+
+                          let positionClass = 'absolute -translate-x-1/2 text-center'
+                          let style = { left: `${pct}%` }
+                          if (isFirst) {
+                            positionClass = 'absolute left-0 text-left'
+                            style = {}
+                          } else if (isLast) {
+                            positionClass = 'absolute right-0 text-right'
+                            style = {}
+                          }
+
+                          const parts = d.day.split(' ')
+                          const dayNum = parts[0]
+                          const month = parts[1] || ''
+
+                          return (
+                            <div
+                              key={i}
+                              style={style}
+                              className={`${positionClass} cursor-pointer transition-colors ${
+                                showOnMobile ? 'block' : 'hidden sm:block'
+                              } ${isActive ? 'font-bold text-gray-900' : isLast ? 'font-semibold text-gray-700' : 'text-gray-400 hover:text-gray-600'}`}
+                              onClick={() => setActiveChartIndex(i)}
+                            >
+                              <div className="sm:hidden flex flex-col items-center text-[10px] leading-tight">
+                                {month ? (
+                                  isFirst || isLast ? (
+                                    <>
+                                      <span className={isActive ? 'text-gray-900 font-bold' : ''}>{dayNum}</span>
+                                      <span className="text-[8px] font-semibold text-gray-500 uppercase">{month}</span>
+                                    </>
+                                  ) : (
+                                    <span>{dayNum}</span>
+                                  )
+                                ) : (
+                                  <span>{d.day.replace(':00', '')}</span>
+                                )}
+                              </div>
+
+                              <div className="hidden sm:block text-[11px] whitespace-nowrap">
+                                {d.day}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+
                     </div>
 
                   </div>
+
+                  {/* ================= BOTTOM LEGEND & TOGGLE SWITCH ROW ================= */}
+                  <div className="mt-4 pt-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 select-none">
+                    
+                    {/* Left: 3 Checkbox Legend Toggles */}
+                    <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
+                      
+                      {/* Omzet Checkbox Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setChartSeries((prev) => ({ ...prev, omzet: !prev.omzet }))}
+                        className="flex items-center gap-2 cursor-pointer group select-none"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                            chartSeries.omzet
+                              ? 'bg-[#1E88E5] text-white shadow-xs'
+                              : 'border border-gray-300 bg-white'
+                          }`}
+                        >
+                          {chartSeries.omzet && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-semibold transition-colors ${
+                          chartSeries.omzet ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          Omzet Penjualan
+                        </span>
+                      </button>
+
+                      {/* Untung Bersih Checkbox Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setChartSeries((prev) => ({ ...prev, laba: !prev.laba }))}
+                        className="flex items-center gap-2 cursor-pointer group select-none"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                            chartSeries.laba
+                              ? 'bg-[#009B5B] text-white shadow-xs'
+                              : 'border border-gray-300 bg-white'
+                          }`}
+                        >
+                          {chartSeries.laba && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-semibold transition-colors ${
+                          chartSeries.laba ? 'text-[#009B5B] font-bold' : 'text-gray-400'
+                        }`}>
+                          Untung Bersih
+                        </span>
+                      </button>
+
+                      {/* Biaya & HPP Checkbox Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setChartSeries((prev) => ({ ...prev, costs: !prev.costs }))}
+                        className="flex items-center gap-2 cursor-pointer group select-none"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                            chartSeries.costs
+                              ? 'bg-[#F43F5E] text-white shadow-xs'
+                              : 'border border-gray-300 bg-white'
+                          }`}
+                        >
+                          {chartSeries.costs && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                        <span className={`text-xs font-semibold transition-colors ${
+                          chartSeries.costs ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          Biaya & HPP
+                        </span>
+                      </button>
+
+                    </div>
+
+                    {/* Right: Bandingkan Periode Lalu Toggle Switch */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setComparePrevious(!comparePrevious)}
+                        className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-700 cursor-pointer select-none"
+                      >
+                        <div
+                          className={`w-9 h-5 rounded-full transition-colors duration-200 relative flex items-center p-0.5 ${
+                            comparePrevious ? 'bg-[#009B5B]' : 'bg-gray-200'
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
+                              comparePrevious ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                        <span className={comparePrevious ? 'text-gray-900 font-semibold' : 'text-gray-500'}>
+                          Bandingkan periode lalu
+                        </span>
+                      </button>
+                    </div>
+
+                  </div>
+
                 </div>
 
                 {/* Table: Evaluasi Keuntungan Produk */}
-                <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                  <div className="mb-5">
+                <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                  <div className="mb-4 sm:mb-5">
                     <h2 className="text-sm sm:text-base font-bold text-gray-900">
                       Evaluasi Keuntungan Produk (Rugi & Tipis)
                     </h2>
@@ -1943,28 +3185,112 @@ export default function DashboardPage({ onLogout }) {
                     </p>
                   </div>
 
-                  {/* Table Wrapper */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[560px]">
+                  {/* MOBILE VIEW (< sm): Clean Native Cards (Tanpa scrollbar horizontal) */}
+                  <div className="space-y-3 sm:hidden">
+                    {products.map((item) => {
+                      const margin = item.price - item.hpp
+                      const percent = Math.round((margin / item.price) * 100)
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3.5 bg-gray-50/70 hover:bg-gray-50 rounded-2xl border border-gray-100/90 transition-colors"
+                        >
+                          {/* Header: Icon, Name, Category & Status Badge */}
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
+                                {item.icon === 'croissant' ? (
+                                  <Croissant className="w-4 h-4 stroke-[1.8]" />
+                                ) : (
+                                  <Coffee className="w-4 h-4 stroke-[1.8]" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-gray-900 truncate leading-snug">
+                                  {item.name}
+                                </p>
+                                <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                                  {item.category}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Status Badge */}
+                            {item.status === 'Rugi' && (
+                              <span className="inline-block bg-rose-50 text-rose-600 border border-rose-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Rugi
+                              </span>
+                            )}
+                            {item.status === 'Tipis' && (
+                              <span className="inline-block bg-amber-50 text-amber-600 border border-amber-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Tipis
+                              </span>
+                            )}
+                            {item.status === 'Sehat' && (
+                              <span className="inline-block bg-emerald-50 text-[#009B5B] border border-emerald-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0">
+                                Sehat
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 3 Metrics: HPP Modal | Harga Jual | Margin Real */}
+                          <div className="grid grid-cols-3 gap-2 py-2 px-2.5 bg-white rounded-xl border border-gray-100 text-center mb-3">
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-medium block">HPP Modal</span>
+                              <span className="text-xs font-bold text-gray-800">
+                                Rp{item.hpp.toLocaleString('id-ID')}
+                              </span>
+                            </div>
+                            <div className="border-x border-gray-100 px-1">
+                              <span className="text-[10px] text-gray-400 font-medium block">Harga Jual</span>
+                              <span className="text-xs font-bold text-gray-800">
+                                Rp{item.price.toLocaleString('id-ID')}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-gray-400 font-medium block">Margin Real</span>
+                              <span className={`text-xs font-bold ${margin < 0 ? 'text-rose-500' : item.status === 'Tipis' ? 'text-amber-600' : 'text-[#009B5B]'}`}>
+                                {margin < 0 ? `-Rp${Math.abs(margin).toLocaleString('id-ID')}` : `+Rp${margin.toLocaleString('id-ID')}`}
+                                <span className="text-[10px] font-medium ml-0.5">({percent}%)</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => setShowEditModal(item)}
+                            className="w-full py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-xl border border-gray-200 shadow-2xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <span>Edit HPP / Harga Jual</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* DESKTOP VIEW (>= sm): Full elegant table without ugly blue pills */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-100 pb-3">
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Nama Produk</span>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Nama Produk
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">HPP</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            HPP Modal
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Harga Jual</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Harga Jual
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Margin Real</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Margin Real
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Status</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400">
+                            Status
                           </th>
-                          <th className="py-2.5 font-semibold text-xs text-blue-700 text-center">
-                            <span className="bg-blue-50/80 px-3 py-1 rounded-lg">Aksi</span>
+                          <th className="py-3 px-2 font-semibold text-xs text-gray-400 text-center">
+                            Aksi
                           </th>
                         </tr>
                       </thead>
@@ -1974,7 +3300,7 @@ export default function DashboardPage({ onLogout }) {
                           const percent = Math.round((margin / item.price) * 100)
                           return (
                             <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
-                              <td className="py-3.5 pr-3">
+                              <td className="py-3.5 px-2">
                                 <div className="flex items-center gap-3">
                                   <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
                                     {item.icon === 'croissant' ? (
@@ -1994,15 +3320,15 @@ export default function DashboardPage({ onLogout }) {
                                 </div>
                               </td>
 
-                              <td className="py-3.5 text-xs font-semibold text-gray-800">
+                              <td className="py-3.5 px-2 text-xs font-semibold text-gray-800">
                                 Rp{item.hpp.toLocaleString('id-ID')}
                               </td>
 
-                              <td className="py-3.5 text-xs font-medium text-gray-700">
+                              <td className="py-3.5 px-2 text-xs font-medium text-gray-700">
                                 Rp{item.price.toLocaleString('id-ID')}
                               </td>
 
-                              <td className="py-3.5 text-xs font-bold">
+                              <td className="py-3.5 px-2 text-xs font-bold">
                                 {margin < 0 ? (
                                   <span className="text-rose-500">
                                     -Rp{Math.abs(margin).toLocaleString('id-ID')} ({percent}%)
@@ -2014,7 +3340,7 @@ export default function DashboardPage({ onLogout }) {
                                 )}
                               </td>
 
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-2">
                                 {item.status === 'Rugi' && (
                                   <span className="inline-block bg-rose-50 text-rose-600 border border-rose-200/60 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
                                     Rugi
@@ -2032,11 +3358,11 @@ export default function DashboardPage({ onLogout }) {
                                 )}
                               </td>
 
-                              <td className="py-3.5 text-center">
+                              <td className="py-3.5 px-2 text-center">
                                 <button
                                   type="button"
                                   onClick={() => setShowEditModal(item)}
-                                  className="text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 shadow-sm transition-all cursor-pointer"
+                                  className="text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 shadow-xs transition-all cursor-pointer"
                                 >
                                   Edit HPP / Harga
                                 </button>
@@ -2054,202 +3380,196 @@ export default function DashboardPage({ onLogout }) {
               {/* ================= RIGHT 4 COLS: AI INSIGHTS & CASH DRAWER ================= */}
               <div className="xl:col-span-4 space-y-5">
                 
-                {/* ================= AI ASSISTANT WIDGET (COMPACT UNTUNGJELAS DESIGN) ================= */}
-                {isAiPanelMinimized ? (
-                  <div className="bg-white rounded-2xl p-3.5 border border-emerald-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center p-1">
-                        <img src="/assets/Icons/logo.png" alt="UntungJelas Logo" className="w-full h-full object-contain" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-gray-900">AI Assistant</h4>
-                        <p className="text-[10px] text-gray-400">Panel disembunyikan</p>
-                      </div>
-                    </div>
+                {/* ================= AI ASSISTANT WIDGET (SMOOTH DROPDOWN ACCORDION) ================= */}
+                <div className="bg-white rounded-3xl border border-emerald-100/80 shadow-[0_4px_20px_rgba(0,155,91,0.04)] overflow-hidden flex flex-col transition-all duration-300">
+                  
+                  {/* Top ambient soft green gradient header (clickable to toggle) */}
+                  <div
+                    onClick={() => setIsAiPanelMinimized(!isAiPanelMinimized)}
+                    className="bg-gradient-to-b from-emerald-50/70 via-emerald-50/20 to-white pt-4 pb-2.5 px-4 relative cursor-pointer select-none transition-colors hover:from-emerald-50/90"
+                  >
+                    {/* V (Dropdown Chevron) Button */}
                     <button
                       type="button"
-                      onClick={() => setIsAiPanelMinimized(false)}
-                      className="text-xs font-bold text-[#009B5B] hover:underline cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsAiPanelMinimized(!isAiPanelMinimized)
+                      }}
+                      className="absolute top-3.5 right-3.5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-white/80 transition-all cursor-pointer flex items-center justify-center"
+                      title={isAiPanelMinimized ? 'Buka AI Assistant' : 'Tutup AI Assistant'}
+                      aria-label="Toggle AI Assistant"
                     >
-                      Buka Asisten
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-500 transition-transform duration-300 ease-in-out ${
+                          isAiPanelMinimized ? 'rotate-0' : 'rotate-180'
+                        }`}
+                      />
                     </button>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-3xl border border-emerald-100/80 shadow-[0_4px_20px_rgba(0,155,91,0.04)] overflow-hidden flex flex-col relative">
-                    
-                    {/* Top ambient soft green gradient */}
-                    <div className="bg-gradient-to-b from-emerald-50/70 via-emerald-50/20 to-white pt-4 pb-2.5 px-4 relative">
-                      {/* Close button X */}
-                      <button
-                        type="button"
-                        onClick={() => setIsAiPanelMinimized(true)}
-                        className="absolute top-3.5 right-3.5 text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-white/80 transition-all cursor-pointer"
-                        title="Tutup AI Assistant"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
 
-                      {/* UntungJelas Brand Logo (Tanpa teks, logo icon saja) */}
-                      <div className="w-10 h-10 mx-auto bg-white rounded-2xl border border-emerald-100 shadow-sm flex items-center justify-center p-2 mb-1.5">
-                        <img
-                          src="/assets/Icons/logo.png"
-                          alt="UntungJelas Logo"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-
-                      {/* Header Title & Subtitle */}
-                      <h3 className="text-sm sm:text-[15px] font-bold text-gray-900 text-center tracking-tight">
-                        AI Assistant
-                      </h3>
-                      <p className="text-[11px] text-gray-500 text-center mt-0.5">
-                        Here's what needs your attention today:
-                      </p>
+                    {/* UntungJelas Brand Logo (Tanpa teks, logo icon saja) */}
+                    <div className="w-10 h-10 mx-auto bg-white rounded-2xl border border-emerald-100 shadow-sm flex items-center justify-center p-2 mb-1.5 transition-transform duration-300">
+                      <img
+                        src="/assets/Icons/logo.png"
+                        alt="UntungJelas Logo"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
 
-                    {/* Content Section: Compact Cards */}
-                    <div className="p-3.5 pt-1 space-y-2">
-                      
-                      {/* Card 1: Margin Alert */}
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
-                        <div className="flex items-start justify-between gap-1.5">
-                          <h4 className="text-xs font-bold text-gray-900 leading-snug">
-                            Harga Mentega naik 15%, Croissant rugi.
-                          </h4>
-                          <span className="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                            Rugi
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 leading-tight">
-                          Naikkan harga jual ke Rp13.000 agar margin aman di 23%.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={handleAdjustCroissantPrice}
-                          className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
-                        >
-                          <span>Sesuaikan Harga</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      {/* Card 2: Stock Alert */}
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
-                        <div className="flex items-start justify-between gap-1.5">
-                          <h4 className="text-xs font-bold text-gray-900 leading-snug">
-                            Stok Sirup Gula Aren sisa 5 cup lagi.
-                          </h4>
-                          <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                            Kritis
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 leading-tight">
-                          Penjualan Kopi Susu tinggi. Pesan ulang sebelum jam sibuk.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => showToast('Membuka pesanan supplier bahan baku Gula Aren...')}
-                          className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
-                        >
-                          <span>Pesan Bahan Baku</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      {/* Card 3: Quick Insights */}
-                      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-1.5">
-                        <h4 className="text-xs font-bold text-gray-900">
-                          Quick Insights
-                        </h4>
-                        <div className="space-y-1 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-500 text-[11px]">Prediksi Omzet</span>
-                            <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                              +3.5%
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-500 text-[11px]">Target Margin</span>
-                            <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                              On track
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-500 text-[11px]">Evaluasi Menu</span>
-                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100/60">
-                              2 Pending
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Suggested next steps (Pill buttons row) */}
-                      <div className="pt-1">
-                        <p className="text-[11px] font-bold text-gray-700 mb-1.5">
-                          Saran langkah cepat:
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleAskAi(null, 'Review evaluasi harga dan margin produk')}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                          >
-                            Review margin (2)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleAskAi(null, 'Follow up supplier bahan baku')}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                          >
-                            Stok bahan (1)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleAskAi(null, 'Cek status kas laci kasir')}
-                            className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                          >
-                            Kas kasir
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* AI Chat Input Box (Compact) */}
-                      <form
-                        onSubmit={(e) => handleAskAi(e)}
-                        className="mt-2 bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 flex items-center gap-2 focus-within:border-[#009B5B] focus-within:ring-2 focus-within:ring-emerald-100 transition-all"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => showToast('Fitur unggah struk/faktur belanja akan segera hadir!')}
-                          className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors cursor-pointer"
-                          title="Lampirkan Dokumen"
-                        >
-                          <Paperclip className="w-3.5 h-3.5" />
-                        </button>
-                        <input
-                          type="text"
-                          value={aiQuestion}
-                          onChange={(e) => setAiQuestion(e.target.value)}
-                          placeholder="Tanya AI UntungJelas..."
-                          className="flex-1 text-xs text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!aiQuestion.trim()}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
-                            aiQuestion.trim()
-                              ? 'bg-[#009B5B] text-white shadow-sm hover:bg-[#00874e]'
-                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                          }`}
-                        >
-                          <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                        </button>
-                      </form>
-
-                    </div>
-
+                    {/* Header Title & Subtitle */}
+                    <h3 className="text-sm sm:text-[15px] font-bold text-gray-900 text-center tracking-tight">
+                      AI Assistant
+                    </h3>
+                    <p className="text-[11px] text-gray-500 text-center mt-0.5 transition-all">
+                      {isAiPanelMinimized
+                        ? 'Klik untuk melihat rekomendasi & analisis'
+                        : "Here's what needs your attention today:"}
+                    </p>
                   </div>
-                )}
+
+                  {/* Smooth Animated Collapsible Content */}
+                  <div
+                    className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+                      isAiPanelMinimized
+                        ? 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                        : 'grid-rows-[1fr] opacity-100 pointer-events-auto'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="p-3.5 pt-1 space-y-2">
+                        
+                        {/* Card 1: Margin Alert */}
+                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <h4 className="text-xs font-bold text-gray-900 leading-snug">
+                              Harga Mentega naik 15%, Croissant rugi.
+                            </h4>
+                            <span className="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded flex-shrink-0">
+                              Rugi
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 leading-tight">
+                            Naikkan harga jual ke Rp13.000 agar margin aman di 23%.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleAdjustCroissantPrice}
+                            className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
+                          >
+                            <span>Sesuaikan Harga</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Card 2: Stock Alert */}
+                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <h4 className="text-xs font-bold text-gray-900 leading-snug">
+                              Stok Sirup Gula Aren sisa 5 cup lagi.
+                            </h4>
+                            <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">
+                              Kritis
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 leading-tight">
+                            Penjualan Kopi Susu tinggi. Pesan ulang sebelum jam sibuk.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => showToast('Membuka pesanan supplier bahan baku Gula Aren...')}
+                            className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
+                          >
+                            <span>Pesan Bahan Baku</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Card 3: Quick Insights */}
+                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-1.5">
+                          <h4 className="text-xs font-bold text-gray-900">
+                            Quick Insights
+                          </h4>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-500 text-[11px]">Prediksi Omzet</span>
+                              <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                                +3.5%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-500 text-[11px]">Target Margin</span>
+                              <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                                On track
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-500 text-[11px]">Evaluasi Menu</span>
+                              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100/60">
+                                2 Pending
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Suggested next steps (Pill buttons row) */}
+                        <div className="pt-1">
+                          <p className="text-[11px] font-bold text-gray-700 mb-1.5">
+                            Saran langkah cepat:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleAskAi(null, 'Review evaluasi harga dan margin produk')}
+                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
+                            >
+                              Review margin (2)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAskAi(null, 'Follow up supplier bahan baku')}
+                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
+                            >
+                              Stok bahan (1)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAskAi(null, 'Cek status kas laci kasir')}
+                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
+                            >
+                              Kas kasir
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* AI Chat Input Box (Compact) */}
+                        <form
+                          onSubmit={(e) => handleAskAi(e)}
+                          className="mt-2 bg-white border border-gray-200 rounded-xl px-3 py-1.5 flex items-center gap-2 focus-within:border-[#009B5B] focus-within:ring-2 focus-within:ring-emerald-100 transition-all"
+                        >
+                          <input
+                            type="text"
+                            value={aiQuestion}
+                            onChange={(e) => setAiQuestion(e.target.value)}
+                            placeholder="Tanya AI UntungJelas..."
+                            className="flex-1 text-xs text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!aiQuestion.trim()}
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
+                              aiQuestion.trim()
+                                ? 'bg-[#009B5B] text-white shadow-sm hover:bg-[#00874e]'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                          >
+                            <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                          </button>
+                        </form>
+
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
 
                 {/* Card: Status Laci Kasir */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex items-center justify-between">
