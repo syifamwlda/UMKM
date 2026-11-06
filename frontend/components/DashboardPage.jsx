@@ -1715,38 +1715,27 @@ export default function DashboardPage({ onLogout }) {
                       <div
                         key={item.id}
                         onClick={() => handleAddToCart(item)}
-                        className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden"
+                        className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B]/40 p-3 sm:p-3.5 shadow-2xs hover:shadow-sm transition-all cursor-pointer flex flex-col group active:scale-[0.98]"
                       >
-                        {/* Top Margin Badge (UntungJelas Smart Tag) */}
-                        <div className="flex items-center justify-end mb-1">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                            <TrendingUp className="w-3 h-3 stroke-[2.2]" />
-                            <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
-                          </span>
-                        </div>
-
                         {/* Product Image */}
-                        <div className="h-24 sm:h-28 w-full flex items-center justify-center my-1 relative">
+                        <div className="h-24 sm:h-28 w-full flex items-center justify-center mb-2">
                           <img
                             src={item.image}
                             alt={item.name}
-                            className="max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-300 drop-shadow-xs"
+                            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
 
                         {/* Product Details */}
-                        <div className="mt-1">
-                          <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
+                        <div>
+                          <h4 className="text-xs sm:text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2">
                             {item.name}
                           </h4>
-                          <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">
-                            {item.desc}
-                          </p>
                           <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs sm:text-sm font-black text-[#1E88E5]">
+                            <span className="text-xs sm:text-sm font-bold text-gray-900">
                               Rp{item.price.toLocaleString('id-ID')}
                             </span>
-                            <span className="w-6 h-6 rounded-lg bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-600 flex items-center justify-center text-xs font-bold transition-all shadow-2xs">
+                            <span className="w-6 h-6 rounded-full bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-500 flex items-center justify-center text-sm font-bold transition-all">
                               +
                             </span>
                           </div>
@@ -1755,25 +1744,21 @@ export default function DashboardPage({ onLogout }) {
                     ))}
                 </div>
 
-                {/* Bottom Bar: Akumulasi Untung Bersih Shift */}
-                <div className="pt-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-                  <div className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span className="w-7 h-7 rounded-xl bg-emerald-50 text-[#009B5B] flex items-center justify-center font-bold text-base flex-shrink-0">
-                      💰
-                    </span>
-                    <span>
-                      Akumulasi Untung Bersih Shift Ini: <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong> <span className="text-gray-400">/ Target Rp600.000</span>
-                    </span>
+                {/* Bottom Bar: Shift Profit */}
+                <div className="pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-gray-400">Untung shift ini</span>
+                    <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-24 sm:w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-28 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#009B5B] rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, Math.round((posShiftProfit / 600000) * 100))}%` }}
                       />
                     </div>
-                    <span className="text-[11px] font-bold text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded">
-                      {((posShiftProfit / 600000) * 100).toFixed(1)}%
+                    <span className="text-[11px] font-semibold text-gray-500">
+                      {((posShiftProfit / 600000) * 100).toFixed(0)}%
                     </span>
                   </div>
                 </div>
@@ -1890,49 +1875,27 @@ export default function DashboardPage({ onLogout }) {
                   )}
                 </div>
 
-                {/* Subtotal & Pajak */}
-                <div className="pt-2 border-t border-emerald-200/60 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-gray-700 block">Subtotal Pesanan</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Pajak Restoran / PB1 (0% UMKM)</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg sm:text-xl font-black text-[#009B5B] block">
-                      Rp{cartSubtotal.toLocaleString('id-ID')}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-medium">Rp0</span>
-                  </div>
+                {/* Subtotal */}
+                <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-600">Subtotal</span>
+                  <span className="text-lg sm:text-xl font-black text-[#009B5B]">
+                    Rp{cartSubtotal.toLocaleString('id-ID')}
+                  </span>
                 </div>
 
-                {/* Real-time HPP & Profit Card (UntungJelas Exclusive Feature) */}
-                <div className="bg-[#009B5B] text-white rounded-2xl p-3.5 space-y-2 shadow-sm">
-                  <div className="flex items-center justify-between text-xs text-emerald-100">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Package className="w-3.5 h-3.5" />
-                      <span>Modal Bahan Baku (HPP)</span>
-                    </div>
-                    <span className="font-semibold text-white">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                {/* HPP & Profit Summary */}
+                <div className="bg-white/70 border border-emerald-200/60 rounded-2xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Modal Bahan Baku (HPP)</span>
+                    <span className="font-semibold text-gray-700">Rp{cartHpp.toLocaleString('id-ID')}</span>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-100">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                      <span>Untung Bersih (Estimasi):</span>
-                    </div>
-                    <span className="text-base sm:text-lg font-black text-white">
-                      +Rp{cartProfit.toLocaleString('id-ID')}
-                    </span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Estimasi Untung</span>
+                    <span className="font-black text-[#009B5B]">+Rp{cartProfit.toLocaleString('id-ID')}</span>
                   </div>
-
-                  {/* Inner White Margin Pill */}
-                  <div className="bg-white rounded-xl p-2 text-gray-800 flex items-center justify-between gap-2 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-[#009B5B]">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      <span>Margin {cartMarginPct}%</span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-medium truncate">
-                      Langsung sinkron ke Kas Untung Bersih hari ini
-                    </span>
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100">
+                    <span className="text-gray-400">Margin</span>
+                    <span className="font-bold text-gray-700">{cartMarginPct}%</span>
                   </div>
                 </div>
 
@@ -1962,25 +1925,15 @@ export default function DashboardPage({ onLogout }) {
                   </div>
                 </div>
 
-                {/* Checkout & Submit Button */}
+                {/* Checkout Button */}
                 <button
                   type="button"
                   disabled={posCart.length === 0}
                   onClick={() => handleCompletePayment(posPaymentMethod)}
-                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
+                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-2 text-left">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold block leading-tight">Bayar & Catat Untung</span>
-                      <span className="text-[9px] text-emerald-100/90 font-medium block">HPP & Laba otomatis dibukukan</span>
-                    </div>
-                  </div>
-                  <span className="text-sm sm:text-base font-black">
-                    Rp{cartSubtotal.toLocaleString('id-ID')}
-                  </span>
+                  <span>Bayar Sekarang</span>
+                  <span className="font-black">Rp{cartSubtotal.toLocaleString('id-ID')}</span>
                 </button>
 
               </div>
