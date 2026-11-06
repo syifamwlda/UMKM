@@ -81,6 +81,24 @@ class HppService
     }
 
     /**
+     * Mengambil nilai modal per unit (HPP) dari sebuah produk.
+     */
+    public function getModalPerUnit(Product $product): float
+    {
+        $ingredients = $product->relationLoaded('ingredients')
+            ? $product->ingredients
+            : $product->ingredients()->get();
+
+        $calc = $this->calculate(
+            (float) $product->selling_price,
+            (float) $product->yield_qty,
+            $ingredients
+        );
+
+        return (float) $calc['modal_per_unit'];
+    }
+
+    /**
      * Menyimpan produk baru beserta bahan bakunya di dalam database transaction.
      */
     public function createProduct(User $user, array $data): array

@@ -455,8 +455,10 @@ Mencatat penjualan baru. Backend secara otomatis mengambil snapshot `unit_price`
 ---
 
 #### 2. `GET /api/transactions`
-Riwayat transaksi user yang login.
+Riwayat transaksi user yang login dengan filter tanggal (default hari ini).
 - **Header**: `Authorization: Bearer <token>`
+- **Query Params**:
+  - `date`: `YYYY-MM-DD` (opsional, default: tanggal hari ini `now()->toDateString()`), atau `all` untuk seluruh riwayat.
 - **Response `200 OK`**:
 ```json
 {
@@ -467,11 +469,74 @@ Riwayat transaksi user yang login.
       "uuid": "8f3b7c2a-9e12-4f33-b412-1d57e84cb123",
       "total": 41000,
       "total_cost": 21500,
+      "profit": 19500,
       "total_profit": 19500,
-      "paid_at": "2026-11-01 10:30:00",
-      "items_count": 2
+      "paid_at": "2026-11-01T10:30:00.000000Z",
+      "receipt_url": "/struk/8f3b7c2a-9e12-4f33-b412-1d57e84cb123",
+      "items_count": 2,
+      "items": [
+        {
+          "id": 1,
+          "product_id": 1,
+          "product_name": "Es Kopi Susu Gula Aren",
+          "qty": 2,
+          "unit_price": 18000,
+          "unit_cost": 8500,
+          "subtotal_price": 36000,
+          "subtotal_cost": 17000,
+          "subtotal_profit": 19000
+        }
+      ]
     }
   ]
+}
+```
+
+---
+
+#### 3. `GET /api/transactions/{id}`
+Melihat detail satu transaksi beserta rincian item, snapshot harga, modal, dan profit transaksi.
+- **Header**: `Authorization: Bearer <token>`
+- **Parameter URL**: `id` (numeric ID atau UUID string)
+- **Response `200 OK`**:
+```json
+{
+  "message": "Detail transaksi berhasil dimuat.",
+  "data": {
+    "id": 1,
+    "uuid": "8f3b7c2a-9e12-4f33-b412-1d57e84cb123",
+    "total": 41000,
+    "total_cost": 21500,
+    "profit": 19500,
+    "total_profit": 19500,
+    "paid_at": "2026-11-01T10:30:00.000000Z",
+    "receipt_url": "/struk/8f3b7c2a-9e12-4f33-b412-1d57e84cb123",
+    "items_count": 2,
+    "items": [
+      {
+        "id": 1,
+        "product_id": 1,
+        "product_name": "Es Kopi Susu Gula Aren",
+        "qty": 2,
+        "unit_price": 18000,
+        "unit_cost": 8500,
+        "subtotal_price": 36000,
+        "subtotal_cost": 17000,
+        "subtotal_profit": 19000
+      },
+      {
+        "id": 2,
+        "product_id": 2,
+        "product_name": "Brownies Panggang Mini",
+        "qty": 1,
+        "unit_price": 5000,
+        "unit_cost": 4500,
+        "subtotal_price": 5000,
+        "subtotal_cost": 4500,
+        "subtotal_profit": 500
+      }
+    ]
+  }
 }
 ```
 

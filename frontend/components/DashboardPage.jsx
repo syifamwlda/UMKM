@@ -43,8 +43,11 @@ import {
   Package,
   Star,
   Printer,
-  Share2
+  Share2,
+  Loader2
 } from 'lucide-react'
+import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 // Daily cafe performance records for September, October & November 2026
 const DAILY_RECORDS = {
@@ -632,153 +635,54 @@ export default function DashboardPage({ onLogout }) {
   ])
 
   // ================= KASIR (POS) STATE =================
-  const [posCatalog] = useState([
-    {
-      id: 1,
-      name: 'Cafe Latte Gayo',
-      category: 'Minuman',
-      desc: 'Espresso double shot..',
-      price: 22000,
-      hpp: 13900,
-      profit: 8100,
-      marginPct: 37,
-      image: '/assets/kasir/cafe-latte.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: true,
-    },
-    {
-      id: 2,
-      name: 'Kopi Susu Gula Aren',
-      category: 'Minuman',
-      desc: 'Espresso blend, gula..',
-      price: 18000,
-      hpp: 11800,
-      profit: 6200,
-      marginPct: 34,
-      image: '/assets/kasir/kopi-susu.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: true,
-      defaultNote: 'Level Gula: 50%',
-    },
-    {
-      id: 3,
-      name: 'Matcha Latte Kyoto',
-      category: 'Minuman',
-      desc: 'Pure Kyoto Matcha..',
-      price: 24000,
-      hpp: 15000,
-      profit: 9000,
-      marginPct: 38,
-      image: '/assets/kasir/matcha-latte.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: false,
-    },
-    {
-      id: 4,
-      name: 'Roti Bakar Coklat',
-      category: 'Makanan',
-      desc: 'Roti brioche panggang..',
-      price: 16000,
-      hpp: 10800,
-      profit: 5200,
-      marginPct: 32,
-      image: '/assets/kasir/roti-bakar.png',
-      tagColor: 'bg-purple-50 text-purple-700',
-      popular: true,
-    },
-    {
-      id: 5,
-      name: 'Croissant Cokelat',
-      category: 'Pastry & Bakery',
-      desc: 'French butter pastry..',
-      price: 15000,
-      hpp: 10500,
-      profit: 4500,
-      marginPct: 30,
-      image: '/assets/kasir/croissant.png',
-      tagColor: 'bg-orange-50 text-orange-700',
-      popular: true,
-      defaultNote: 'Penyajian: Dihangatkan',
-    },
-    {
-      id: 6,
-      name: 'Spaghetti Aglio Olio',
-      category: 'Makanan',
-      desc: 'Tumisan smoked beef..',
-      price: 28000,
-      hpp: 16800,
-      profit: 11200,
-      marginPct: 40,
-      image: '/assets/kasir/spaghetti.png',
-      tagColor: 'bg-purple-50 text-purple-700',
-      popular: false,
-    },
-    {
-      id: 7,
-      name: 'Cold Brew Coffee',
-      category: 'Minuman',
-      desc: 'Kopi Arabica steeped..',
-      price: 20000,
-      hpp: 12600,
-      profit: 7400,
-      marginPct: 37,
-      image: '/assets/kasir/cold-brew.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: false,
-    },
-    {
-      id: 8,
-      name: 'Almond Croissant',
-      category: 'Pastry & Bakery',
-      desc: 'Flaky crust pastry..',
-      price: 18000,
-      hpp: 12200,
-      profit: 5800,
-      marginPct: 32,
-      image: '/assets/kasir/almond-croissant.png',
-      tagColor: 'bg-orange-50 text-orange-700',
-      popular: false,
-    },
-  ])
+  const { user } = useAuth()
+  const [posCatalog, setPosCatalog] = useState([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [posCart, setPosCart] = useState([])
 
-  // Cart matches the user's mockup:
-  // Kopi Susu Gula Aren x2 (36.000) + Croissant Cokelat x1 (15.000) + Cafe Latte Gayo x1 (22.000) = Rp 73.000
-  const [posCart, setPosCart] = useState([
-    {
-      id: 2,
-      name: 'Kopi Susu Gula Aren',
-      price: 18000,
-      hpp: 11800,
-      qty: 2,
-      note: 'Level Gula: 50%',
-      image: '/assets/kasir/kopi-susu.png'
-    },
-    {
-      id: 5,
-      name: 'Croissant Cokelat',
-      price: 15000,
-      hpp: 10500,
-      qty: 1,
-      note: 'Penyajian: Dihangatkan',
-      image: '/assets/kasir/croissant.png'
-    },
-    {
-      id: 1,
-      name: 'Cafe Latte Gayo',
-      price: 22000,
-      hpp: 10000,
-      qty: 1,
-      note: 'Normal ice & sweet',
-      image: '/assets/kasir/cafe-latte.png'
+  const fetchPosProducts = async () => {
+    try {
+      setLoadingProducts(true)
+      const res = await api.get('/products')
+      const productsData = (res.data?.data || []).map((p) => {
+        const price = Number(p.selling_price) || 0
+        const hpp = Number(p.modal_per_unit) || 0
+        const profit = Math.max(0, price - hpp)
+        const marginPct = price > 0 ? ((profit / price) * 100).toFixed(1) : '0'
+        return {
+          id: p.id,
+          name: p.name,
+          category: 'Semua',
+          desc: p.ingredients && p.ingredients.length > 0
+            ? p.ingredients.map((i) => i.name).join(', ')
+            : 'Resep terstandarisasi',
+          price: price,
+          hpp: hpp,
+          profit: profit,
+          marginPct: marginPct,
+          image: null,
+          popular: false,
+        }
+      })
+      setPosCatalog(productsData)
+    } catch (err) {
+      console.error('Gagal memuat produk kasir:', err)
+    } finally {
+      setLoadingProducts(false)
     }
-  ])
+  }
+
+  useEffect(() => {
+    fetchPosProducts()
+  }, [])
 
   const [posCategory, setPosCategory] = useState('Semua')
   const [posSearch, setPosSearch] = useState('')
   const [posTable, setPosTable] = useState('Meja 04')
   const [posOrderType, setPosOrderType] = useState('Dine-in')
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
-  const [posShiftProfit, setPosShiftProfit] = useState(482500)
+  const [posShiftProfit, setPosShiftProfit] = useState(0)
   const [posReceiptModal, setPosReceiptModal] = useState(null)
 
   const showToast = (msg) => {
@@ -1055,27 +959,58 @@ export default function DashboardPage({ onLogout }) {
     showToast('Pesanan telah di-reset')
   }
 
-  const handleCompletePayment = (method) => {
-    if (posCart.length === 0) return
-    const totalTrx = cartSubtotal
-    const profitEst = cartProfit
-    const receiptData = {
-      txId: '#TX-' + Math.floor(100 + Math.random() * 900),
-      table: posTable,
-      orderType: posOrderType,
-      method: method,
-      items: [...posCart],
-      subtotal: totalTrx,
-      hpp: cartHpp,
-      profit: profitEst,
-      margin: cartMarginPct,
-      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+  const handleCompletePayment = async (method) => {
+    if (posCart.length === 0 || checkoutLoading) return
+
+    setCheckoutLoading(true)
+    try {
+      const payload = {
+        paid_at: new Date().toISOString(),
+        items: posCart.map((item) => ({
+          product_id: item.id,
+          qty: item.qty,
+        })),
+      }
+
+      const res = await api.post('/transactions', payload)
+      const data = res.data?.data
+
+      const profitReal = Number(data?.profit ?? data?.total_profit ?? cartProfit)
+      const totalReal = Number(data?.total ?? cartSubtotal)
+      const costReal = Number(data?.total_cost ?? cartHpp)
+      const shortUuid = data?.uuid ? data.uuid.substring(0, 8).toUpperCase() : Math.floor(100 + Math.random() * 900)
+
+      const receiptData = {
+        txId: `#TX-${shortUuid}`,
+        uuid: data?.uuid,
+        receiptUrl: data?.receipt_url,
+        table: posTable,
+        orderType: posOrderType,
+        method: method,
+        items: [...posCart],
+        subtotal: totalReal,
+        hpp: costReal,
+        profit: profitReal,
+        margin: totalReal > 0 ? ((profitReal / totalReal) * 100).toFixed(1) : cartMarginPct,
+        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      }
+
+      setPosShiftProfit((prev) => prev + profitReal)
+      setPosCart([])
+      setPosReceiptModal(receiptData)
+      updateRealtimeData(totalReal, profitReal, `Kasir: ${method}`)
+      showToast(`Transaksi berhasil via ${method}! Laba Rp${profitReal.toLocaleString('id-ID')} dicatat.`)
+    } catch (err) {
+      console.error('Gagal mencatat transaksi:', err)
+      const errorMsg =
+        err.response?.data?.message ||
+        (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(' ') : null) ||
+        'Gagal mencatat transaksi kasir. Pastikan semua produk telah memiliki modal HPP.'
+      showToast(`Gagal: ${errorMsg}`)
+      alert(`Pemberitahuan Kasir:\n${errorMsg}`)
+    } finally {
+      setCheckoutLoading(false)
     }
-    setPosShiftProfit((prev) => prev + profitEst)
-    setPosCart([])
-    setPosReceiptModal(receiptData)
-    updateRealtimeData(totalTrx, profitEst, `Kasir: ${method}`)
-    showToast(`Transaksi berhasil via ${method}! Struk tercetak.`)
   }
 
   const menuUtama = [
@@ -1201,7 +1136,13 @@ export default function DashboardPage({ onLogout }) {
                   <button
                     key={item.name}
                     type="button"
-                    onClick={() => setActiveMenu(item.name)}
+                    onClick={() => {
+                      if (item.name === 'Katalog & HPP') {
+                        window.location.hash = '#produk'
+                      } else {
+                        setActiveMenu(item.name)
+                      }
+                    }}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium transition-all cursor-pointer relative ${
                       isActive
                         ? 'text-gray-900 font-bold bg-emerald-50/50'
@@ -1300,7 +1241,11 @@ export default function DashboardPage({ onLogout }) {
                       <button
                         key={item.name}
                         onClick={() => {
-                          setActiveMenu(item.name)
+                          if (item.name === 'Katalog & HPP') {
+                            window.location.hash = '#produk'
+                          } else {
+                            setActiveMenu(item.name)
+                          }
                           setMobileSidebarOpen(false)
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold ${
@@ -1325,7 +1270,11 @@ export default function DashboardPage({ onLogout }) {
                       <button
                         key={item.name}
                         onClick={() => {
-                          setActiveMenu(item.name)
+                          if (item.name === 'Katalog & HPP') {
+                            window.location.hash = '#produk'
+                          } else {
+                            setActiveMenu(item.name)
+                          }
                           setMobileSidebarOpen(false)
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
@@ -1697,62 +1646,94 @@ export default function DashboardPage({ onLogout }) {
 
                 {/* Product Cards Grid (3 Columns) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                  {posCatalog
-                    .filter((p) => {
-                      const matchesCategory =
-                        posCategory === 'Semua'
-                          ? true
-                          : posCategory === 'Favorit'
-                          ? p.popular
-                          : p.category === posCategory
-                      const matchesSearch =
-                        !posSearch ||
-                        p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
-                        p.desc.toLowerCase().includes(posSearch.toLowerCase())
-                      return matchesCategory && matchesSearch
-                    })
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleAddToCart(item)}
-                        className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden"
+                  {loadingProducts ? (
+                    <div className="col-span-2 sm:col-span-3 py-16 text-center text-gray-400">
+                      <Loader2 className="w-7 h-7 animate-spin mx-auto text-[#009B5B] mb-2" />
+                      <p className="text-xs font-medium">Memuat katalog produk...</p>
+                    </div>
+                  ) : posCatalog.length === 0 ? (
+                    <div className="col-span-2 sm:col-span-3 py-12 px-4 text-center bg-white rounded-2xl border border-dashed border-gray-200">
+                      <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
+                        <Package className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-800">Belum ada produk, tambah dulu di Katalog & HPP</p>
+                      <p className="text-xs text-gray-400 mt-1 mb-4">Tambahkan resep dan modal produk Anda agar siap dijual di kasir.</p>
+                      <button
+                        type="button"
+                        onClick={() => { window.location.hash = '#produk' }}
+                        className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
                       >
-                        {/* Top Margin Badge (UntungJelas Smart Tag) */}
-                        <div className="flex items-center justify-end mb-1">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                            <TrendingUp className="w-3 h-3 stroke-[2.2]" />
-                            <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
-                          </span>
-                        </div>
-
-                        {/* Product Image */}
-                        <div className="h-24 sm:h-28 w-full flex items-center justify-center my-1 relative">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-300 drop-shadow-xs"
-                          />
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="mt-1">
-                          <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
-                            {item.name}
-                          </h4>
-                          <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">
-                            {item.desc}
-                          </p>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs sm:text-sm font-black text-[#1E88E5]">
-                              Rp{item.price.toLocaleString('id-ID')}
-                            </span>
-                            <span className="w-6 h-6 rounded-lg bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-600 flex items-center justify-center text-xs font-bold transition-all shadow-2xs">
-                              +
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Buka Katalog & HPP</span>
+                      </button>
+                    </div>
+                  ) : (
+                    posCatalog
+                      .filter((p) => {
+                        const matchesCategory =
+                          posCategory === 'Semua'
+                            ? true
+                            : posCategory === 'Favorit'
+                            ? p.popular
+                            : p.category === posCategory
+                        const matchesSearch =
+                          !posSearch ||
+                          p.name.toLowerCase().includes(posSearch.toLowerCase()) ||
+                          p.desc.toLowerCase().includes(posSearch.toLowerCase())
+                        return matchesCategory && matchesSearch
+                      })
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleAddToCart(item)}
+                          className="bg-white rounded-2xl border border-gray-100 hover:border-[#009B5B] p-3 sm:p-3.5 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98] relative overflow-hidden"
+                        >
+                          {/* Top Margin Badge (UntungJelas Smart Tag) */}
+                          <div className="flex items-center justify-end mb-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
+                              <TrendingUp className="w-3 h-3 stroke-[2.2]" />
+                              <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
                             </span>
                           </div>
+
+                          {/* Product Image / Consistent Placeholder */}
+                          <div className="h-24 sm:h-28 w-full flex items-center justify-center my-1 relative">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-300 drop-shadow-xs"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-100/80 border border-emerald-200/60 flex flex-col items-center justify-center text-emerald-800 shadow-xs group-hover:scale-105 transition-transform">
+                                <span className="text-base sm:text-lg font-black tracking-wider text-[#009B5B]">
+                                  {item.name ? item.name.substring(0, 2).toUpperCase() : 'UJ'}
+                                </span>
+                                <span className="text-[9px] font-semibold text-emerald-600/80">Menu</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Product Details */}
+                          <div className="mt-1">
+                            <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
+                              {item.name}
+                            </h4>
+                            <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">
+                              {item.desc}
+                            </p>
+                            <div className="mt-2 flex items-center justify-between">
+                              <span className="text-xs sm:text-sm font-black text-[#1E88E5]">
+                                Rp{item.price.toLocaleString('id-ID')}
+                              </span>
+                              <span className="w-6 h-6 rounded-lg bg-gray-100 group-hover:bg-[#009B5B] group-hover:text-white text-gray-600 flex items-center justify-center text-xs font-bold transition-all shadow-2xs">
+                                +
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                  )}
                 </div>
 
                 {/* Bottom Bar: Akumulasi Untung Bersih Shift */}
@@ -1842,7 +1823,13 @@ export default function DashboardPage({ onLogout }) {
                         className="bg-white rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center gap-3 transition-all"
                       >
                         <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
-                          <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-[#009B5B] flex items-center justify-center text-xs font-black border border-emerald-100">
+                              {item.name ? item.name.substring(0, 2).toUpperCase() : 'UJ'}
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -1965,17 +1952,25 @@ export default function DashboardPage({ onLogout }) {
                 {/* Checkout & Submit Button */}
                 <button
                   type="button"
-                  disabled={posCart.length === 0}
+                  disabled={posCart.length === 0 || checkoutLoading}
                   onClick={() => handleCompletePayment(posPaymentMethod)}
                   className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2 text-left">
                     <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                      {checkoutLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                      )}
                     </div>
                     <div>
-                      <span className="text-xs font-bold block leading-tight">Bayar & Catat Untung</span>
-                      <span className="text-[9px] text-emerald-100/90 font-medium block">HPP & Laba otomatis dibukukan</span>
+                      <span className="text-xs font-bold block leading-tight">
+                        {checkoutLoading ? 'Memproses Transaksi...' : 'Bayar & Catat Untung'}
+                      </span>
+                      <span className="text-[9px] text-emerald-100/90 font-medium block">
+                        {checkoutLoading ? 'Menyimpan ke server...' : 'HPP & Laba otomatis dibukukan'}
+                      </span>
                     </div>
                   </div>
                   <span className="text-sm sm:text-base font-black">
@@ -2004,7 +1999,7 @@ export default function DashboardPage({ onLogout }) {
                   {/* Struk Paper Preview */}
                   <div className="my-4 p-4 bg-gray-50 rounded-2xl border border-gray-200/80 text-left text-xs space-y-2">
                     <div className="flex justify-between font-bold text-gray-900 pb-2 border-b border-gray-200">
-                      <span>Kedai Kopi Nabila</span>
+                      <span>{user?.business_name || 'Kedai Usaha'}</span>
                       <span>{posReceiptModal.time}</span>
                     </div>
                     <div className="text-[11px] text-gray-500">
