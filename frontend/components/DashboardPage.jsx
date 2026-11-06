@@ -1627,38 +1627,6 @@ export default function DashboardPage({ onLogout }) {
         {/* ================= IF ACTIVE MENU IS KASIR (POS) ================= */}
         {activeMenu === 'Kasir' ? (
           <div className="space-y-4 animate-fade-in">
-            {/* Top Bar for Kasir (Clean Navigation - No Shift Pagi, No Rata-rata Margin Hari Ini) */}
-            <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setActiveMenu('Dashboard')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-xl border border-gray-200 shadow-2xs transition-all active:scale-95 cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Kembali ke Dashboard</span>
-                </button>
-                <div className="hidden sm:block h-4 w-px bg-gray-200" />
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#009B5B] animate-pulse" />
-                  <span className="text-xs sm:text-[13px] font-bold text-gray-900">
-                    Kasir POS Pintar
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                <div className="text-right hidden sm:block">
-                  <span className="text-xs font-bold text-gray-800 block leading-tight">Kedai Kopi Nabila</span>
-                  <span className="text-[10px] text-gray-400 font-medium">Kasir #1 Aktif</span>
-                </div>
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-                  alt="Nabila"
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/20"
-                />
-              </div>
-            </div>
 
             {/* Main Dual-Pane POS Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
@@ -1768,9 +1736,6 @@ export default function DashboardPage({ onLogout }) {
 
                         {/* Product Details */}
                         <div className="mt-1">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${item.tagColor} inline-block mb-1`}>
-                            {item.category}
-                          </span>
                           <h4 className="text-xs sm:text-[13px] font-bold text-gray-900 group-hover:text-[#009B5B] transition-colors leading-snug line-clamp-1">
                             {item.name}
                           </h4>
