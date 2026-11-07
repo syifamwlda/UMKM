@@ -776,6 +776,24 @@ export default function DashboardPage({ onLogout }) {
   const [posCategory, setPosCategory] = useState('Semua')
   const [posSearch, setPosSearch] = useState('')
   const [posTable, setPosTable] = useState('Meja 04')
+  const [isTableModalOpen, setIsTableModalOpen] = useState(false)
+  const [selectedTableArea, setSelectedTableArea] = useState('Semua')
+
+  const RESTAURANT_TABLES = [
+    { id: 'T-01', name: 'Meja 01', area: 'Indoor (AC)', seats: 2, status: 'Terisi' },
+    { id: 'T-02', name: 'Meja 02', area: 'Indoor (AC)', seats: 2, status: 'Tersedia' },
+    { id: 'T-03', name: 'Meja 03', area: 'Indoor (AC)', seats: 4, status: 'Tersedia' },
+    { id: 'T-04', name: 'Meja 04', area: 'Indoor (AC)', seats: 4, status: 'Tersedia' },
+    { id: 'T-05', name: 'Meja 05', area: 'Indoor (AC)', seats: 6, status: 'Tersedia' },
+    { id: 'T-06', name: 'Meja 06', area: 'Indoor (AC)', seats: 4, status: 'Terisi' },
+    { id: 'T-07', name: 'Meja 07', area: 'Outdoor', seats: 2, status: 'Tersedia' },
+    { id: 'T-08', name: 'Meja 08', area: 'Outdoor', seats: 4, status: 'Tersedia' },
+    { id: 'T-09', name: 'Meja 09', area: 'Outdoor', seats: 4, status: 'Terisi' },
+    { id: 'T-10', name: 'Meja 10', area: 'Outdoor', seats: 6, status: 'Tersedia' },
+    { id: 'T-B1', name: 'Bar 01', area: 'Bar Depan', seats: 1, status: 'Tersedia' },
+    { id: 'T-B2', name: 'Bar 02', area: 'Bar Depan', seats: 1, status: 'Tersedia' },
+    { id: 'T-V1', name: 'VIP 01', area: 'Ruang VIP', seats: 8, status: 'Tersedia' },
+  ]
   const [posOrderType, setPosOrderType] = useState('Dine-in')
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
   const [posShiftProfit, setPosShiftProfit] = useState(482500)
@@ -1658,10 +1676,10 @@ export default function DashboardPage({ onLogout }) {
                 {/* Category Filter Pills Row */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {[
-                    { id: 'Semua', label: 'Semua (24)', icon: LayoutGrid },
-                    { id: 'Minuman', label: 'Minuman (12)', icon: Coffee },
-                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery (6)', icon: Croissant },
-                    { id: 'Makanan', label: 'Makanan (6)', icon: Utensils },
+                    { id: 'Semua', label: 'Semua', icon: LayoutGrid },
+                    { id: 'Minuman', label: 'Minuman', icon: Coffee },
+                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
+                    { id: 'Makanan', label: 'Makanan', icon: Utensils },
                   ].map((cat) => {
                     const CatIcon = cat.icon
                     const isSelected = posCategory === cat.id
@@ -1792,21 +1810,23 @@ export default function DashboardPage({ onLogout }) {
                   </div>
                 </div>
 
-                {/* Table selector — simple text button */}
+                {/* Table selector — opens restaurant tables modal */}
                 <button
                   type="button"
-                  onClick={() => {
-                    const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
-                    const curIdx = tables.indexOf(posTable)
-                    const nextTable = tables[(curIdx + 1) % tables.length]
-                    setPosTable(nextTable)
-                    showToast(`Pindah ke ${nextTable}`)
-                  }}
-                  className="w-full py-1.5 bg-white/60 hover:bg-white border border-dashed border-emerald-300 rounded-xl text-xs font-medium text-gray-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  onClick={() => setIsTableModalOpen(true)}
+                  className="w-full py-2 px-3 bg-white/80 hover:bg-white border border-dashed border-emerald-300 hover:border-emerald-500 rounded-xl text-xs font-medium text-gray-700 flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                 >
-                  <Store className="w-3.5 h-3.5 text-gray-400" />
-                  <span>{posTable}</span>
-                  <ChevronDown className="w-3 h-3 text-gray-400" />
+                  <div className="flex items-center gap-1.5">
+                    <Store className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="font-semibold text-gray-900">{posTable}</span>
+                    <span className="text-[10px] text-gray-400 font-normal">
+                      • {RESTAURANT_TABLES.find(t => t.name === posTable)?.area || 'Indoor'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-700 group-hover:text-emerald-800">
+                    <span>Pilih Meja</span>
+                    <ChevronDown className="w-3 h-3 text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
+                  </div>
                 </button>
 
                 {/* Cart Items List */}
@@ -1895,20 +1915,30 @@ export default function DashboardPage({ onLogout }) {
                 <div className="flex items-center gap-2">
                   {[
                     { id: 'Tunai', label: 'Tunai' },
-                    { id: 'QRIS', label: 'QRIS' },
+                    { id: 'QRIS', label: 'QRIS', isLogo: true },
                     { id: 'Kartu/Debit', label: 'Debit' },
                   ].map((m) => (
                     <button
                       key={m.id}
                       type="button"
                       onClick={() => setPosPaymentMethod(m.id)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 h-9 ${
                         posPaymentMethod === m.id
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                          ? 'bg-gray-900 text-white shadow-xs'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      {m.label}
+                      {m.isLogo ? (
+                        <img
+                          src="/assets/kasir/qris-logo.png"
+                          alt="QRIS"
+                          className={`h-3.5 sm:h-4 max-w-[54px] object-contain transition-all ${
+                            posPaymentMethod === m.id ? 'brightness-0 invert' : ''
+                          }`}
+                        />
+                      ) : (
+                        <span>{m.label}</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -1996,6 +2026,155 @@ export default function DashboardPage({ onLogout }) {
                     >
                       Tutup & Pesanan Baru
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal: Pemilihan Meja Restoran (Interactive Table Pop-up) */}
+            {isTableModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+                <div className="bg-white w-full max-w-xl rounded-3xl p-5 sm:p-6 shadow-2xl border border-gray-100 animate-scale-up relative max-h-[90vh] flex flex-col">
+                  {/* Modal Header */}
+                  <div className="flex items-start justify-between pb-3 border-b border-gray-100">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#009B5B] flex items-center justify-center">
+                          <Store className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                            Pilih Meja Restoran
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Kedai Kopi Nabila • Meja saat ini: <strong className="text-[#009B5B]">{posTable}</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsTableModalOpen(false)}
+                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center cursor-pointer transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Area Filter Tabs */}
+                  <div className="flex items-center gap-1.5 py-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {['Semua', 'Indoor (AC)', 'Outdoor', 'Bar Depan', 'Ruang VIP'].map((area) => (
+                      <button
+                        key={area}
+                        type="button"
+                        onClick={() => setSelectedTableArea(area)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                          selectedTableArea === area
+                            ? 'bg-gray-900 text-white shadow-xs'
+                            : 'bg-gray-100/80 hover:bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {area}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tables Grid */}
+                  <div className="flex-1 overflow-y-auto py-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                    {RESTAURANT_TABLES
+                      .filter((t) => selectedTableArea === 'Semua' || t.area === selectedTableArea)
+                      .map((table) => {
+                        const isCurrent = posTable === table.name
+                        const isOccupied = table.status === 'Terisi'
+                        return (
+                          <button
+                            key={table.id}
+                            type="button"
+                            onClick={() => {
+                              setPosTable(table.name)
+                              if (posOrderType !== 'Dine-in') setPosOrderType('Dine-in')
+                              showToast(`Meja pesanan diset ke: ${table.name}`)
+                              setIsTableModalOpen(false)
+                            }}
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between relative group ${
+                              isCurrent
+                                ? 'bg-emerald-50/90 border-[#009B5B] ring-2 ring-emerald-500/30 shadow-xs'
+                                : isOccupied
+                                ? 'bg-gray-50/80 border-gray-200 hover:border-gray-300'
+                                : 'bg-white border-gray-200/90 hover:border-emerald-400 hover:shadow-xs'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <span className="font-bold text-xs sm:text-[13px] text-gray-900">
+                                {table.name}
+                              </span>
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  isCurrent
+                                    ? 'bg-[#009B5B] ring-2 ring-emerald-300 animate-pulse'
+                                    : isOccupied
+                                    ? 'bg-amber-400'
+                                    : 'bg-emerald-500'
+                                }`}
+                              />
+                            </div>
+
+                            <div className="mt-3">
+                              <span className="text-[10px] text-gray-400 block">
+                                {table.seats} Kursi • {table.area}
+                              </span>
+                              <span
+                                className={`text-[10px] font-semibold mt-1 inline-block ${
+                                  isCurrent
+                                    ? 'text-[#009B5B]'
+                                    : isOccupied
+                                    ? 'text-amber-600'
+                                    : 'text-emerald-600'
+                                }`}
+                              >
+                                {isCurrent ? 'Sedang Dipilih' : isOccupied ? 'Terisi' : 'Tersedia'}
+                              </span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                  </div>
+
+                  {/* Modal Footer: Quick Actions & Status Legend */}
+                  <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+                    <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" /> Tersedia
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-400" /> Terisi
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-[#009B5B]" /> Dipilih
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPosTable('Take-away (Tanpa Meja)')
+                          setPosOrderType('Take-away')
+                          showToast('Pesanan diset ke Take-away')
+                          setIsTableModalOpen(false)
+                        }}
+                        className="flex-1 sm:flex-none py-1.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                      >
+                        Bungkus / Take-away
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsTableModalOpen(false)}
+                        className="flex-1 sm:flex-none py-1.5 px-3 bg-gray-900 hover:bg-black text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                      >
+                        Tutup
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
