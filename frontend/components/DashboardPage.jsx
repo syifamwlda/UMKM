@@ -1766,89 +1766,81 @@ export default function DashboardPage({ onLogout }) {
               </div>
 
               {/* ================= RIGHT PANE: ORDER / CART PANEL (4 COLS) ================= */}
-              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-3">
                 
-                {/* Header: Pesanan Saat Ini + #TX-554 */}
-                <div className="flex items-center justify-between pb-1">
-                  <h3 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
-                    Pesanan Saat Ini
-                  </h3>
-                  <span className="text-[11px] font-extrabold text-[#009B5B] bg-emerald-100/80 px-2.5 py-1 rounded-xl">
-                    #TX-554
-                  </span>
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-gray-900">Pesanan</h3>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextType = posOrderType === 'Dine-in' ? 'Take-away' : 'Dine-in'
+                        setPosOrderType(nextType)
+                      }}
+                      className="py-1 px-2.5 bg-white border border-gray-200/80 rounded-lg text-xs font-medium text-gray-600 hover:border-gray-300 transition-all cursor-pointer"
+                    >
+                      {posOrderType}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetCart}
+                      className="py-1 px-2 bg-white border border-gray-200/80 rounded-lg text-xs text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
                 </div>
 
-                {/* Table & Order Settings Buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
-                      const curIdx = tables.indexOf(posTable)
-                      const nextTable = tables[(curIdx + 1) % tables.length]
-                      setPosTable(nextTable)
-                      showToast(`Pindah ke ${nextTable}`)
-                    }}
-                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <Store className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{posTable}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextType = posOrderType === 'Dine-in' ? 'Take-away' : 'Dine-in'
-                      setPosOrderType(nextType)
-                      showToast(`Pesanan diset: ${nextType}`)
-                    }}
-                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <Utensils className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{posOrderType}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleResetCart}
-                    className="py-1.5 px-2 bg-white hover:bg-rose-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-rose-600 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Reset</span>
-                  </button>
-                </div>
+                {/* Table selector — simple text button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
+                    const curIdx = tables.indexOf(posTable)
+                    const nextTable = tables[(curIdx + 1) % tables.length]
+                    setPosTable(nextTable)
+                    showToast(`Pindah ke ${nextTable}`)
+                  }}
+                  className="w-full py-1.5 bg-white/60 hover:bg-white border border-dashed border-emerald-300 rounded-xl text-xs font-medium text-gray-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Store className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{posTable}</span>
+                  <ChevronDown className="w-3 h-3 text-gray-400" />
+                </button>
 
                 {/* Cart Items List */}
-                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
+                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
                   {posCart.length > 0 ? (
                     posCart.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center gap-3 transition-all"
+                        className="bg-white rounded-xl p-2.5 border border-gray-100 flex items-center gap-2.5"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
                           <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-1">
-                            <h5 className="text-xs font-bold text-gray-900 truncate">{item.name}</h5>
+                            <h5 className="text-xs font-semibold text-gray-900 truncate">{item.name}</h5>
                             <button
                               type="button"
                               onClick={() => handleRemoveFromCart(item.id)}
-                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer"
-                              title="Hapus menu"
+                              className="text-gray-300 hover:text-rose-400 p-0.5 transition-colors cursor-pointer flex-shrink-0"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
-                          <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note || item.desc}</p>
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-lg p-0.5">
+                          {item.note && (
+                            <p className="text-[10px] text-gray-400 truncate">{item.note}</p>
+                          )}
+                          <div className="flex items-center justify-between mt-1.5">
+                            <div className="flex items-center gap-1 bg-gray-100/80 rounded-lg p-0.5">
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, -1)}
-                                className="w-5 h-5 rounded-md bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                                className="w-5 h-5 rounded-md bg-white text-gray-600 flex items-center justify-center font-bold text-xs cursor-pointer hover:bg-gray-50"
                               >
                                 -
                               </button>
@@ -1856,12 +1848,12 @@ export default function DashboardPage({ onLogout }) {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, 1)}
-                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                                className="w-5 h-5 rounded-md bg-[#009B5B] text-white flex items-center justify-center font-bold text-xs cursor-pointer"
                               >
                                 +
                               </button>
                             </div>
-                            <span className="text-xs sm:text-[13px] font-black text-gray-900">
+                            <span className="text-xs font-bold text-gray-900">
                               Rp{(item.price * item.qty).toLocaleString('id-ID')}
                             </span>
                           </div>
@@ -1869,60 +1861,56 @@ export default function DashboardPage({ onLogout }) {
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 text-center text-xs text-gray-400 bg-white/70 rounded-2xl border border-dashed border-emerald-200 p-4">
-                      Keranjang kosong. Pilih menu di sebelah kiri untuk menambah pesanan.
+                    <div className="py-8 text-center text-xs text-gray-400">
+                      Belum ada menu dipilih
                     </div>
                   )}
                 </div>
 
                 {/* Subtotal */}
                 <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-600">Subtotal</span>
-                  <span className="text-lg sm:text-xl font-black text-[#009B5B]">
+                  <span className="text-xs font-semibold text-gray-600">Total</span>
+                  <span className="text-lg font-black text-[#009B5B]">
                     Rp{cartSubtotal.toLocaleString('id-ID')}
                   </span>
                 </div>
 
                 {/* HPP & Profit Summary */}
-                <div className="bg-white/70 border border-emerald-200/60 rounded-2xl p-3 space-y-1.5">
+                <div className="bg-white/70 border border-emerald-200/60 rounded-xl p-3 space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Modal Bahan Baku (HPP)</span>
-                    <span className="font-semibold text-gray-700">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                    <span>HPP</span>
+                    <span className="font-medium text-gray-700">Rp{cartHpp.toLocaleString('id-ID')}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500">Estimasi Untung</span>
-                    <span className="font-black text-[#009B5B]">+Rp{cartProfit.toLocaleString('id-ID')}</span>
+                    <span className="text-gray-500">Untung</span>
+                    <span className="font-bold text-[#009B5B]">+Rp{cartProfit.toLocaleString('id-ID')}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100">
                     <span className="text-gray-400">Margin</span>
-                    <span className="font-bold text-gray-700">{cartMarginPct}%</span>
+                    <span className="font-semibold text-gray-600">{cartMarginPct}%</span>
                   </div>
                 </div>
 
-                {/* Payment Methods Selector */}
-                <div>
-                  <span className="text-[11px] font-bold text-gray-700 block mb-1.5">Pilih Metode Pembayaran</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'Tunai', icon: Banknote, label: 'Tunai' },
-                      { id: 'QRIS', icon: QrCode, label: 'QRIS' },
-                      { id: 'Kartu/Debit', icon: CreditCard, label: 'Kartu/Debit' },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPosPaymentMethod(m.id)}
-                        className={`py-2 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                          posPaymentMethod === m.id
-                            ? 'bg-[#1E88E5] text-white shadow-sm ring-2 ring-blue-300'
-                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/80 shadow-2xs'
-                        }`}
-                      >
-                        <m.icon className="w-4 h-4" />
-                        <span className="text-[10px]">{m.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                {/* Payment Methods */}
+                <div className="flex items-center gap-2">
+                  {[
+                    { id: 'Tunai', label: 'Tunai' },
+                    { id: 'QRIS', label: 'QRIS' },
+                    { id: 'Kartu/Debit', label: 'Debit' },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setPosPaymentMethod(m.id)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        posPaymentMethod === m.id
+                          ? 'bg-gray-900 text-white'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Checkout Button */}
@@ -1930,7 +1918,7 @@ export default function DashboardPage({ onLogout }) {
                   type="button"
                   disabled={posCart.length === 0}
                   onClick={() => handleCompletePayment(posPaymentMethod)}
-                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
+                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
                 >
                   <span>Bayar Sekarang</span>
                   <span className="font-black">Rp{cartSubtotal.toLocaleString('id-ID')}</span>
