@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   TrendingUp,
   Banknote,
@@ -19,8 +19,12 @@ import {
   CreditCard,
   QrCode,
   Coins,
-  Check
+  Check,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
+import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 // Mock transaction history dataset
 const INITIAL_TRANSACTIONS = [
@@ -87,6 +91,14 @@ const INITIAL_TRANSACTIONS = [
 ]
 
 export default function LaporanKeuanganPage({ onToast }) {
+  const { user } = useAuth()
+
+  // Real backend dataset states
+  const [transactions, setTransactions] = useState([])
+  const [stats, setStats] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+
   // Filters & Pagination
   const [selectedMethod, setSelectedMethod] = useState('Semua')
   const [isMethodDropdownOpen, setIsMethodDropdownOpen] = useState(false)
@@ -97,9 +109,66 @@ export default function LaporanKeuanganPage({ onToast }) {
   // Chart hover state
   const [hoveredWeek, setHoveredWeek] = useState(null)
 
+  // Fetch real data from GET /api/transactions?date=all and GET /api/dashboard/stats
+  const fetchReportsData = async () => {
+    try {
+      setIsLoading(true)
+      setLoadError(null)
+      const [trxRes, statsRes] = await Promise.all([
+        api.get('/transactions?date=all'),
+        api.get('/dashboard/stats')
+      ])
+
+      const rawTrx = trxRes.data?.data || []
+      const formatted = rawTrx.map((t) => {
+        const d = t.paid_at ? new Date(t.paid_at) : new Date()
+        const dateFormatted = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+        const timeFormatted = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+        const itemsSummary = t.items && t.items.length > 0
+          ? t.items.map(it => `${it.qty}x ${it.product_name}`).join(', ')
+          : 'Transaksi Kasir'
+        const shortUuid = t.uuid ? t.uuid.substring(0, 8).toUpperCase() : String(t.id).padStart(4, '0')
+
+        return {
+          id: `#TX-${shortUuid}`,
+          rawId: t.id,
+          uuid: t.uuid,
+          date: dateFormatted,
+          time: timeFormatted,
+          items: itemsSummary,
+          method: 'Kasir POS',
+          omzet: Number(t.total) || 0,
+          hpp: Number(t.total_cost) || 0,
+          profit: Number(t.total_profit) || 0,
+          margin: Number(t.margin_percent) || 0,
+        }
+      })
+
+      setTransactions(formatted)
+      setStats(statsRes.data?.data || null)
+    } catch (err) {
+      console.error('Gagal memuat laporan keuangan:', err)
+      setLoadError('Gagal memuat data laporan keuangan dari server backend. Pastikan server aktif.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchReportsData()
+  }, [])
+
+  // Dynamic Metrics computed from real transactions
+  const totalOmzet = useMemo(() => transactions.reduce((acc, t) => acc + t.omzet, 0), [transactions])
+  const totalHpp = useMemo(() => transactions.reduce((acc, t) => acc + t.hpp, 0), [transactions])
+  const totalProfit = useMemo(() => transactions.reduce((acc, t) => acc + t.profit, 0), [transactions])
+  const avgMargin = totalOmzet > 0 ? ((totalProfit / totalOmzet) * 100).toFixed(1) : '0'
+  const totalCount = transactions.length
+  const aov = totalCount > 0 ? Math.round(totalOmzet / totalCount) : 0
+
   // Filtered & Sorted Transactions
   const filteredTransactions = useMemo(() => {
-    return INITIAL_TRANSACTIONS.filter((tx) => {
+    return transactions.filter((tx) => {
       if (selectedMethod === 'Semua') return true
       return tx.method.toLowerCase().includes(selectedMethod.toLowerCase())
     }).sort((a, b) => {
@@ -107,7 +176,7 @@ export default function LaporanKeuanganPage({ onToast }) {
       if (sortOrder === 'omzet-asc') return a.omzet - b.omzet
       return 0
     })
-  }, [selectedMethod, sortOrder])
+  }, [transactions, selectedMethod, sortOrder])
 
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / itemsPerPage))
   const paginatedTransactions = useMemo(() => {
@@ -157,7 +226,7 @@ export default function LaporanKeuanganPage({ onToast }) {
         </button>
       </div>
 
-      {/* ================= ROW 1: 4 TOP KPI CARDS ================= */}
+      {/* ================= ROW 1: 4 TOP KPI CARDS (Real-time Backend Data) ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Total Omset Kotor */}
@@ -169,11 +238,11 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            Rp19.500.000
+            {isLoading ? '...' : `Rp${totalOmzet.toLocaleString('id-ID')}`}
           </p>
           <div className="flex items-center gap-1 text-[#009F58] font-bold text-xs pt-1">
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>7% dari bulan lalu</span>
+            <span>{totalCount > 0 ? `${totalCount} transaksi kasir` : 'Belum ada transaksi'}</span>
           </div>
         </div>
 
@@ -186,15 +255,15 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            Rp6.240.000
+            {isLoading ? '...' : `Rp${totalHpp.toLocaleString('id-ID')}`}
           </p>
           <div className="flex items-center gap-1.5 text-gray-500 font-medium text-xs pt-1">
             <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
-            <span>32% dari omzet</span>
+            <span>{totalOmzet > 0 ? `${((totalHpp / totalOmzet) * 100).toFixed(1)}% dari omzet` : '0% dari omzet'}</span>
           </div>
         </div>
 
-        {/* Card 3: Total Laba Bersih (Solid Brand Green Card) */}
+        {/* Card 3: Total Laba Bersih */}
         <div className="bg-[#009F58] rounded-2xl p-4 sm:p-5 text-white shadow-xs space-y-1">
           <div className="flex items-center justify-between text-emerald-100 mb-1">
             <span className="text-xs font-semibold">Total Laba Bersih</span>
@@ -203,11 +272,11 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-white tracking-tight">
-            Rp13.260.000
+            {isLoading ? '...' : `Rp${totalProfit.toLocaleString('id-ID')}`}
           </p>
           <div className="flex items-center gap-1 text-emerald-100 font-medium text-xs pt-1">
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>+18% dari bulan lalu</span>
+            <span>{totalProfit >= 0 ? 'Surplus laba usaha' : 'Defisit modal bahan'}</span>
           </div>
         </div>
 
@@ -218,11 +287,11 @@ export default function LaporanKeuanganPage({ onToast }) {
             <Gauge className="w-4 h-4 text-gray-700" />
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            68,0%
+            {isLoading ? '...' : `${avgMargin}%`}
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className="font-bold text-xs text-[#009F58]">
-              Sehat
+            <span className={`font-bold text-xs ${Number(avgMargin) >= 55 ? 'text-[#009F58]' : Number(avgMargin) >= 30 ? 'text-amber-600' : 'text-rose-600'}`}>
+              {Number(avgMargin) >= 55 ? 'Sehat' : Number(avgMargin) >= 30 ? 'Cukup Sehat' : 'Perlu Evaluasi'}
             </span>
             <span className="text-xs text-gray-400 font-medium">
               Target &gt; 55%
@@ -242,48 +311,48 @@ export default function LaporanKeuanganPage({ onToast }) {
               Performa Outlet Utama
             </p>
             <h3 className="text-lg font-bold text-gray-900 mt-0.5">
-              Kedai Kopi Nabila
+              {user?.business_name || user?.name || 'Usaha Anda'}
             </h3>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Target Bulanan Tercapai : <span className="font-bold text-gray-800">112%</span>
+              Status Operasional : <span className="font-bold text-emerald-600">Aktif & Terbuka</span>
             </p>
           </div>
 
-          {/* 3 Stats Grid: Diperbesar dan mengisi ruang agar tidak kosong */}
+          {/* 3 Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4 flex-1">
             <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-semibold text-gray-500">Tiket Rata-rata (AOV)</span>
               <p className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-2">
-                Rp42.500
+                Rp{aov.toLocaleString('id-ID')}
               </p>
               <span className="text-xs text-[#009F58] font-bold block">
-                +4.2% per transaksi
+                {totalCount} transaksi tercatat
               </span>
             </div>
 
             <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
-              <span className="text-xs font-semibold text-gray-500">Produk Terlaris</span>
-              <p className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight my-2 truncate leading-snug" title="Kopi Susu Aren">
-                Kopi Susu Aren
+              <span className="text-xs font-semibold text-gray-500">Menu Andalan</span>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight my-2 truncate leading-snug" title={stats?.products?.[0]?.name || 'Menu Usaha'}>
+                {stats?.products?.[0]?.name || 'Menu Belum Terdaftar'}
               </p>
               <span className="text-xs text-gray-500 font-medium block">
-                384 porsi terjual
+                {stats?.products?.[0]?.status === 'sehat' ? 'Margin Sehat' : 'Terdaftar di Katalog'}
               </span>
             </div>
 
             <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
-              <span className="text-xs font-semibold text-gray-500">Rasio Efisiensi Bahan</span>
+              <span className="text-xs font-semibold text-gray-500">Rasio Margin Kotor</span>
               <p className="text-2xl sm:text-[26px] font-black text-[#009F58] tracking-tight my-2">
-                98.4%
+                {avgMargin}%
               </p>
               <span className="text-xs text-gray-500 font-medium block">
-                Waste terukur 1.6%
+                Bantalan profit kasir
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right Card: Top Menu Paling Untung (5 cols) - Matches Left Card Height */}
+        {/* Right Card: Top Menu Paling Untung (5 cols) */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div className="flex items-center justify-between pb-1.5 border-b border-gray-100/80">
             <h3 className="font-bold text-sm text-gray-900">
@@ -293,79 +362,54 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
 
           <div className="space-y-2.5 my-auto py-1">
-            {/* Item 1 */}
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  Kopi Susu Gula Aren
-                </span>
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp18.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
-                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '72%' }} />
-                </div>
-                <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 72%
-                </span>
-              </div>
-            </div>
-
-            {/* Item 2 */}
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  Cold Brew Coffee
-                </span>
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp24.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
-                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '62%' }} />
-                </div>
-                <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 62%
-                </span>
-              </div>
-            </div>
-
-            {/* Item 3 */}
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  Matcha Latte Kyoto
-                </span>
-                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp19.600 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
-                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '65%' }} />
-                </div>
-                <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 65%
-                </span>
-              </div>
-            </div>
+            {stats?.products && stats.products.length > 0 ? (
+              stats.products.slice(0, 3).map((item, idx) => {
+                const profitVal = Number(item.profit_per_unit) || 0
+                const marginVal = Number(item.margin_percent) || 0
+                return (
+                  <div key={idx}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-bold text-gray-900 text-xs sm:text-[13px] truncate max-w-[180px]">
+                        {item.name}
+                      </span>
+                      <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                        {profitVal >= 0 ? `+Rp${profitVal.toLocaleString('id-ID')}` : `-Rp${Math.abs(profitVal).toLocaleString('id-ID')}`}
+                        <span className="text-[10px] text-gray-400 font-normal"> / porsi</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full bg-[#009F58] rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(0, marginVal))}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-gray-600 shrink-0">
+                        Margin {marginVal}%
+                      </span>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <p className="text-xs text-gray-400 py-6 text-center">
+                Belum ada produk dengan margin keuntungan tercatat.
+              </p>
+            )}
           </div>
 
           <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[11px] text-gray-400">
-              3 produk margin tertinggi
+              {stats?.products?.length || 0} produk dalam katalog
             </span>
             <button
               type="button"
               onClick={() => {
-                if (onToast) onToast('Beralih ke analisis detail margin produk...')
+                window.location.hash = '#produk'
               }}
               className="text-xs font-semibold text-[#009F58] hover:text-[#008246] transition-colors inline-flex items-center gap-1 cursor-pointer group"
             >
-              <span>Analisis Margin Produk</span>
+              <span>Kelola Resep & Margin</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
@@ -380,8 +424,11 @@ export default function LaporanKeuanganPage({ onToast }) {
         <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-gray-50">
             <div>
-              <h3 className="font-bold text-sm text-gray-900">
-                Perkembangan Arus Kas & Laba Riil
+              <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
+                <span>Perkembangan Arus Kas & Laba Riil</span>
+                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                  Contoh
+                </span>
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
                 Korelasi mingguan antara omzet kotor, beban modal bahan (HPP), dan laba bersih
@@ -538,8 +585,11 @@ export default function LaporanKeuanganPage({ onToast }) {
 
         {/* Right Widget: Sebaran Metode (5 cols) */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <h3 className="font-bold text-sm text-gray-900 mb-2">
-            Sebaran Metode
+          <h3 className="font-bold text-sm text-gray-900 mb-2 flex items-center gap-2">
+            <span>Sebaran Metode</span>
+            <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+              Contoh
+            </span>
           </h3>
 
           {/* Donut Chart */}
@@ -747,8 +797,45 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
         </div>
 
+        {/* Loading & Error States */}
+        {loadError && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-xs text-rose-700 rounded-2xl flex items-center justify-between m-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+              <span>{loadError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={fetchReportsData}
+              className="font-bold underline text-rose-800 hover:text-rose-950 cursor-pointer"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="py-16 text-center space-y-2">
+            <Loader2 className="w-7 h-7 text-[#009F58] animate-spin mx-auto" />
+            <p className="text-xs font-semibold text-gray-600">Memuat laporan transaksi riil dari server...</p>
+          </div>
+        )}
+
+        {!isLoading && filteredTransactions.length === 0 && (
+          <div className="py-16 text-center space-y-2 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto mb-2">
+              <Package className="w-6 h-6 stroke-[1.8]" />
+            </div>
+            <p className="text-sm font-bold text-gray-800">Belum Ada Transaksi Kasir</p>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              Buka menu Kasir untuk mulai mencatat transaksi penjualan usahamu secara real-time.
+            </p>
+          </div>
+        )}
+
         {/* MOBILE VIEW (CARDS): block md:hidden */}
-        <div className="block md:hidden divide-y divide-gray-100">
+        {!isLoading && filteredTransactions.length > 0 && (
+          <div className="block md:hidden divide-y divide-gray-100">
           {paginatedTransactions.map((tx) => (
             <div key={tx.id} className="p-4 bg-white hover:bg-gray-50/70 transition-colors">
               <div className="flex items-center justify-between gap-2 mb-2">
@@ -805,8 +892,10 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           ))}
         </div>
+      )}
 
-        {/* DESKTOP VIEW (TABLE): hidden md:block */}
+      {/* DESKTOP VIEW (TABLE): hidden md:block */}
+      {!isLoading && filteredTransactions.length > 0 && (
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
@@ -881,9 +970,13 @@ export default function LaporanKeuanganPage({ onToast }) {
                     <button
                       type="button"
                       onClick={() => {
-                        if (onToast) onToast(`Membuka rincian transaksi ${tx.id}...`)
+                        if (tx.uuid) {
+                          window.open(`/#struk/${tx.uuid}`, '_blank')
+                        } else if (onToast) {
+                          onToast(`Membuka rincian transaksi ${tx.id}...`)
+                        }
                       }}
-                      title="Lihat Rincian"
+                      title="Buka Struk Digital"
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 transition-colors cursor-pointer mx-auto"
                     >
                       <Eye className="w-4 h-4 stroke-[1.8]" />
@@ -894,13 +987,14 @@ export default function LaporanKeuanganPage({ onToast }) {
             </tbody>
           </table>
         </div>
+      )}
 
-        {/* Table Footer: Pagination */}
-        <div className="px-5 py-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-          <p>
-            Menampilkan <span className="font-bold text-gray-800">{paginatedTransactions.length}</span> dari{' '}
-            <span className="font-bold text-gray-800">142</span> transaksi terverifikasi
-          </p>
+      {/* Table Footer: Pagination */}
+      <div className="px-5 py-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+        <p>
+          Menampilkan <span className="font-bold text-gray-800">{paginatedTransactions.length}</span> dari{' '}
+          <span className="font-bold text-gray-800">{filteredTransactions.length}</span> transaksi terverifikasi
+        </p>
 
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
