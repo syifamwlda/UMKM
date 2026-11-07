@@ -544,35 +544,112 @@ Melihat detail satu transaksi beserta rincian item, snapshot harga, modal, dan p
 
 ### Fitur 4: Dashboard Untung-Rugi & Tren 7 Hari
 
-#### 1. `GET /api/dashboard`
-Ringkasan untung hari ini, perbandingan tren 7 hari, dan produk untung/rugi.
+#### 1. `GET /api/dashboard/stats` (Alias: `GET /api/dashboard`)
+Statistik ringkasan keuntungan harian, tren performa 7 hari terakhir, evaluasi produk (rugi di urutan teratas), dan rekomendasi pintar berbasis aturan untuk user yang login.
 - **Header**: `Authorization: Bearer <token>`
 - **Response `200 OK`**:
 ```json
 {
-  "message": "Data dashboard berhasil dimuat.",
+  "message": "Data statistik dashboard berhasil dimuat.",
   "data": {
     "today": {
-      "omset": 540000,
-      "modal_sebenarnya": 270000,
+      "omzet": 540000,
+      "laba": 270000,
       "untung_bersih": 270000,
-      "transaksi_count": 18
+      "modal": 270000,
+      "modal_sebenarnya": 270000,
+      "transaksi_count": 18,
+      "jumlah_transaksi": 18,
+      "margin_rata_rata": 50.0
     },
-    "trend_7_days": [
-      { "date": "2026-10-26", "omset": 350000, "modal": 180000, "untung": 170000 },
-      { "date": "2026-10-27", "omset": 420000, "modal": 210000, "untung": 210000 },
-      { "date": "2026-10-28", "omset": 390000, "modal": 195000, "untung": 195000 },
-      { "date": "2026-10-29", "omset": 480000, "modal": 240000, "untung": 240000 },
-      { "date": "2026-10-30", "omset": 510000, "modal": 250000, "untung": 260000 },
-      { "date": "2026-10-31", "omset": 620000, "modal": 300000, "untung": 320000 },
-      { "date": "2026-11-01", "omset": 540000, "modal": 270000, "untung": 270000 }
+    "trend": [
+      {
+        "date": "2026-11-01",
+        "omzet": 350000,
+        "modal": 180000,
+        "laba": 170000,
+        "transaksi_count": 8
+      },
+      {
+        "date": "2026-11-02",
+        "omzet": 420000,
+        "modal": 210000,
+        "laba": 210000,
+        "transaksi_count": 10
+      },
+      {
+        "date": "2026-11-03",
+        "omzet": 390000,
+        "modal": 195000,
+        "laba": 195000,
+        "transaksi_count": 9
+      },
+      {
+        "date": "2026-11-04",
+        "omzet": 480000,
+        "modal": 240000,
+        "laba": 240000,
+        "transaksi_count": 12
+      },
+      {
+        "date": "2026-11-05",
+        "omzet": 510000,
+        "modal": 250000,
+        "laba": 260000,
+        "transaksi_count": 14
+      },
+      {
+        "date": "2026-11-06",
+        "omzet": 620000,
+        "modal": 300000,
+        "laba": 320000,
+        "transaksi_count": 16
+      },
+      {
+        "date": "2026-11-07",
+        "omzet": 540000,
+        "modal": 270000,
+        "laba": 270000,
+        "transaksi_count": 18
+      }
     ],
-    "top_profitable_products": [
-      { "name": "Es Kopi Susu Gula Aren", "total_profit": 190000, "margin_percent": 52.78 }
+    "products": [
+      {
+        "id": 7,
+        "name": "Croissant Cokelat Butter",
+        "selling_price": 10000,
+        "yield_qty": 1,
+        "total_modal": 11000,
+        "modal_per_unit": 11000,
+        "margin_percent": -10.0,
+        "status": "rugi"
+      },
+      {
+        "id": 6,
+        "name": "Brownies Panggang Mini",
+        "selling_price": 12000,
+        "yield_qty": 1,
+        "total_modal": 10700,
+        "modal_per_unit": 10700,
+        "margin_percent": 10.83,
+        "status": "tipis"
+      },
+      {
+        "id": 1,
+        "name": "Kopi Susu Gula Aren",
+        "selling_price": 18000,
+        "yield_qty": 1,
+        "total_modal": 8500,
+        "modal_per_unit": 8500,
+        "margin_percent": 52.78,
+        "status": "sehat"
+      }
     ],
-    "unprofitable_or_slim_products": [
-      { "name": "Brownies Panggang Mini", "total_profit": 5000, "margin_percent": 10.0, "status": "tipis" }
-    ]
+    "insight": {
+      "headline": "Perhatian: Ada Menu Rugi!",
+      "text": "Menu 'Croissant Cokelat Butter' saat ini memiliki margin minus (-10.0%). Segera naikkan harga jual atau kurangi takaran bahan baku agar modal tertutup.",
+      "source": "fallback"
+    }
   }
 }
 ```
@@ -580,7 +657,7 @@ Ringkasan untung hari ini, perbandingan tren 7 hari, dan produk untung/rugi.
 ---
 
 #### 2. `GET /api/dashboard/ai-insight`
-Saran harian berbasis AI dengan fallback teks terstruktur jika AI offline/timeout.
+Saran harian berbasis AI dengan fallback teks terstruktur jika AI offline/timeout (diintegrasikan pada Tahap berikutnya).
 - **Header**: `Authorization: Bearer <token>`
 - **Response `200 OK`**:
 ```json

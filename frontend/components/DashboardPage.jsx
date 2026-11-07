@@ -49,60 +49,8 @@ import {
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
-// Daily cafe performance records for September, October & November 2026
-const DAILY_RECORDS = {
-  // September 2026 (for prior month comparison)
-  '2026-09-15': { omzet: 410000, laba: 160000, transaksi: 15 },
-  '2026-09-16': { omzet: 430000, laba: 170000, transaksi: 16 },
-  '2026-09-17': { omzet: 450000, laba: 180000, transaksi: 17 },
-  '2026-09-18': { omzet: 490000, laba: 195000, transaksi: 19 },
-  '2026-09-19': { omzet: 550000, laba: 225000, transaksi: 22 },
-  '2026-09-20': { omzet: 580000, laba: 240000, transaksi: 23 },
-  '2026-09-21': { omzet: 390000, laba: 150000, transaksi: 15 },
-  '2026-09-22': { omzet: 420000, laba: 165000, transaksi: 16 },
-  '2026-09-23': { omzet: 440000, laba: 175000, transaksi: 17 },
-  '2026-09-24': { omzet: 470000, laba: 190000, transaksi: 18 },
-  '2026-09-25': { omzet: 510000, laba: 205000, transaksi: 20 },
-  '2026-09-26': { omzet: 560000, laba: 230000, transaksi: 22 },
-  '2026-09-27': { omzet: 600000, laba: 250000, transaksi: 24 },
-  '2026-09-28': { omzet: 410000, laba: 160000, transaksi: 16 },
-  '2026-09-29': { omzet: 430000, laba: 170000, transaksi: 17 },
-  '2026-09-30': { omzet: 460000, laba: 185000, transaksi: 18 },
-  // October 2026
-  '2026-10-01': { omzet: 420000, laba: 170000, transaksi: 16 },
-  '2026-10-02': { omzet: 460000, laba: 185000, transaksi: 18 },
-  '2026-10-03': { omzet: 510000, laba: 210000, transaksi: 20 },
-  '2026-10-04': { omzet: 530000, laba: 215000, transaksi: 21 },
-  '2026-10-05': { omzet: 390000, laba: 150000, transaksi: 15 },
-  '2026-10-06': { omzet: 410000, laba: 160000, transaksi: 16 },
-  '2026-10-07': { omzet: 440000, laba: 175000, transaksi: 17 },
-  '2026-10-08': { omzet: 480000, laba: 195000, transaksi: 19 },
-  '2026-10-09': { omzet: 520000, laba: 210000, transaksi: 20 },
-  '2026-10-10': { omzet: 560000, laba: 230000, transaksi: 22 },
-  '2026-10-11': { omzet: 590000, laba: 245000, transaksi: 23 },
-  '2026-10-12': { omzet: 430000, laba: 165000, transaksi: 16 },
-  '2026-10-13': { omzet: 450000, laba: 175000, transaksi: 17 },
-  '2026-10-14': { omzet: 470000, laba: 185000, transaksi: 18 },
-  '2026-10-15': { omzet: 500000, laba: 200000, transaksi: 19 },
-  '2026-10-16': { omzet: 540000, laba: 220000, transaksi: 21 },
-  '2026-10-17': { omzet: 610000, laba: 250000, transaksi: 24 },
-  '2026-10-18': { omzet: 630000, laba: 260000, transaksi: 25 },
-  '2026-10-19': { omzet: 440000, laba: 170000, transaksi: 17 },
-  '2026-10-20': { omzet: 460000, laba: 180000, transaksi: 18 },
-  '2026-10-21': { omzet: 480000, laba: 190000, transaksi: 19 },
-  '2026-10-22': { omzet: 510000, laba: 205000, transaksi: 20 },
-  '2026-10-23': { omzet: 530000, laba: 215000, transaksi: 21 },
-  '2026-10-24': { omzet: 570000, laba: 230000, transaksi: 22 },
-  '2026-10-25': { omzet: 450000, laba: 175000, transaksi: 18 },
-  '2026-10-26': { omzet: 410000, laba: 155000, transaksi: 15 },
-  '2026-10-27': { omzet: 520000, laba: 220000, transaksi: 22 },
-  '2026-10-28': { omzet: 440000, laba: 180000, transaksi: 17 },
-  '2026-10-29': { omzet: 490000, laba: 200000, transaksi: 19 },
-  '2026-10-30': { omzet: 460000, laba: 190000, transaksi: 18 },
-  '2026-10-31': { omzet: 580000, laba: 220000, transaksi: 21 },
-  // November 2026 (1 Nov is today)
-  '2026-11-01': { omzet: 650000, laba: 250000, transaksi: 24 }
-}
+// Database records dinamis diambil dari GET /api/dashboard/stats
+const DAILY_RECORDS = {}
 
 // Generate organic café rush patterns for any date
 const getHourlyPattern = (dateStr, totalOmzet, totalLaba) => {
@@ -613,26 +561,95 @@ export default function DashboardPage({ onLogout }) {
   })
 
   // Product evaluation list
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Croissant Cokelat',
-      category: 'Pastry • Fresh Bake',
-      hpp: 10500,
-      price: 10000,
-      status: 'Rugi',
-      icon: 'croissant'
-    },
-    {
-      id: 2,
-      name: 'Es Kopi Milkshake',
-      category: 'Beverage • Cold Drink',
-      hpp: 11200,
-      price: 13000,
-      status: 'Tipis',
-      icon: 'coffee'
+  const [products, setProducts] = useState([])
+
+  // Dashboard Stats States (GET /api/dashboard/stats)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [statsError, setStatsError] = useState(null)
+  const [dashboardStats, setDashboardStats] = useState(null)
+  const [insightData, setInsightData] = useState({
+    headline: 'Memuat Rekomendasi...',
+    text: 'Sistem sedang menganalisis kesehatan margin usaha Anda...',
+    source: 'fallback'
+  })
+
+  const fetchDashboardStats = async () => {
+    try {
+      setStatsLoading(true)
+      setStatsError(null)
+      const res = await api.get('/dashboard/stats')
+      const data = res.data?.data
+      if (data) {
+        setDashboardStats(data)
+
+        const today = data.today || {}
+        const omzetVal = Number(today.omzet) || 0
+        const labaVal = Number(today.laba) || 0
+        const modalVal = Number(today.modal) || 0
+        const countVal = Number(today.transaksi_count) || 0
+        const marginVal = Number(today.margin_rata_rata) || 0
+
+        setKpiStats({
+          untung: labaVal,
+          untungGrowth: omzetVal > 0 ? `Margin rata-rata ${marginVal}%` : 'Belum ada transaksi hari ini',
+          omzet: omzetVal,
+          omzetGrowth: countVal > 0 ? `${countVal} transaksi tercatat hari ini` : 'Buka kasir untuk mulai transaksi',
+          transaksi: countVal,
+          transaksiSub: `Modal Bahan: Rp${modalVal.toLocaleString('id-ID')}`,
+          kesehatan: Math.min(100, Math.max(0, Math.round(marginVal * 1.5 + 20))),
+          kesehatanLabel: marginVal >= 20 ? 'Sangat Sehat' : marginVal > 0 ? 'Cukup Sehat' : 'Perlu Evaluasi'
+        })
+
+        if (data.trend && Array.isArray(data.trend)) {
+          const formattedTrend = data.trend.map((t) => {
+            const d = new Date(t.date)
+            const dayLabel = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+            return {
+              day: dayLabel,
+              date: t.date,
+              omzet: Number(t.omzet) || 0,
+              laba: Number(t.laba) || 0,
+              modal: Number(t.modal) || 0,
+            }
+          })
+          setTrendData(formattedTrend)
+        }
+
+        if (data.products && Array.isArray(data.products)) {
+          const mappedProducts = data.products.map((p) => {
+            const price = Number(p.selling_price) || 0
+            const hpp = Number(p.modal_per_unit) || 0
+            const profit = price - hpp
+            return {
+              id: p.id,
+              name: p.name,
+              category: p.category || (p.ingredients?.map(i => i.name).slice(0, 2).join(', ') || 'Menu Usaha'),
+              hpp: hpp,
+              price: price,
+              profit: profit,
+              marginPercent: Number(p.margin_percent) || 0,
+              status: p.status === 'rugi' ? 'Rugi' : p.status === 'tipis' ? 'Tipis' : 'Sehat',
+              icon: p.name.toLowerCase().includes('kopi') || p.name.toLowerCase().includes('latte') ? 'coffee' : 'croissant'
+            }
+          })
+          setProducts(mappedProducts)
+        }
+
+        if (data.insight) {
+          setInsightData(data.insight)
+        }
+      }
+    } catch (err) {
+      console.error('Gagal memuat statistik dashboard:', err)
+      setStatsError(err.response?.data?.message || 'Gagal memuat statistik dashboard. Pastikan server backend aktif.')
+    } finally {
+      setStatsLoading(false)
     }
-  ])
+  }
+
+  useEffect(() => {
+    fetchDashboardStats()
+  }, [])
 
   // ================= KASIR (POS) STATE =================
   const { user } = useAuth()
@@ -999,6 +1016,7 @@ export default function DashboardPage({ onLogout }) {
       setPosCart([])
       setPosReceiptModal(receiptData)
       updateRealtimeData(totalReal, profitReal, `Kasir: ${method}`)
+      fetchDashboardStats()
       showToast(`Transaksi berhasil via ${method}! Laba Rp${profitReal.toLocaleString('id-ID')} dicatat.`)
     } catch (err) {
       console.error('Gagal mencatat transaksi:', err)
@@ -2362,6 +2380,62 @@ export default function DashboardPage({ onLogout }) {
               </div>
             </div>
 
+            {/* Error State Banner */}
+            {statsError && (
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-800">
+                <div className="flex items-center gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold block">Gagal memuat data statistik dashboard</span>
+                    <span className="text-[11px] text-rose-600 font-normal">{statsError}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchDashboardStats}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer self-start sm:self-auto"
+                >
+                  Coba Lagi
+                </button>
+              </div>
+            )}
+
+            {/* Loading Indicator */}
+            {statsLoading && (
+              <div className="mb-4 py-2 px-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between text-xs text-emerald-800 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#009B5B]" />
+                  <span>Sinkronisasi data penjualan & modal HPP dari database...</span>
+                </div>
+                <span className="text-[10px] font-bold text-[#009B5B]">Memuat</span>
+              </div>
+            )}
+
+            {/* Empty State Banner (Hari ini belum ada transaksi) */}
+            {!statsLoading && !statsError && kpiStats.transaksi === 0 && (
+              <div className="mb-6 p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                <div className="flex items-center gap-2.5">
+                  <Store className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-bold block">Belum ada transaksi tercatat hari ini</span>
+                    <span className="text-[11px] text-amber-700/90 font-normal">
+                      Buka menu Kasir atau tekan tombol <strong>Transaksi Baru</strong> di atas untuk mulai membukukan penjualan.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveMenu('Kasir')
+                    showToast('Membuka Halaman Kasir (POS)...')
+                  }}
+                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer self-start sm:self-auto"
+                >
+                  Buka Kasir
+                </button>
+              </div>
+            )}
+
             {/* ================= 4 STAT CARDS ================= */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
               
@@ -3182,9 +3256,14 @@ export default function DashboardPage({ onLogout }) {
 
                   {/* MOBILE VIEW (< sm): Clean Native Cards (Tanpa scrollbar horizontal) */}
                   <div className="space-y-3 sm:hidden">
-                    {products.map((item) => {
-                      const margin = item.price - item.hpp
-                      const percent = Math.round((margin / item.price) * 100)
+                    {products.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 p-4">
+                        Belum ada produk. Tambahkan menu dan resep di Katalog & HPP.
+                      </div>
+                    ) : (
+                      products.map((item) => {
+                        const margin = item.price - item.hpp
+                        const percent = item.marginPercent !== undefined ? item.marginPercent : Math.round((margin / item.price) * 100)
                       return (
                         <div
                           key={item.id}
@@ -3261,7 +3340,8 @@ export default function DashboardPage({ onLogout }) {
                           </button>
                         </div>
                       )
-                    })}
+                    })
+                  )}
                   </div>
 
                   {/* DESKTOP VIEW (>= sm): Full elegant table without ugly blue pills */}
@@ -3290,9 +3370,16 @@ export default function DashboardPage({ onLogout }) {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {products.map((item) => {
-                          const margin = item.price - item.hpp
-                          const percent = Math.round((margin / item.price) * 100)
+                        {products.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-8 text-center text-xs text-gray-400">
+                              Belum ada produk. Tambahkan menu dan resep di Katalog & HPP.
+                            </td>
+                          </tr>
+                        ) : (
+                          products.map((item) => {
+                            const margin = item.price - item.hpp
+                            const percent = item.marginPercent !== undefined ? item.marginPercent : Math.round((margin / item.price) * 100)
                           return (
                             <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
                               <td className="py-3.5 px-2">
@@ -3364,7 +3451,8 @@ export default function DashboardPage({ onLogout }) {
                               </td>
                             </tr>
                           )
-                        })}
+                        })
+                      )}
                       </tbody>
                     </table>
                   </div>
@@ -3430,135 +3518,43 @@ export default function DashboardPage({ onLogout }) {
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="p-3.5 pt-1 space-y-2">
+                      <div className="p-3.5 pt-1 space-y-2.5">
                         
-                        {/* Card 1: Margin Alert */}
-                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
-                          <div className="flex items-start justify-between gap-1.5">
-                            <h4 className="text-xs font-bold text-gray-900 leading-snug">
-                              Harga Mentega naik 15%, Croissant rugi.
-                            </h4>
-                            <span className="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                              Rugi
+                        {/* Real Insight Card */}
+                        <div className="bg-white rounded-2xl p-3 border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.03)] space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              <span>{insightData.source === 'fallback' ? 'Smart Insight' : 'AI Gemini'}</span>
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-medium">
+                              {insightData.source === 'fallback' ? 'Berbasis Aturan' : 'Analisis AI'}
                             </span>
                           </div>
-                          <p className="text-[11px] text-gray-500 leading-tight">
-                            Naikkan harga jual ke Rp13.000 agar margin aman di 23%.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={handleAdjustCroissantPrice}
-                            className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
-                          >
-                            <span>Sesuaikan Harga</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </div>
 
-                        {/* Card 2: Stock Alert */}
-                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] hover:border-emerald-100 transition-all space-y-1">
-                          <div className="flex items-start justify-between gap-1.5">
-                            <h4 className="text-xs font-bold text-gray-900 leading-snug">
-                              Stok Sirup Gula Aren sisa 5 cup lagi.
-                            </h4>
-                            <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                              Kritis
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-500 leading-tight">
-                            Penjualan Kopi Susu tinggi. Pesan ulang sebelum jam sibuk.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => showToast('Membuka pesanan supplier bahan baku Gula Aren...')}
-                            className="pt-1 flex items-center gap-1 text-[11px] font-bold text-[#009B5B] hover:text-emerald-700 transition-colors cursor-pointer"
-                          >
-                            <span>Pesan Bahan Baku</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        {/* Card 3: Quick Insights */}
-                        <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-1.5">
-                          <h4 className="text-xs font-bold text-gray-900">
-                            Quick Insights
+                          <h4 className="text-xs font-bold text-gray-900 leading-snug">
+                            {insightData.headline}
                           </h4>
-                          <div className="space-y-1 text-xs">
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-500 text-[11px]">Prediksi Omzet</span>
-                              <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                                +3.5%
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-500 text-[11px]">Target Margin</span>
-                              <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
-                                On track
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-500 text-[11px]">Evaluasi Menu</span>
-                              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100/60">
-                                2 Pending
-                              </span>
-                            </div>
-                          </div>
-                        </div>
 
-                        {/* Suggested next steps (Pill buttons row) */}
-                        <div className="pt-1">
-                          <p className="text-[11px] font-bold text-gray-700 mb-1.5">
-                            Saran langkah cepat:
+                          <p className="text-[11px] text-gray-600 leading-relaxed">
+                            {insightData.text}
                           </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleAskAi(null, 'Review evaluasi harga dan margin produk')}
-                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                            >
-                              Review margin (2)
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAskAi(null, 'Follow up supplier bahan baku')}
-                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                            >
-                              Stok bahan (1)
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAskAi(null, 'Cek status kas laci kasir')}
-                              className="px-2.5 py-1 bg-white hover:bg-emerald-50 border border-gray-200/90 rounded-lg text-[10px] font-medium text-gray-700 hover:text-[#009B5B] transition-all cursor-pointer"
-                            >
-                              Kas kasir
-                            </button>
+
+                          <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
+                            <span>Saran harian kasir & HPP</span>
+                            <span className="text-[#009B5B] font-semibold">UntungJelas Engine</span>
                           </div>
                         </div>
 
-                        {/* AI Chat Input Box (Compact) */}
-                        <form
-                          onSubmit={(e) => handleAskAi(e)}
-                          className="mt-2 bg-white border border-gray-200 rounded-xl px-3 py-1.5 flex items-center gap-2 focus-within:border-[#009B5B] focus-within:ring-2 focus-within:ring-emerald-100 transition-all"
+                        {/* Quick action button to check product margins */}
+                        <button
+                          type="button"
+                          onClick={() => { window.location.hash = '#produk' }}
+                          className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                         >
-                          <input
-                            type="text"
-                            value={aiQuestion}
-                            onChange={(e) => setAiQuestion(e.target.value)}
-                            placeholder="Tanya AI UntungJelas..."
-                            className="flex-1 text-xs text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!aiQuestion.trim()}
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${
-                              aiQuestion.trim()
-                                ? 'bg-[#009B5B] text-white shadow-sm hover:bg-[#00874e]'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-                          </button>
-                        </form>
+                          <span>Kelola Resep & Margin Menu</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
 
                       </div>
                     </div>
