@@ -1762,56 +1762,64 @@ export default function DashboardPage({ onLogout }) {
               </div>
 
               {/* ================= RIGHT PANE: ORDER / CART PANEL (4 COLS) ================= */}
-              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-3">
+              <div className="xl:col-span-4 bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
                 
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-gray-900">Pesanan</h3>
+                {/* Header Pesanan */}
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">Pesanan Saat Ini</h3>
+                    {posCart.length > 0 && (
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        {posCart.reduce((sum, it) => sum + it.qty, 0)} item
+                      </span>
+                    )}
+                  </div>
                   {posCart.length > 0 && (
                     <button
                       type="button"
                       onClick={handleResetCart}
-                      className="py-1 px-2.5 bg-white/80 hover:bg-rose-50 border border-gray-200/80 hover:border-rose-200 rounded-lg text-xs font-medium text-gray-500 hover:text-rose-600 transition-all cursor-pointer flex items-center gap-1"
-                      title="Reset Pesanan"
+                      className="text-xs font-semibold text-gray-400 hover:text-rose-600 transition-colors cursor-pointer flex items-center gap-1"
+                      title="Kosongkan Pesanan"
                     >
-                      <RotateCcw className="w-3 h-3 text-rose-500" />
+                      <RotateCcw className="w-3.5 h-3.5" />
                       <span>Reset</span>
                     </button>
                   )}
                 </div>
 
                 {/* Cart Items List */}
-                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
+                <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
                   {posCart.length > 0 ? (
                     posCart.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-xl p-2.5 border border-gray-100 flex items-center gap-2.5"
+                        className="bg-gray-50/70 hover:bg-gray-50 rounded-2xl p-3 border border-gray-100 flex items-center gap-3 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center p-1.5 flex-shrink-0 shadow-2xs">
                           <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-1">
-                            <h5 className="text-xs font-semibold text-gray-900 truncate">{item.name}</h5>
+                            <h5 className="text-xs font-bold text-gray-900 truncate">{item.name}</h5>
                             <button
                               type="button"
                               onClick={() => handleRemoveFromCart(item.id)}
-                              className="text-gray-300 hover:text-rose-400 p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                              title="Hapus"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                           {item.note && (
-                            <p className="text-[10px] text-gray-400 truncate">{item.note}</p>
+                            <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note}</p>
                           )}
-                          <div className="flex items-center justify-between mt-1.5">
-                            <div className="flex items-center gap-1 bg-gray-100/80 rounded-lg p-0.5">
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-1.5 bg-white border border-gray-200/80 rounded-lg p-0.5 shadow-2xs">
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, -1)}
-                                className="w-5 h-5 rounded-md bg-white text-gray-600 flex items-center justify-center font-bold text-xs cursor-pointer hover:bg-gray-50"
+                                className="w-5 h-5 rounded-md hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
                               >
                                 -
                               </button>
@@ -1819,12 +1827,12 @@ export default function DashboardPage({ onLogout }) {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, 1)}
-                                className="w-5 h-5 rounded-md bg-[#009B5B] text-white flex items-center justify-center font-bold text-xs cursor-pointer"
+                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-2xs transition-colors"
                               >
                                 +
                               </button>
                             </div>
-                            <span className="text-xs font-bold text-gray-900">
+                            <span className="text-xs sm:text-[13px] font-black text-gray-900">
                               Rp{(item.price * item.qty).toLocaleString('id-ID')}
                             </span>
                           </div>
@@ -1832,129 +1840,146 @@ export default function DashboardPage({ onLogout }) {
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 text-center text-xs text-gray-400">
-                      Belum ada menu dipilih
+                    <div className="py-10 px-4 text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-2.5 text-gray-300">
+                        <Store className="w-6 h-6 stroke-[1.5]" />
+                      </div>
+                      <p className="text-xs font-bold text-gray-700">Belum ada pesanan</p>
+                      <p className="text-[11px] text-gray-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
+                        Klik produk di katalog untuk menambahkan pesanan ke keranjang
+                      </p>
                     </div>
                   )}
                 </div>
 
-                {/* Subtotal */}
-                <div className="pt-2 border-t border-emerald-200/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-600">Total</span>
-                  <span className="text-lg font-black text-[#009B5B]">
-                    Rp{cartSubtotal.toLocaleString('id-ID')}
-                  </span>
-                </div>
-
-                {/* HPP & Profit Summary */}
-                <div className="bg-white/70 border border-emerald-200/60 rounded-xl p-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>HPP</span>
-                    <span className="font-medium text-gray-700">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                {/* Financial Intelligence Breakdown Card */}
+                <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Subtotal Pesanan</span>
+                    <span className="font-bold text-gray-900 text-sm">
+                      Rp{cartSubtotal.toLocaleString('id-ID')}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500">Untung</span>
-                    <span className="font-bold text-[#009B5B]">+Rp{cartProfit.toLocaleString('id-ID')}</span>
+                    <span className="text-gray-500 font-medium">Estimasi Modal (HPP)</span>
+                    <span className="font-semibold text-gray-700">
+                      Rp{cartHpp.toLocaleString('id-ID')}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100">
-                    <span className="text-gray-400">Margin</span>
-                    <span className="font-semibold text-gray-600">{cartMarginPct}%</span>
+                  
+                  <div className="pt-2.5 border-t border-gray-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-gray-900">Untung Bersih</span>
+                      {cartMarginPct > 0 && (
+                        <span className="text-[10px] font-black text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                          {cartMarginPct}%
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-base font-black text-[#009B5B]">
+                      +Rp{cartProfit.toLocaleString('id-ID')}
+                    </span>
                   </div>
                 </div>
 
                 {/* Payment Methods */}
-                <div className="flex items-center gap-2">
-                  {/* 1. Tunai (Logo Uang Tunai) */}
-                  <button
-                    type="button"
-                    title="Pembayaran Tunai"
-                    onClick={() => setPosPaymentMethod('Tunai')}
-                    className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
-                      posPaymentMethod === 'Tunai'
-                        ? 'bg-gray-900 text-white shadow-xs'
-                        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <svg
-                      className="h-4.5 w-auto"
-                      viewBox="0 0 32 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      stroke="currentColor"
-                    >
-                      <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
-                      <circle cx="16" cy="10" r="4.5" strokeWidth="1.8" />
-                      <path d="M5 6.5V7M27 6.5V7M5 13V13.5M27 13V13.5" strokeWidth="2" strokeLinecap="round" />
-                      <text
-                        x="16"
-                        y="12.2"
-                        fill="currentColor"
-                        stroke="none"
-                        fontSize="6"
-                        fontWeight="900"
-                        textAnchor="middle"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                      >
-                        Rp
-                      </text>
-                    </svg>
-                  </button>
-
-                  {/* 2. QRIS (Logo QRIS) */}
-                  <button
-                    type="button"
-                    title="Pembayaran QRIS"
-                    onClick={() => setPosPaymentMethod('QRIS')}
-                    className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
-                      posPaymentMethod === 'QRIS'
-                        ? 'bg-gray-900 text-white shadow-xs'
-                        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <img
-                      src="/assets/kasir/qris-logo.png"
-                      alt="QRIS"
-                      className={`h-4 max-w-[58px] object-contain transition-all ${
-                        posPaymentMethod === 'QRIS' ? 'brightness-0 invert' : ''
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Pilih Pembayaran
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {/* 1. Tunai (Logo Uang Tunai) */}
+                    <button
+                      type="button"
+                      title="Pembayaran Tunai"
+                      onClick={() => setPosPaymentMethod('Tunai')}
+                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                        posPaymentMethod === 'Tunai'
+                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
                       }`}
-                    />
-                  </button>
-
-                  {/* 3. Debit (Logo Kartu Debit) */}
-                  <button
-                    type="button"
-                    title="Pembayaran Kartu Debit"
-                    onClick={() => setPosPaymentMethod('Kartu/Debit')}
-                    className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
-                      posPaymentMethod === 'Kartu/Debit'
-                        ? 'bg-gray-900 text-white shadow-xs'
-                        : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <svg
-                      className="h-4.5 w-auto"
-                      viewBox="0 0 32 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      stroke="currentColor"
                     >
-                      <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
-                      <line x1="1" y1="5.5" x2="31" y2="5.5" strokeWidth="1.8" />
-                      <rect x="4" y="9.5" width="5.5" height="4" rx="1" fill="currentColor" stroke="none" />
-                      <text
-                        x="13"
-                        y="14"
-                        fill="currentColor"
-                        stroke="none"
-                        fontSize="6"
-                        fontWeight="800"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                        letterSpacing="0.4"
+                      <svg
+                        className="h-4.5 w-auto"
+                        viewBox="0 0 32 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        stroke="currentColor"
                       >
-                        DEBIT
-                      </text>
-                    </svg>
-                  </button>
+                        <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
+                        <circle cx="16" cy="10" r="4.5" strokeWidth="1.8" />
+                        <path d="M5 6.5V7M27 6.5V7M5 13V13.5M27 13V13.5" strokeWidth="2" strokeLinecap="round" />
+                        <text
+                          x="16"
+                          y="12.2"
+                          fill="currentColor"
+                          stroke="none"
+                          fontSize="6"
+                          fontWeight="900"
+                          textAnchor="middle"
+                          fontFamily="system-ui, -apple-system, sans-serif"
+                        >
+                          Rp
+                        </text>
+                      </svg>
+                    </button>
+
+                    {/* 2. QRIS (Logo QRIS) */}
+                    <button
+                      type="button"
+                      title="Pembayaran QRIS"
+                      onClick={() => setPosPaymentMethod('QRIS')}
+                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                        posPaymentMethod === 'QRIS'
+                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src="/assets/kasir/qris-logo.png"
+                        alt="QRIS"
+                        className={`h-4 max-w-[58px] object-contain transition-all ${
+                          posPaymentMethod === 'QRIS' ? 'brightness-0 invert' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {/* 3. Debit (Logo Kartu Debit) */}
+                    <button
+                      type="button"
+                      title="Pembayaran Kartu Debit"
+                      onClick={() => setPosPaymentMethod('Kartu/Debit')}
+                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                        posPaymentMethod === 'Kartu/Debit'
+                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
+                      }`}
+                    >
+                      <svg
+                        className="h-4.5 w-auto"
+                        viewBox="0 0 32 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        stroke="currentColor"
+                      >
+                        <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
+                        <line x1="1" y1="5.5" x2="31" y2="5.5" strokeWidth="1.8" />
+                        <rect x="4" y="9.5" width="5.5" height="4" rx="1" fill="currentColor" stroke="none" />
+                        <text
+                          x="13"
+                          y="14"
+                          fill="currentColor"
+                          stroke="none"
+                          fontSize="6"
+                          fontWeight="800"
+                          fontFamily="system-ui, -apple-system, sans-serif"
+                          letterSpacing="0.4"
+                        >
+                          DEBIT
+                        </text>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Checkout Button */}
@@ -1962,10 +1987,18 @@ export default function DashboardPage({ onLogout }) {
                   type="button"
                   disabled={posCart.length === 0}
                   onClick={() => handleCompletePayment(posPaymentMethod)}
-                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
+                  className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-between ${
+                    posCart.length > 0
+                      ? 'bg-[#009B5B] hover:bg-[#00874e] text-white shadow-sm hover:shadow active:scale-[0.98] cursor-pointer'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200/60'
+                  }`}
                 >
-                  <span>Bayar Sekarang</span>
-                  <span className="font-black">Rp{cartSubtotal.toLocaleString('id-ID')}</span>
+                  <span className="font-bold">
+                    {posCart.length > 0 ? 'Bayar Sekarang' : 'Pilih Menu Dahulu'}
+                  </span>
+                  <span className="font-black text-base">
+                    Rp{cartSubtotal.toLocaleString('id-ID')}
+                  </span>
                 </button>
 
               </div>
