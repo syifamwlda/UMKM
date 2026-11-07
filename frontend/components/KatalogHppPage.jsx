@@ -516,9 +516,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               </h4>
 
               {/* Ingredients Table */}
-              <div className="border border-emerald-100 rounded-xl overflow-hidden bg-white">
-                {/* Table Header: Clean emerald background matching table */}
-                <div className="grid grid-cols-12 bg-[#EBF7F0] px-4 py-2.5 text-xs font-bold text-emerald-950 border-b border-emerald-100">
+              <div className="border border-gray-200/90 rounded-xl overflow-hidden bg-white">
+                {/* Table Header: Subtle light gray background */}
+                <div className="grid grid-cols-12 bg-gray-50/90 px-4 py-2.5 text-xs font-bold text-gray-700 border-b border-gray-100">
                   <div className="col-span-5">Nama Bahan Baku</div>
                   <div className="col-span-3 text-center">Takaran</div>
                   <div className="col-span-3 text-right">Modal Bahan</div>
@@ -1044,16 +1044,16 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            {/* Table Header: Soft emerald tint matching Figma layout */}
+            {/* Table Header: Subtle light gray background */}
             <thead>
-              <tr className="bg-[#EBF7F0] text-emerald-950 text-xs font-bold border-b border-emerald-100">
-                <th className="py-3.5 px-5 text-left font-bold text-emerald-950">Nama Produk</th>
-                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Kategori</th>
-                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">HPP</th>
-                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Harga Jual</th>
-                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Margin</th>
-                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Status</th>
-                <th className="py-3.5 px-4 text-center font-bold text-emerald-950 w-12"></th>
+              <tr className="bg-gray-50/90 text-gray-700 text-xs font-bold border-b border-gray-100">
+                <th className="py-3.5 px-5 text-left font-bold text-gray-700">Nama Produk</th>
+                <th className="py-3.5 px-4 text-left font-bold text-gray-700">Kategori</th>
+                <th className="py-3.5 px-4 text-left font-bold text-gray-700">HPP</th>
+                <th className="py-3.5 px-4 text-left font-bold text-gray-700">Harga Jual</th>
+                <th className="py-3.5 px-4 text-left font-bold text-gray-700">Margin</th>
+                <th className="py-3.5 px-4 text-left font-bold text-gray-700">Status</th>
+                <th className="py-3.5 px-4 text-center font-bold text-gray-700 w-12"></th>
               </tr>
             </thead>
 
