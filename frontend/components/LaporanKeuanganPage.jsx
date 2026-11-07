@@ -241,8 +241,8 @@ export default function LaporanKeuanganPage({ onToast }) {
             <h3 className="text-lg font-bold text-gray-900 mt-0.5">
               Kedai Kopi Nabila
             </h3>
-            <p className="text-xs font-bold text-[#009F58] mt-1">
-              Target Bulanan Tercapai : 112%
+            <p className="text-xs text-gray-500 font-medium mt-0.5">
+              Target Bulanan Tercapai : <span className="font-bold text-gray-800">112%</span>
             </p>
           </div>
 
@@ -341,7 +341,7 @@ export default function LaporanKeuanganPage({ onToast }) {
               onClick={() => {
                 if (onToast) onToast('Beralih ke analisis detail margin produk...')
               }}
-              className="text-xs font-bold text-[#009F58] hover:text-[#008f4f] transition-colors cursor-pointer"
+              className="text-xs font-semibold text-[#1E88E5] hover:text-blue-700 transition-colors cursor-pointer"
             >
               Analisis Margin Produk →
             </button>
