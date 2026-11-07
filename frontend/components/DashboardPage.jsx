@@ -45,6 +45,7 @@ import {
   Printer,
   Share2
 } from 'lucide-react'
+import KatalogHppPage from './KatalogHppPage'
 
 // Daily cafe performance records for September, October & November 2026
 const DAILY_RECORDS = {
@@ -631,13 +632,44 @@ export default function DashboardPage({ onLogout }) {
     }
   ])
 
-  // ================= KASIR (POS) STATE =================
-  const [posCatalog] = useState([
+  // ================= KASIR & KATALOG HPP STATE =================
+  const [posCatalog, setPosCatalog] = useState([
+    {
+      id: 2,
+      name: 'Kopi Susu Gula Aren',
+      category: 'Minuman',
+      sku: 'BEV001',
+      desc: 'Espresso blend, gula aren murni, susu segar',
+      price: 18000,
+      hpp: 5000,
+      profit: 13000,
+      marginPct: 72,
+      image: '/assets/kasir/kopi-susu.png',
+      tagColor: 'bg-blue-50 text-blue-600',
+      popular: true,
+      defaultNote: 'Level Gula: 50%',
+    },
+    {
+      id: 5,
+      name: 'Croissant Cokelat',
+      category: 'Pastry & Bakery',
+      sku: 'BEV004',
+      desc: 'French butter pastry, dark chocolate',
+      price: 10000,
+      hpp: 10500,
+      profit: -500,
+      marginPct: -5,
+      image: '/assets/kasir/croissant.png',
+      tagColor: 'bg-orange-50 text-orange-700',
+      popular: true,
+      defaultNote: 'Penyajian: Dihangatkan',
+    },
     {
       id: 1,
       name: 'Cafe Latte Gayo',
       category: 'Minuman',
-      desc: 'Espresso double shot..',
+      sku: 'BEV003',
+      desc: 'Espresso double shot Gayo, steamed milk',
       price: 22000,
       hpp: 13900,
       profit: 8100,
@@ -647,24 +679,11 @@ export default function DashboardPage({ onLogout }) {
       popular: true,
     },
     {
-      id: 2,
-      name: 'Kopi Susu Gula Aren',
-      category: 'Minuman',
-      desc: 'Espresso blend, gula..',
-      price: 18000,
-      hpp: 11800,
-      profit: 6200,
-      marginPct: 34,
-      image: '/assets/kasir/kopi-susu.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: true,
-      defaultNote: 'Level Gula: 50%',
-    },
-    {
       id: 3,
       name: 'Matcha Latte Kyoto',
       category: 'Minuman',
-      desc: 'Pure Kyoto Matcha..',
+      sku: 'BEV007',
+      desc: 'Pure Kyoto Matcha, fresh milk',
       price: 24000,
       hpp: 15000,
       profit: 9000,
@@ -677,7 +696,8 @@ export default function DashboardPage({ onLogout }) {
       id: 4,
       name: 'Roti Bakar Coklat',
       category: 'Makanan',
-      desc: 'Roti brioche panggang..',
+      sku: 'FOD001',
+      desc: 'Roti brioche panggang selai coklat',
       price: 16000,
       hpp: 10800,
       profit: 5200,
@@ -687,24 +707,11 @@ export default function DashboardPage({ onLogout }) {
       popular: true,
     },
     {
-      id: 5,
-      name: 'Croissant Cokelat',
-      category: 'Pastry & Bakery',
-      desc: 'French butter pastry..',
-      price: 15000,
-      hpp: 10500,
-      profit: 4500,
-      marginPct: 30,
-      image: '/assets/kasir/croissant.png',
-      tagColor: 'bg-orange-50 text-orange-700',
-      popular: true,
-      defaultNote: 'Penyajian: Dihangatkan',
-    },
-    {
       id: 6,
       name: 'Spaghetti Aglio Olio',
       category: 'Makanan',
-      desc: 'Tumisan smoked beef..',
+      sku: 'FOD002',
+      desc: 'Tumisan smoked beef, olive oil & garlic',
       price: 28000,
       hpp: 16800,
       profit: 11200,
@@ -717,7 +724,8 @@ export default function DashboardPage({ onLogout }) {
       id: 7,
       name: 'Cold Brew Coffee',
       category: 'Minuman',
-      desc: 'Kopi Arabica steeped..',
+      sku: 'BEV005',
+      desc: 'Kopi Arabica steeped 12 jam, smooth & fruity',
       price: 20000,
       hpp: 12600,
       profit: 7400,
@@ -730,7 +738,8 @@ export default function DashboardPage({ onLogout }) {
       id: 8,
       name: 'Almond Croissant',
       category: 'Pastry & Bakery',
-      desc: 'Flaky crust pastry..',
+      sku: 'BEV006',
+      desc: 'Flaky crust pastry with almond cream & sliced nuts',
       price: 18000,
       hpp: 12200,
       profit: 5800,
@@ -1871,12 +1880,12 @@ export default function DashboardPage({ onLogout }) {
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-gray-900">Untung Bersih</span>
                       {cartMarginPct > 0 && (
-                        <span className="text-[10px] font-black text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                        <span className="text-[10px] font-black text-[#009F58] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                           {cartMarginPct}%
                         </span>
                       )}
                     </div>
-                    <span className="text-base font-black text-[#009B5B]">
+                    <span className="text-base font-black text-[#009F58]">
                       +Rp{cartProfit.toLocaleString('id-ID')}
                     </span>
                   </div>
@@ -1887,41 +1896,19 @@ export default function DashboardPage({ onLogout }) {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                     Pilih Pembayaran
                   </p>
-                  <div className="flex items-center gap-2">
-                    {/* 1. Tunai (Logo Uang Tunai) */}
+                  <div className="p-1 bg-gray-100/90 rounded-2xl flex items-center gap-1 border border-gray-200/50">
+                    {/* 1. Tunai (Icon Money / Banknote) */}
                     <button
                       type="button"
                       title="Pembayaran Tunai"
                       onClick={() => setPosPaymentMethod('Tunai')}
-                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
                         posPaymentMethod === 'Tunai'
-                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
-                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
                       }`}
                     >
-                      <svg
-                        className="h-4.5 w-auto"
-                        viewBox="0 0 32 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        stroke="currentColor"
-                      >
-                        <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
-                        <circle cx="16" cy="10" r="4.5" strokeWidth="1.8" />
-                        <path d="M5 6.5V7M27 6.5V7M5 13V13.5M27 13V13.5" strokeWidth="2" strokeLinecap="round" />
-                        <text
-                          x="16"
-                          y="12.2"
-                          fill="currentColor"
-                          stroke="none"
-                          fontSize="6"
-                          fontWeight="900"
-                          textAnchor="middle"
-                          fontFamily="system-ui, -apple-system, sans-serif"
-                        >
-                          Rp
-                        </text>
-                      </svg>
+                      <Banknote className={`w-5 h-5 transition-colors ${posPaymentMethod === 'Tunai' ? 'text-gray-900 stroke-[2]' : 'text-gray-400 stroke-[1.8]'}`} />
                     </button>
 
                     {/* 2. QRIS (Logo QRIS) */}
@@ -1929,17 +1916,17 @@ export default function DashboardPage({ onLogout }) {
                       type="button"
                       title="Pembayaran QRIS"
                       onClick={() => setPosPaymentMethod('QRIS')}
-                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
                         posPaymentMethod === 'QRIS'
-                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
-                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
                       }`}
                     >
                       <img
                         src="/assets/kasir/qris-logo.png"
                         alt="QRIS"
                         className={`h-4 max-w-[58px] object-contain transition-all ${
-                          posPaymentMethod === 'QRIS' ? 'brightness-0 invert' : ''
+                          posPaymentMethod === 'QRIS' ? 'opacity-100' : 'opacity-50 hover:opacity-80'
                         }`}
                       />
                     </button>
@@ -1949,57 +1936,46 @@ export default function DashboardPage({ onLogout }) {
                       type="button"
                       title="Pembayaran Kartu Debit"
                       onClick={() => setPosPaymentMethod('Kartu/Debit')}
-                      className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10.5 ${
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
                         posPaymentMethod === 'Kartu/Debit'
-                          ? 'bg-[#009B5B] text-white shadow-sm ring-2 ring-emerald-500/20'
-                          : 'bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200/70 hover:border-gray-300'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
                       }`}
                     >
-                      <svg
-                        className="h-4.5 w-auto"
-                        viewBox="0 0 32 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        stroke="currentColor"
-                      >
-                        <rect x="1" y="1" width="30" height="18" rx="3" strokeWidth="1.8" />
-                        <line x1="1" y1="5.5" x2="31" y2="5.5" strokeWidth="1.8" />
-                        <rect x="4" y="9.5" width="5.5" height="4" rx="1" fill="currentColor" stroke="none" />
-                        <text
-                          x="13"
-                          y="14"
-                          fill="currentColor"
-                          stroke="none"
-                          fontSize="6"
-                          fontWeight="800"
-                          fontFamily="system-ui, -apple-system, sans-serif"
-                          letterSpacing="0.4"
-                        >
-                          DEBIT
-                        </text>
-                      </svg>
+                      <img
+                        src="/assets/kasir/debit-logo.png"
+                        alt="Debit"
+                        className={`h-5 w-auto object-contain transition-all ${
+                          posPaymentMethod === 'Kartu/Debit' ? 'opacity-100' : 'opacity-50 hover:opacity-80'
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
 
-                {/* Checkout Button */}
-                <button
-                  type="button"
-                  disabled={posCart.length === 0}
-                  onClick={() => handleCompletePayment(posPaymentMethod)}
-                  className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-between ${
-                    posCart.length > 0
-                      ? 'bg-[#009B5B] hover:bg-[#00874e] text-white shadow-sm hover:shadow active:scale-[0.98] cursor-pointer'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200/60'
-                  }`}
-                >
-                  <span className="font-bold">
-                    {posCart.length > 0 ? 'Bayar Sekarang' : 'Pilih Menu Dahulu'}
-                  </span>
-                  <span className="font-black text-base">
-                    Rp{cartSubtotal.toLocaleString('id-ID')}
-                  </span>
-                </button>
+                {/* Checkout Section: Clean, Professional POS Hierarchy */}
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-baseline justify-between px-0.5">
+                    <span className="text-xs font-semibold text-gray-500">Total Tagihan</span>
+                    <span className="text-xl font-black text-gray-900 tracking-tight">
+                      Rp{cartSubtotal.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={posCart.length === 0}
+                    onClick={() => handleCompletePayment(posPaymentMethod)}
+                    className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      posCart.length > 0
+                        ? 'bg-[#009F58] hover:bg-[#008f4f] text-white shadow-sm hover:shadow active:scale-[0.99] cursor-pointer'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200/60'
+                    }`}
+                  >
+                    <span>{posCart.length > 0 ? 'Bayar Sekarang' : 'Pilih Menu Terlebih Dahulu'}</span>
+                    {posCart.length > 0 && <ArrowRight className="w-4 h-4 stroke-[2.5]" />}
+                  </button>
+                </div>
 
               </div>
 
@@ -2081,6 +2057,12 @@ export default function DashboardPage({ onLogout }) {
 
 
           </div>
+        ) : activeMenu === 'Katalog & HPP' ? (
+          <KatalogHppPage
+            catalog={posCatalog}
+            onUpdateCatalog={setPosCatalog}
+            onToast={showToast}
+          />
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
           <>
