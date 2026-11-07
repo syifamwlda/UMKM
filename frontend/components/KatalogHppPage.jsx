@@ -14,11 +14,13 @@ import {
   Trash2,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   TrendingUp,
   Sparkles,
   Banknote,
   BookOpen,
   Layers,
+  Check,
   X
 } from 'lucide-react'
 
@@ -67,6 +69,74 @@ const DEFAULT_RECIPES = {
   ]
 }
 
+function CategoryDropdown({ value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const options = [
+    { id: 'Minuman', label: 'Minuman', icon: Coffee },
+    { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
+    { id: 'Makanan', label: 'Makanan', icon: Utensils }
+  ]
+  const current = options.find((o) => o.id === value) || options[0]
+  const CurrentIcon = current.icon
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50/80 border rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+          isOpen
+            ? 'bg-white border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
+            : 'border-gray-200 hover:border-gray-300 text-gray-900'
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <CurrentIcon className="w-4 h-4 text-[#009F58]" />
+          <span>{current.label}</span>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-[#009F58]' : ''
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+            {options.map((opt) => {
+              const Icon = opt.icon
+              const isSelected = value === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.id)
+                    setIsOpen(false)
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-50 text-[#009F58] font-bold'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-[#009F58]' : 'text-gray-400'}`} />
+                    <span>{opt.label}</span>
+                  </div>
+                  {isSelected && <Check className="w-4 h-4 text-[#009F58]" />}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast }) {
   // Navigation view: 'list' | 'add' | 'edit'
   const [view, setView] = useState('list')
@@ -76,6 +146,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Semua')
   const [statusFilter, setStatusFilter] = useState('Semua Status')
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false)
   const [sortOrder, setSortOrder] = useState('default')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
@@ -436,18 +507,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   <label className="text-xs font-semibold text-gray-700 block mb-1.5">
                     Kategori
                   </label>
-                  <div className="relative">
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer"
-                    >
-                      <option value="Minuman">Minuman</option>
-                      <option value="Pastry & Bakery">Pastry & Bakery</option>
-                      <option value="Makanan">Makanan</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
+                  <CategoryDropdown
+                    value={formData.category}
+                    onChange={(val) => setFormData({ ...formData, category: val })}
+                  />
                 </div>
               </div>
             ) : (
@@ -470,18 +533,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     <label className="text-xs font-semibold text-gray-700 block mb-1.5">
                       Kategori
                     </label>
-                    <div className="relative">
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer"
-                      >
-                        <option value="Minuman">Minuman</option>
-                        <option value="Pastry & Bakery">Pastry & Bakery</option>
-                        <option value="Makanan">Makanan</option>
-                      </select>
-                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
+                    <CategoryDropdown
+                      value={formData.category}
+                      onChange={(val) => setFormData({ ...formData, category: val })}
+                    />
                   </div>
 
                   <div>
@@ -966,18 +1021,89 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         {/* Status Dropdown & Sort */}
         <div className="flex items-center gap-2">
           <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none pl-8 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:border-[#009F58] cursor-pointer"
+            <button
+              type="button"
+              onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+              className={`inline-flex items-center gap-2 pl-3 pr-2.5 py-2.5 bg-white border rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+                isStatusDropdownOpen
+                  ? 'border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
+                  : statusFilter !== 'Semua Status'
+                  ? 'border-[#009F58] text-[#009F58] bg-emerald-50/40'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
+              }`}
             >
-              <option value="Semua Status">Status: Semua Status</option>
-              <option value="Sehat">Status: Sehat</option>
-              <option value="Tipis">Status: Margin Tipis</option>
-              <option value="Rugi">Status: Rugi</option>
-            </select>
-            <Sliders className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Sliders className={`w-3.5 h-3.5 ${statusFilter !== 'Semua Status' ? 'text-[#009F58]' : 'text-gray-400'}`} />
+              <span>
+                {statusFilter === 'Semua Status'
+                  ? 'Status: Semua Status'
+                  : statusFilter === 'Tipis'
+                  ? 'Status: Margin Tipis'
+                  : `Status: ${statusFilter}`}
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
+                  isStatusDropdownOpen ? 'rotate-180 text-[#009F58]' : ''
+                }`}
+              />
+            </button>
+
+            {isStatusDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsStatusDropdownOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+                  <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      Filter Status Margin
+                    </p>
+                  </div>
+                  {[
+                    { id: 'Semua Status', label: 'Semua Status', sub: 'Tampilkan semua produk', icon: Sliders, color: 'text-gray-500' },
+                    { id: 'Sehat', label: 'Status: Sehat', sub: 'Margin optimal ≥ 55%', icon: CheckCircle2, color: 'text-[#009F58]' },
+                    { id: 'Tipis', label: 'Status: Margin Tipis', sub: 'Margin tipis 1% - 54%', icon: AlertTriangle, color: 'text-amber-500' },
+                    { id: 'Rugi', label: 'Status: Rugi', sub: 'Margin minus / defisit', icon: AlertCircle, color: 'text-[#D32F2F]' }
+                  ].map((opt) => {
+                    const Icon = opt.icon
+                    const isSelected = statusFilter === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(opt.id)
+                          setCurrentPage(1)
+                          setIsStatusDropdownOpen(false)
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-colors cursor-pointer text-left ${
+                          isSelected
+                            ? 'bg-emerald-50 text-[#009F58] font-bold'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-white shadow-2xs' : 'bg-gray-100/70'
+                          }`}>
+                            <Icon className={`w-3.5 h-3.5 ${opt.color}`} />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-xs text-gray-900 leading-tight">
+                              {opt.label}
+                            </div>
+                            <div className="text-[10px] text-gray-400 leading-tight mt-0.5">
+                              {opt.sub}
+                            </div>
+                          </div>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-[#009F58] shrink-0 ml-2" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           <button
