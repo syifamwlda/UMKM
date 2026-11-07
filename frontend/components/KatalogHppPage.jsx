@@ -21,6 +21,12 @@ import {
   BookOpen,
   Layers,
   Check,
+  Save,
+  Image as ImageIcon,
+  Calculator,
+  Package,
+  Info,
+  Percent,
   X
 } from 'lucide-react'
 
@@ -68,6 +74,28 @@ const DEFAULT_RECIPES = {
     { id: 3, name: 'Topping Roasted Almond Slice', detail: 'Kacang Almond Panggang', amount: '15 gram', cost: 2200 },
   ]
 }
+
+const PRODUCT_IMAGE_PRESETS = [
+  { id: 'kopi-susu', label: 'Kopi Susu', path: '/assets/kasir/kopi-susu.png' },
+  { id: 'cafe-latte', label: 'Cafe Latte', path: '/assets/kasir/cafe-latte.png' },
+  { id: 'cold-brew', label: 'Cold Brew', path: '/assets/kasir/cold-brew.png' },
+  { id: 'matcha-latte', label: 'Matcha Latte', path: '/assets/kasir/matcha-latte.png' },
+  { id: 'croissant', label: 'Croissant', path: '/assets/kasir/croissant.png' },
+  { id: 'almond-croissant', label: 'Almond Pastry', path: '/assets/kasir/almond-croissant.png' },
+  { id: 'roti-bakar', label: 'Roti Bakar', path: '/assets/kasir/roti-bakar.png' },
+  { id: 'spaghetti', label: 'Spaghetti', path: '/assets/kasir/spaghetti.png' },
+]
+
+const QUICK_INGREDIENTS = [
+  { name: 'Espresso Shot', detail: 'House Blend 100% Arabica', amount: '15 gram', cost: 2250, type: 'Bahan Baku' },
+  { name: 'Fresh Milk UHT', detail: 'Diamond / Greenfields Fresh', amount: '120 ml', cost: 1800, type: 'Bahan Baku' },
+  { name: 'Gula Aren Cair', detail: 'Gula Aren Murni Organik', amount: '20 ml', cost: 500, type: 'Bahan Baku' },
+  { name: 'Sirup Perisa', detail: 'Caramel / Vanilla / Hazelnut', amount: '15 ml', cost: 1200, type: 'Bahan Baku' },
+  { name: 'Kyoto Matcha Powder', detail: 'Grade A Ceremonial Uji', amount: '8 gram', cost: 4500, type: 'Bahan Baku' },
+  { name: 'Cup PP 16oz + Sedotan', detail: 'Cup Plastik + Straw + Sealer', amount: '1 set', cost: 450, type: 'Kemasan' },
+  { name: 'Paper Hot Cup 8oz', detail: 'Heat Insulated Cup + Lid', amount: '1 set', cost: 650, type: 'Kemasan' },
+  { name: 'Dough Croissant Butter', detail: 'Frozen Raw Sheet Dough', amount: '1 pcs', cost: 7500, type: 'Bahan Baku' },
+]
 
 function CategoryDropdown({ value, onChange }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -428,89 +456,150 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   }
 
   // =========================================================================
-  // VIEW: EDIT RESEP PRODUK & TAMBAH PRODUK
+  // VIEW: EDIT RESEP PRODUK & TAMBAH PRODUK (STUDIO RACIKAN HPP & HARGA)
   // =========================================================================
   if (view === 'add' || view === 'edit') {
     const isEdit = view === 'edit'
+    const totalIngredients = formData.ingredients || []
 
     return (
       <div className="space-y-5 animate-fade-in pb-12">
-        {/* Top Header Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Top Header & Breadcrumb */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-gray-100">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-              {isEdit ? 'Edit Resep Produk' : 'Tambah Produk & Resep Baru'}
+            <div className="flex items-center gap-2 text-xs text-gray-500 font-medium mb-1">
+              <button
+                type="button"
+                onClick={() => setView('list')}
+                className="hover:text-gray-900 transition-colors flex items-center gap-1 cursor-pointer font-semibold"
+              >
+                <span>Katalog HPP</span>
+              </button>
+              <span className="text-gray-300">/</span>
+              <span className="text-[#009F58] font-bold">
+                {isEdit ? 'Edit Menu' : 'Tambah Menu & Resep Baru'}
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
+              <span>{isEdit ? 'Edit Resep & Komposisi Menu' : 'Tambah Menu & Racikan HPP'}</span>
+              {isEdit && formData.sku && (
+                <span className="text-xs font-mono font-bold bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-lg border border-gray-200">
+                  {formData.sku}
+                </span>
+              )}
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">
               {isEdit
-                ? 'Atur porsi bahan baku untuk menghitung modal dasar (HPP) otomatis.'
-                : 'Masukkan informasi menu dan racik takaran bahan baku untuk menghitung modal dasar (HPP) otomatis secara akurat.'}
+                ? 'Perbarui takaran resep, modal dasar (HPP), dan simulasikan harga jual menu usaha Anda.'
+                : 'Racik takaran bahan baku, pantau modal dasar secara presisi, dan kalkulasi margin laba sehat F&B Anda.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (onToast) onToast('Fitur Import CSV/Excel akan segera hadir!')
-              }}
-              className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Upload className="w-3.5 h-3.5 text-gray-500" />
-              <span>Import CSV / Excel</span>
-            </button>
-
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setView('list')}
-              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] border border-rose-100 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Batal / Kembali</span>
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <span>Batal</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveProduct}
+              className="px-5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs hover:shadow"
+            >
+              <Save className="w-4 h-4" />
+              <span>{isEdit ? 'Simpan Perubahan' : 'Terbitkan Menu'}</span>
             </button>
           </div>
         </div>
 
-        {/* 2-Column Clean Layout */}
+        {/* 2-Column Responsive Studio Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
-          {/* ================= LEFT COLUMN: INFORMASI PRODUK & RESEP (7 COLS) ================= */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-5 shadow-xs">
+          {/* ================= LEFT COLUMN: IDENTITAS MENU & KOMPOSISI RESEP (7 COLS) ================= */}
+          <div className="lg:col-span-7 space-y-5">
             
-            {/* Header: Informasi Produk & SKU Badge */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Utensils className="w-4 h-4 text-[#009F58]" />
-                <h3 className="font-bold text-sm sm:text-base text-gray-900">
-                  Informasi Produk
-                </h3>
-              </div>
-              {isEdit && formData.sku && (
-                <span className="text-xs font-semibold text-gray-500 font-mono">
-                  SKU: {formData.sku}
+            {/* Card 1: Identitas Menu & Foto */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#009F58] flex items-center justify-center">
+                    <Utensils className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                      Identitas Menu
+                    </h3>
+                    <p className="text-[11px] text-gray-400">
+                      Informasi dasar yang tampil di daftar menu dan kasir
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-[#009F58] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                  Aktif di Kasir
                 </span>
-              )}
-            </div>
+              </div>
 
-            {/* Nama Produk & Kategori Grid (Side by side on Edit, matching Figma) */}
-            {isEdit ? (
+              {/* Foto Produk Picker */}
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">
+                  Pilih Foto / Ikon Menu
+                </label>
+                <div className="flex items-center gap-3 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {PRODUCT_IMAGE_PRESETS.map((preset) => {
+                    const isSelected = formData.image === preset.path
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, image: preset.path })}
+                        className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 shrink-0 flex flex-col items-center gap-1 cursor-pointer ${
+                          isSelected
+                            ? 'border-[#009F58] bg-emerald-50/50 shadow-xs ring-2 ring-[#009F58]/20'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                      >
+                        <img
+                          src={preset.path}
+                          alt={preset.label}
+                          className="w-11 h-11 object-cover rounded-lg"
+                        />
+                        <span className={`text-[10px] font-semibold leading-none ${
+                          isSelected ? 'text-[#009F58]' : 'text-gray-500'
+                        }`}>
+                          {preset.label}
+                        </span>
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#009F58] text-white flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Nama Menu & Kategori */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                    Nama Produk
+                  <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                    Nama Menu <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Contoh: Kopi Susu Gula Aren"
-                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-semibold focus:bg-white focus:border-[#009F58] focus:ring-2 focus:ring-[#009F58]/10 outline-none transition-all placeholder:text-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                    Kategori
+                  <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                    Kategori Menu
                   </label>
                   <CategoryDropdown
                     value={formData.category}
@@ -518,103 +607,131 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   />
                 </div>
               </div>
-            ) : (
-              <>
+
+              {/* SKU & Panduan Barista */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
                 <div>
-                  <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                    Nama Produk
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-gray-700">
+                      Kode SKU
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAutoSku}
+                      className="text-[10px] font-bold text-[#009F58] hover:underline cursor-pointer"
+                    >
+                      Acak Kode
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Contoh: Kopi Susu Gula Aren"
-                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="Contoh: BEV001"
+                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-mono font-semibold focus:bg-white focus:border-[#009F58] outline-none transition-all"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                      Kategori
-                    </label>
-                    <CategoryDropdown
-                      value={formData.category}
-                      onChange={(val) => setFormData({ ...formData, category: val })}
-                    />
-                  </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                    Catatan Standar Penyajian <span className="text-[10px] text-gray-400 font-normal">(Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Contoh: Ekstraksi 25 detik, es batu 120gr, kocok sebelum disajikan"
+                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs text-gray-800 focus:bg-white focus:border-[#009F58] outline-none transition-all placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
+            </div>
 
+            {/* Card 2: Komposisi Resep & Modal Bahan (HPP) */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#009F58] flex items-center justify-center">
+                    <BookOpen className="w-3.5 h-3.5" />
+                  </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                      SKU Produk
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        value={formData.sku}
-                        onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                        placeholder="Contoh: BEV008"
-                        className="flex-1 px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-mono focus:bg-white focus:border-[#009F58] outline-none transition-all"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAutoSku}
-                        className="px-3.5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
-                      >
-                        Auto
-                      </button>
-                    </div>
+                    <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                      Komposisi Bahan & Kemasan (HPP)
+                    </h3>
+                    <p className="text-[11px] text-gray-400">
+                      Rincian bahan mentah dan kemasan yang dipakai dalam 1 porsi
+                    </p>
                   </div>
                 </div>
-              </>
-            )}
+                <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                  {totalIngredients.length} Komponen
+                </span>
+              </div>
 
-            {/* Komposisi Takaran Resep Header */}
-            <div className="pt-2">
-              <h4 className="text-xs font-bold text-gray-900 mb-2">
-                Komposisi Takaran Resep
-              </h4>
-
-              {/* Ingredients Table */}
+              {/* Table Komponen Bahan */}
               <div className="border border-gray-200/90 rounded-xl overflow-hidden bg-white">
-                {/* Table Header: Subtle light gray background */}
                 <div className="grid grid-cols-12 bg-gray-50/90 px-4 py-2.5 text-xs font-bold text-gray-700 border-b border-gray-100">
-                  <div className="col-span-5">Nama Bahan Baku</div>
-                  <div className="col-span-3 text-center">Takaran</div>
+                  <div className="col-span-4 sm:col-span-5">Komponen Bahan</div>
+                  <div className="col-span-3 sm:col-span-2 text-center">Takaran</div>
                   <div className="col-span-3 text-right">Modal Bahan</div>
-                  <div className="col-span-1 text-center"></div>
+                  <div className="col-span-2 text-center hidden sm:block">Porsi HPP</div>
+                  <div className="col-span-2 sm:col-span-1 text-center"></div>
                 </div>
 
-                {/* Table Rows or Empty State */}
-                {formData.ingredients.length > 0 ? (
-                  <div className="divide-y divide-gray-100 max-h-[280px] overflow-y-auto">
-                    {formData.ingredients.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid grid-cols-12 px-4 py-2.5 text-xs items-center hover:bg-gray-50/70 transition-colors"
-                      >
-                        <div className="col-span-5 pr-2">
-                          <p className="font-bold text-gray-900 leading-tight">{item.name}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">{item.detail}</p>
+                {totalIngredients.length > 0 ? (
+                  <div className="divide-y divide-gray-100 max-h-[300px] overflow-y-auto">
+                    {totalIngredients.map((item) => {
+                      const costNum = Number(item.cost) || 0
+                      const pctOfHpp = currentFormHpp > 0 ? Math.round((costNum / currentFormHpp) * 100) : 0
+                      const isPackaging = /cup|sedotan|paper|kemasan|botol|bag|lid|box/i.test(item.name) || /cup|sedotan|paper|kemasan|botol|bag|lid|box/i.test(item.detail)
+                      return (
+                        <div
+                          key={item.id}
+                          className="grid grid-cols-12 px-4 py-3 text-xs items-center hover:bg-gray-50/70 transition-colors"
+                        >
+                          <div className="col-span-4 sm:col-span-5 pr-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-gray-900 leading-tight">{item.name}</span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                isPackaging
+                                  ? 'bg-sky-50 text-sky-700 border border-sky-100'
+                                  : 'bg-emerald-50 text-[#009F58] border border-emerald-100'
+                              }`}>
+                                {isPackaging ? 'Kemasan' : 'Bahan'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-0.5 truncate">{item.detail || '-'}</p>
+                          </div>
+                          <div className="col-span-3 sm:col-span-2 text-center text-gray-700 font-semibold text-xs">
+                            {item.amount}
+                          </div>
+                          <div className="col-span-3 text-right font-bold text-gray-900 text-xs">
+                            Rp{costNum.toLocaleString('id-ID')}
+                          </div>
+                          <div className="col-span-2 text-center hidden sm:block">
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-gray-500">{pctOfHpp}%</span>
+                              <div className="w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-[#009F58] rounded-full"
+                                  style={{ width: `${Math.min(100, pctOfHpp)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-span-2 sm:col-span-1 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteIngredient(item.id)}
+                              className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer mx-auto"
+                              title="Hapus Bahan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="col-span-3 text-center text-gray-700 font-medium">
-                          {item.amount}
-                        </div>
-                        <div className="col-span-3 text-right font-semibold text-gray-900">
-                          Rp{Number(item.cost).toLocaleString('id-ID')}
-                        </div>
-                        <div className="col-span-1 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteIngredient(item.id)}
-                            className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer mx-auto"
-                            title="Hapus Bahan"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 ) : (
                   <div className="py-8 px-4 text-center">
@@ -624,143 +741,157 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     <p className="text-xs font-bold text-gray-800">
                       Belum ada bahan baku yang dimasukkan
                     </p>
-                    <p className="text-[11px] text-gray-400 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                      Tambahkan bahan dasar seperti espresso shot, susu UHT, sirup perisa, atau kemasan cup & sedotan pada formulir di bawah ini.
+                    <p className="text-[11px] text-gray-400 mt-1 max-w-[320px] mx-auto leading-relaxed">
+                      Pilih dari template cepat di bawah atau masukkan takaran bahan seperti kopi, susu, sirup, hingga cup kemasan.
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Add Ingredient Form or Button */}
-              {(!isEdit || showAddIngredientForm) ? (
-                <div className="mt-3 p-3.5 bg-gray-50/80 rounded-xl border border-gray-200 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-bold text-gray-700">
-                      Input Bahan Baru ke Resep
-                    </p>
-                    {isEdit && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddIngredientForm(false)}
-                        className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {/* Template Bahan Cepat F&B */}
+              <div>
+                <p className="text-[11px] font-bold text-gray-600 mb-1.5 flex items-center gap-1">
+                  <span>Template Bahan Cepat F&B:</span>
+                  <span className="text-gray-400 font-normal">(Klik untuk isi otomatis)</span>
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {QUICK_INGREDIENTS.map((qi, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setIngredientInput({
+                          name: qi.name,
+                          detail: qi.detail,
+                          amount: qi.amount,
+                          cost: String(qi.cost)
+                        })
+                      }}
+                      className="px-2.5 py-1 bg-gray-50 hover:bg-emerald-50 hover:text-[#009F58] hover:border-emerald-200 border border-gray-200 rounded-lg text-[11px] font-semibold text-gray-600 transition-colors cursor-pointer"
+                    >
+                      + {qi.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Input Bahan Baru Form */}
+              <div className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-200/90 space-y-2.5">
+                <span className="text-[11px] font-bold text-gray-700 block">
+                  Tambah Bahan / Kemasan Baru
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                  <div className="sm:col-span-4">
                     <input
                       type="text"
                       value={ingredientInput.name}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })}
-                      placeholder="Contoh: Kopi Espresso"
-                      className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
+                      placeholder="Nama Bahan (Kopi / Susu / Cup)"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-900 outline-none focus:border-[#009F58]"
                     />
+                  </div>
+                  <div className="sm:col-span-3">
+                    <input
+                      type="text"
+                      value={ingredientInput.detail}
+                      onChange={(e) => setIngredientInput({ ...ingredientInput, detail: e.target.value })}
+                      placeholder="Merk/Detail (contoh: Diamond)"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
                     <input
                       type="text"
                       value={ingredientInput.amount}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, amount: e.target.value })}
-                      placeholder="Contoh: 15 gram"
-                      className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
+                      placeholder="Takaran (15g / 100ml)"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-900 outline-none focus:border-[#009F58]"
                     />
+                  </div>
+                  <div className="sm:col-span-3">
                     <input
                       type="number"
                       value={ingredientInput.cost}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, cost: e.target.value })}
-                      placeholder="Biaya (Rp)"
-                      className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
+                      placeholder="Biaya Rp (contoh: 2500)"
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-900 outline-none focus:border-[#009F58]"
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleAddIngredient}
-                    className="w-full py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5 text-[#009F58]" />
-                    <span>Simpan Bahan ke Resep</span>
-                  </button>
                 </div>
-              ) : (
                 <button
                   type="button"
-                  onClick={() => setShowAddIngredientForm(true)}
-                  className="mt-3 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold text-xs rounded-xl border border-gray-200/90 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  onClick={handleAddIngredient}
+                  className="w-full py-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  <Plus className="w-3.5 h-3.5 text-gray-600" />
-                  <span>Tambah Bahan Baku</span>
+                  <Plus className="w-3.5 h-3.5 text-[#009F58] stroke-[2.5]" />
+                  <span>Simpan Komponen ke Racikan Resep</span>
                 </button>
-              )}
+              </div>
 
-              {/* Total Modal Dasar (HPP) Card (Soft green tint) */}
-              <div className="mt-4 p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
+              {/* Total Modal Dasar (HPP) Summary Banner */}
+              <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#009F58] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-                    <BookOpen className="w-5 h-5 stroke-[1.8]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#009F58] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Calculator className="w-5 h-5 stroke-[2]" />
                   </div>
                   <div>
                     <h5 className="text-xs font-bold text-gray-900">
-                      Total Modal Dasar (HPP)
+                      Total Modal Dasar Pokok (HPP)
                     </h5>
                     <p className="text-[11px] text-gray-500 mt-0.5">
                       {currentFormHpp > 0
-                        ? `100% Akurat Terhadap Stok (${formData.ingredients.length} bahan terdaftar)`
-                        : 'Modal dasar akan dihitung otomatis saat bahan dan kemasan ditambahkan.'}
+                        ? `Terakumulasi dari ${totalIngredients.length} bahan baku dan kemasan racikan.`
+                        : 'Modal dasar akan otomatis terhitung saat bahan ditambahkan.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="sm:text-right shrink-0">
                   <span className="text-xl sm:text-2xl font-black text-[#009F58] leading-none block">
                     Rp{currentFormHpp.toLocaleString('id-ID')}
                   </span>
-                  <span className="text-[10px] text-gray-400 block mt-1">
-                    /porsi racikan
+                  <span className="text-[10px] text-gray-400 block mt-1 font-semibold">
+                    per porsi sajian
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Tambahkan Catatan */}
-            <div className="pt-2">
-              <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                Tambahkan Catatan
-              </label>
-              <textarea
-                rows={2}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Tuliskan catatan cara pembuatan atau takaran standar untuk panduan kasir / barista (opsional)... Contoh: Ekstraksi espresso 25 detik, tuang sirup terlebih dahulu sebelum es batu."
-                className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none transition-all"
-              />
             </div>
 
           </div>
 
-          {/* ================= RIGHT COLUMN: SIMULATOR HARGA & AI INSIGHT (5 COLS) ================= */}
+          {/* ================= RIGHT COLUMN: SIMULATOR HARGA & MARGIN (5 COLS) ================= */}
           <div className="lg:col-span-5 space-y-4">
             
             <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
               
-              {/* Header: Simulator Harga Jual */}
-              <div className="flex items-center justify-between">
+              {/* Header: Simulator Harga & Margin */}
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-[#009F58]" />
-                  <h3 className="font-bold text-sm text-gray-900">
-                    Simulator Harga Jual
-                  </h3>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-[#009F58] flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                      Kalkulator Margin & Harga Jual
+                    </h3>
+                    <p className="text-[11px] text-gray-400">
+                      Simulasi finansial per porsi produk
+                    </p>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-400 font-medium">
-                  Real-time Margin
+                <span className="text-xs text-gray-500 font-semibold">
+                  Real-Time
                 </span>
               </div>
 
               {/* Rencanakan Harga Jual Konsumen */}
-              <div>
-                <label className="text-xs font-semibold text-gray-600 block mb-1.5">
-                  Rencanakan Harga Jual Konsumen
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 flex items-center justify-between">
+                  <span>Rencana Harga Jual Konsumen</span>
+                  <span className="text-[11px] font-normal text-gray-400">Tercetak di struk kasir</span>
                 </label>
-                <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 focus-within:border-[#009F58] focus-within:ring-2 focus-within:ring-[#009F58]/10 transition-all">
-                  <span className="px-2.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-lg mr-3 shadow-xs">
+                <div className="flex items-center bg-gray-50/80 border border-gray-200 rounded-xl px-3.5 py-2.5 focus-within:bg-white focus-within:border-[#009F58] focus-within:ring-2 focus-within:ring-[#009F58]/10 transition-all">
+                  <span className="px-2.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-lg mr-3 shadow-2xs">
                     Rp
                   </span>
                   <input
@@ -771,108 +902,161 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       setFormData({ ...formData, price: raw ? Number(raw) : 0 })
                     }}
                     placeholder="18.000"
-                    className="flex-1 text-xl sm:text-2xl font-bold text-gray-900 outline-none bg-transparent"
+                    className="flex-1 text-xl sm:text-2xl font-black text-gray-900 outline-none bg-transparent placeholder:text-gray-300"
                   />
                   <SquarePen className="w-4 h-4 text-gray-400" />
                 </div>
               </div>
 
-              {/* 2 Metrics: Estimasi Untung Bersih & Persentase Margin */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-100">
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span className="text-xs font-semibold">Estimasi Untung Bersih</span>
-                    <Banknote className="w-3.5 h-3.5 text-[#009F58]" />
-                  </div>
-                  <p className={`text-xl font-black mt-1 ${currentNetProfit >= 0 ? 'text-[#009F58]' : 'text-[#D32F2F]'}`}>
+              {/* Rekomendasi Harga Cepat 1-Click Berdasarkan Target Margin */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-800">Rekomendasi Margin Otomatis</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Klik untuk terapkan</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { margin: 0.50, label: 'Margin 50%', desc: 'Ekonomis' },
+                    { margin: 0.65, label: 'Margin 65%', desc: 'Standar F&B', recommended: true },
+                    { margin: 0.75, label: 'Margin 75%', desc: 'Tinggi' },
+                  ].map((tier) => {
+                    const suggestedPrice = currentFormHpp > 0 ? Math.ceil((currentFormHpp / (1 - tier.margin)) / 500) * 500 : 0
+                    const isActive = Number(formData.price) === suggestedPrice && suggestedPrice > 0
+                    return (
+                      <button
+                        key={tier.margin}
+                        type="button"
+                        disabled={currentFormHpp <= 0}
+                        onClick={() => setFormData({ ...formData, price: suggestedPrice })}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-emerald-50 border-[#009F58] ring-2 ring-[#009F58]/20'
+                            : 'bg-white hover:bg-gray-50 border-gray-200'
+                        } ${currentFormHpp <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-gray-900">{tier.label}</span>
+                          {tier.recommended && (
+                            <span className="text-[9px] font-bold text-[#009F58] bg-emerald-100/70 px-1 py-0.2 rounded">
+                              Ideal
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-black text-[#009F58] mt-1">
+                          {suggestedPrice > 0 ? `Rp${suggestedPrice.toLocaleString('id-ID')}` : '-'}
+                        </p>
+                        <span className="text-[10px] text-gray-400 block mt-0.5">{tier.desc}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Rincian Finansial Breakdown Card */}
+              <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-100 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500 font-medium">Harga Jual Konsumen</span>
+                  <span className="font-bold text-gray-900">Rp{currentSellingPrice.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500 font-medium">Modal Pokok Resep (HPP)</span>
+                  <span className="font-bold text-[#D32F2F]">-Rp{currentFormHpp.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="pt-2 border-t border-gray-200/70 flex items-center justify-between text-xs">
+                  <span className="font-bold text-gray-800">Laba Kotor per Porsi</span>
+                  <span className={`font-black text-sm ${currentNetProfit >= 0 ? 'text-[#009F58]' : 'text-[#D32F2F]'}`}>
                     {currentNetProfit >= 0 ? `+Rp${currentNetProfit.toLocaleString('id-ID')}` : `-Rp${Math.abs(currentNetProfit).toLocaleString('id-ID')}`}
-                  </p>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">
-                    {isEdit ? 'Laba kotor per cup' : 'Laba kotor per porsi'}
                   </span>
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-100">
-                  <div className="flex items-center justify-between text-gray-500">
-                    <span className="text-xs font-semibold">Persentase Margin</span>
-                    <TrendingUp className={`w-3.5 h-3.5 ${currentNetProfit < 0 ? 'text-[#D32F2F]' : Number(currentMarginPct) < 55 ? 'text-amber-600' : 'text-[#009F58]'}`} />
-                  </div>
-                  <p className={`text-xl font-black mt-1 ${currentNetProfit < 0 ? 'text-[#D32F2F]' : Number(currentMarginPct) < 55 ? 'text-amber-600' : 'text-[#009F58]'}`}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500 font-medium">Rasio Beban Bahan (Food Cost)</span>
+                  <span className="font-bold text-gray-700">
+                    {currentSellingPrice > 0 ? `${((currentFormHpp / currentSellingPrice) * 100).toFixed(1)}%` : '0%'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-gray-800">Margin Keuntungan Kotor</span>
+                  <span className={`font-black text-base ${currentNetProfit < 0 ? 'text-[#D32F2F]' : Number(currentMarginPct) < 55 ? 'text-amber-600' : 'text-[#009F58]'}`}>
                     {currentMarginPct}%
-                  </p>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">
-                    {isEdit ? 'Basis harga menu' : 'Target sehat: 55% - 70%'}
                   </span>
                 </div>
               </div>
 
-              {/* Status Margin Banner */}
-              <div className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-colors ${
+              {/* Benchmark Standar F&B Alert Card */}
+              <div className={`p-4 rounded-xl border text-xs transition-colors space-y-1.5 ${
                 currentNetProfit < 0
-                  ? 'bg-rose-50/80 border-rose-200/70 text-[#D32F2F]'
-                  : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
-                  ? 'bg-amber-50/80 border-amber-200/70 text-amber-800'
-                  : Number(currentMarginPct) >= 55
-                  ? 'bg-emerald-50/80 border-emerald-200/70 text-[#009F58]'
-                  : 'bg-gray-50/80 border-gray-200/70 text-gray-600'
+                  ? 'bg-rose-50 border-rose-200 text-[#D32F2F]'
+                  : Number(currentMarginPct) < 55
+                  ? 'bg-amber-50/80 border-amber-200 text-amber-800'
+                  : 'bg-emerald-50/70 border-emerald-200 text-[#009F58]'
               }`}>
-                <span className="font-bold">
+                <div className="flex items-center gap-2 font-bold">
+                  {currentNetProfit < 0 ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-[#D32F2F]" />
+                      <span>Defisit / Potensi Merugi ({currentMarginPct}%)</span>
+                    </>
+                  ) : Number(currentMarginPct) < 55 ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      <span>Margin Tipis ({currentMarginPct}%)</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-[#009F58]" />
+                      <span>Margin Sehat & Optimal ({currentMarginPct}%)</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-[11px] leading-relaxed text-gray-600">
                   {currentNetProfit < 0
-                    ? `Margin Rugi (${currentMarginPct}%)`
-                    : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
-                    ? `Margin Tipis (${currentMarginPct}%)`
-                    : Number(currentMarginPct) >= 55
-                    ? `Margin Sehat (${currentMarginPct}%)`
-                    : 'Status Margin'}
-                </span>
-                <span className="text-[11px] text-gray-500">
-                  Target minimal café: 55%
-                </span>
+                    ? 'Harga jual berada di bawah biaya modal bahan. Anda akan merugi pada setiap porsi yang terjual. Segera naikkan harga jual atau efisiensikan bahan.'
+                    : Number(currentMarginPct) < 55
+                    ? 'Margin di bawah 55% rentan tidak cukup menutupi beban sewa, listrik, dan gaji pegawai café. Disarankan mencapai margin minimal 55% - 70%.'
+                    : 'Margin berada di atas standar F&B (55% - 70%). Anda memiliki cadangan profit yang cukup kuat untuk biaya operasional dan promosi menu.'}
+                </p>
               </div>
 
-              {/* Insight Bisnis AI Box: Solid Green Top Bar */}
-              <div className="rounded-2xl overflow-hidden border border-emerald-100/90 shadow-2xs">
-                {/* Header bar: Brand Green */}
-                <div className="bg-[#009F58] px-4 py-2.5 text-white flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-white text-[#009F58] flex items-center justify-center">
-                      <Sparkles className="w-3 h-3 fill-current" />
+              {/* Proyeksi Penjualan Harian */}
+              {currentNetProfit > 0 && (
+                <div className="p-3.5 bg-gray-50/60 rounded-xl border border-gray-100">
+                  <div className="flex items-center justify-between text-xs font-bold text-gray-700 mb-2">
+                    <span>Estimasi Hasil Penjualan</span>
+                    <span className="text-[10px] text-gray-400 font-normal">Proyeksi laba kotor</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white p-2.5 rounded-lg border border-gray-100">
+                      <span className="text-[10px] text-gray-400 block">25 porsi / hari</span>
+                      <span className="font-bold text-gray-900 block mt-0.5">
+                        +Rp{(currentNetProfit * 25).toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-[9px] text-[#009F58] font-semibold">
+                        ~Rp{((currentNetProfit * 25 * 30) / 1000000).toFixed(1)}jt / bln
+                      </span>
                     </div>
-                    <span className="font-bold text-xs">Insight Bisnis AI</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-100">
-                    Real-Time Analysis
-                  </span>
-                </div>
-
-                {/* Body Text */}
-                <div className="p-4 bg-white space-y-2.5">
-                  <p className="text-xs text-gray-700 leading-relaxed">
-                    {currentNetProfit < 0
-                      ? `Peringatan: Harga jual lebih rendah dari modal dasar (HPP). Produk ini berpotensi merugi Rp${Math.abs(currentNetProfit).toLocaleString('id-ID')} per porsi. Disarankan menaikkan harga jual minimal ke Rp${Math.ceil((currentFormHpp / 0.45) / 1000) * 1000} agar mencapai margin aman 55%.`
-                      : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
-                      ? `Margin produk ini tergolong tipis (${currentMarginPct}%). Standar industri café F&B minimal 55% untuk menutupi beban sewa & operasional. Pertimbangkan efisiensi takaran bahan baku atau optimasi harga jual.`
-                      : Number(currentMarginPct) >= 55
-                      ? `Margin produk ini sangat sehat (${currentMarginPct}%), berada di atas benchmark café F&B (55% - 70%). Anda memiliki ruang yang sangat fleksibel untuk promosi diskon, bundling, atau loyalty reward!`
-                      : 'AI akan menganalisis kelayakan margin dan memberikan saran rekomendasi harga optimal berdasarkan data pasar F&B setelah Anda memasukkan komposisi resep.'}
-                  </p>
-
-                  <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#009F58]" />
-                    <span>Dianalisis dari data pasar F&B Jakarta Selatan (Kuartal Terbaru)</span>
+                    <div className="bg-white p-2.5 rounded-lg border border-gray-100">
+                      <span className="text-[10px] text-gray-400 block">50 porsi / hari</span>
+                      <span className="font-bold text-[#009F58] block mt-0.5">
+                        +Rp{(currentNetProfit * 50).toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-[9px] text-[#009F58] font-semibold">
+                        ~Rp{((currentNetProfit * 50 * 30) / 1000000).toFixed(1)}jt / bln
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
             </div>
 
-            {/* Big Action Submit Button */}
+            {/* Tombol Simpan Utama */}
             <button
               type="button"
               onClick={handleSaveProduct}
-              className="w-full py-3.5 px-6 rounded-xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm shadow-xs hover:shadow transition-all cursor-pointer text-center"
+              className="w-full py-3.5 px-6 rounded-xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              {isEdit ? 'Simpan Perubahan Resep & Produk' : 'Simpan & Terbitkan Produk'}
+              <Save className="w-4 h-4" />
+              <span>{isEdit ? 'Simpan Perubahan Menu' : 'Simpan & Terbitkan Menu'}</span>
             </button>
 
           </div>
