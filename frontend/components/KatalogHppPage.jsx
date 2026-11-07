@@ -869,37 +869,37 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               <span className="text-xs font-semibold">Rata-rata Margin Usaha</span>
               <TrendingUp className="w-4 h-4 text-[#009F58]" />
             </div>
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-2xl font-black text-[#009F58] tracking-tight">
-                {metrics.avgMargin}%
-              </span>
-              <span className="text-xs text-gray-400 font-medium">
-                Target Min. 30%
-              </span>
-            </div>
+            <p className="text-2xl font-black text-[#009F58] tracking-tight">
+              {metrics.avgMargin}%
+            </p>
+            <p className="text-xs text-gray-400 mt-1 font-medium">
+              Target Min. 30%
+            </p>
           </div>
           <p className="text-xs text-gray-400 mt-4">
             Aman untuk beban operasional & sewa
           </p>
         </div>
 
-        {/* Card 3: Perlu Evaluasi Margin (Fix: No collision with '1 Produk') */}
+        {/* Card 3: Perlu Evaluasi Margin */}
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between text-gray-500 mb-1">
               <span className="text-xs font-semibold">Perlu Evaluasi Margin</span>
               <AlertTriangle className="w-4 h-4 text-[#D32F2F]" />
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xl font-black text-[#D32F2F] tracking-tight">
-                {metrics.evalCount} Produk
-              </span>
-              {metrics.evalCount > 0 && (
-                <span className="text-[11px] font-bold text-[#D32F2F] bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md">
-                  Prioritas Koreksi
-                </span>
-              )}
-            </div>
+            <p className="text-2xl font-black text-[#D32F2F] tracking-tight">
+              {metrics.evalCount} Produk
+            </p>
+            {metrics.evalCount > 0 ? (
+              <p className="text-xs text-[#D32F2F] font-bold mt-1">
+                Prioritas Koreksi
+              </p>
+            ) : (
+              <p className="text-xs text-emerald-600 font-medium mt-1">
+                Semua Margin Sehat
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between mt-4">
