@@ -104,7 +104,12 @@ function CategoryDropdown({ value, onChange }) {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.1)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+            <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                Pilih Kategori
+              </p>
+            </div>
             {options.map((opt) => {
               const Icon = opt.icon
               const isSelected = value === opt.id
@@ -1027,12 +1032,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               className={`inline-flex items-center gap-2 pl-3 pr-2.5 py-2.5 bg-white border rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs ${
                 isStatusDropdownOpen
                   ? 'border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
-                  : statusFilter !== 'Semua Status'
-                  ? 'border-[#009F58] text-[#009F58] bg-emerald-50/40'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
-              <Sliders className={`w-3.5 h-3.5 ${statusFilter !== 'Semua Status' ? 'text-[#009F58]' : 'text-gray-400'}`} />
+              <Sliders className="w-3.5 h-3.5 text-gray-400" />
               <span>
                 {statusFilter === 'Semua Status'
                   ? 'Status: Semua Status'
@@ -1053,17 +1056,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   className="fixed inset-0 z-40"
                   onClick={() => setIsStatusDropdownOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-1.5 w-60 bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.1)] border border-gray-100 p-1.5 z-50 animate-fade-in">
                   <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Filter Status Margin
+                      Filter Status
                     </p>
                   </div>
                   {[
-                    { id: 'Semua Status', label: 'Semua Status', sub: 'Tampilkan semua produk', icon: Sliders, color: 'text-gray-500' },
-                    { id: 'Sehat', label: 'Status: Sehat', sub: 'Margin optimal ≥ 55%', icon: CheckCircle2, color: 'text-[#009F58]' },
-                    { id: 'Tipis', label: 'Status: Margin Tipis', sub: 'Margin tipis 1% - 54%', icon: AlertTriangle, color: 'text-amber-500' },
-                    { id: 'Rugi', label: 'Status: Rugi', sub: 'Margin minus / defisit', icon: AlertCircle, color: 'text-[#D32F2F]' }
+                    { id: 'Semua Status', label: 'Semua Status', icon: Sliders },
+                    { id: 'Sehat', label: 'Status: Sehat', icon: CheckCircle2 },
+                    { id: 'Tipis', label: 'Status: Margin Tipis', icon: AlertTriangle },
+                    { id: 'Rugi', label: 'Status: Rugi', icon: AlertCircle }
                   ].map((opt) => {
                     const Icon = opt.icon
                     const isSelected = statusFilter === opt.id
@@ -1076,28 +1079,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                           setCurrentPage(1)
                           setIsStatusDropdownOpen(false)
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-colors cursor-pointer text-left ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                           isSelected
                             ? 'bg-emerald-50 text-[#009F58] font-bold'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-white shadow-2xs' : 'bg-gray-100/70'
-                          }`}>
-                            <Icon className={`w-3.5 h-3.5 ${opt.color}`} />
-                          </div>
-                          <div>
-                            <div className="font-semibold text-xs text-gray-900 leading-tight">
-                              {opt.label}
-                            </div>
-                            <div className="text-[10px] text-gray-400 leading-tight mt-0.5">
-                              {opt.sub}
-                            </div>
-                          </div>
+                          <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#009F58]' : 'text-gray-400'}`} />
+                          <span>{opt.label}</span>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#009F58] shrink-0 ml-2" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#009F58]" />}
                       </button>
                     )
                   })}
