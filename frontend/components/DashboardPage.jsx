@@ -46,6 +46,7 @@ import {
   Share2
 } from 'lucide-react'
 import KatalogHppPage from './KatalogHppPage'
+import LaporanKeuanganPage from './LaporanKeuanganPage'
 
 // Daily cafe performance records for September, October & November 2026
 const DAILY_RECORDS = {
@@ -2063,6 +2064,8 @@ export default function DashboardPage({ onLogout }) {
             onUpdateCatalog={setPosCatalog}
             onToast={showToast}
           />
+        ) : activeMenu === 'Laporan Keuangan' ? (
+          <LaporanKeuanganPage onToast={showToast} />
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
           <>
