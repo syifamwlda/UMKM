@@ -121,3 +121,4 @@ class PublicReceiptTest extends TestCase
         $res61->assertStatus(429);
     }
 }
+

@@ -28,3 +28,4 @@ class HealthScoreController extends Controller
         ], 200);
     }
 }
+

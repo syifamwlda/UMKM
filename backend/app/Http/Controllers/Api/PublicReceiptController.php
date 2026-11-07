@@ -51,3 +51,4 @@ class PublicReceiptController extends Controller
         ], 200);
     }
 }
+
