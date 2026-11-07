@@ -392,6 +392,45 @@ Menghapus produk.
 
 ---
 
+#### 6. `GET /api/products/{id}/advice`
+Meminta rekomendasi harga jual cerdas dari **Gemini AI** (atau fallback aturan margin sehat jika AI offline/timeout/tanpa key). Dilindungi otentikasi Sanctum dan isolasi data per user. Respons di-cache selama 6 jam per user dan hash data produk.
+- **Header**: `Authorization: Bearer <token>`
+- **Response `200 OK` (Sumber AI)**:
+```json
+{
+  "message": "Saran harga produk berhasil dimuat.",
+  "data": {
+    "headline": "Saran Harga Gemini: Croissant Coklat",
+    "text": "Harga jual Rp25.000 sudah menghasilkan margin 28% yang tergolong sehat. Anda bisa tetap mempertahankan harga ini untuk menjaga loyalitas pelanggan.",
+    "source": "ai",
+    "product_id": 1,
+    "selling_price": 25000,
+    "modal_per_unit": 18000,
+    "margin_percent": 28,
+    "status": "sehat"
+  }
+}
+```
+- **Response `200 OK` (Sumber Fallback / Aturan Heuristik)**:
+```json
+{
+  "message": "Saran harga produk berhasil dimuat.",
+  "data": {
+    "headline": "Rekomendasi Naikkan Harga: Nasi Goreng Rugi",
+    "text": "Harga jual Rp10.000 berada di bawah modal Rp13.000 (-30.0%). Naikkan harga jual ke minimal Rp16.500 agar mencapai batas margin sehat 20%.",
+    "source": "fallback",
+    "product_id": 2,
+    "selling_price": 10000,
+    "modal_per_unit": 13000,
+    "margin_percent": -30,
+    "status": "rugi"
+  }
+}
+```
+- **Response `404 Not Found`**: Jika produk bukan milik user yang sedang terautentikasi.
+
+---
+
 ### Fitur 3: Kasir Sederhana (Catat Penjualan & Snapshot)
 
 #### 1. `POST /api/transactions`
@@ -656,21 +695,19 @@ Statistik ringkasan keuntungan harian, tren performa 7 hari terakhir, evaluasi p
 
 ---
 
-#### 2. `GET /api/dashboard/ai-insight`
-Saran harian berbasis AI dengan fallback teks terstruktur jika AI offline/timeout (diintegrasikan pada Tahap berikutnya).
-- **Header**: `Authorization: Bearer <token>`
-- **Response `200 OK`**:
-```json
-{
-  "message": "Insight harian berhasil dimuat.",
-  "data": {
-    "date": "2026-11-01",
-    "headline": "Kopi Senja Bahagia Hari Ini Sangat Menguntungkan!",
-    "advice": "Penjualan Es Kopi Susu menyumbang 70% dari keuntungan bersihmu hari ini. Tapi perhatikan Brownies Panggang: marginnya cuma 10%. Coba naikkan harga jual 500 perak atau cari supplier cokelat yang lebih hemat agar margin naik ke 25%.",
-    "source": "ai_gemini"
-  }
-}
-```
+#### Integrasi Gemini AI pada Dashboard & Artisan CLI
+
+1. **Daily Insight**: Field `data.insight` pada `GET /api/dashboard/stats` dievaluasi melalui `AiInsightService::dailyInsight`.
+   - Header API: `x-goog-api-key: <key>`.
+   - Timeout: 8 detik.
+   - Temperature: 0.4, Max Output Tokens: 800.
+   - Tanpa PII: Hanya angka ringkasan omzet, laba, margin rata-rata, dan status 5 produk kunci.
+   - Cache: 6 jam per user dan hash data ringkasan.
+   - Sumber: `"ai"` jika Gemini merespons berhasil, atau `"fallback"` jika API key tidak diset, timeout, atau terjadi error.
+
+2. **Artisan CLI**:
+   - `php artisan ai:models`: Memanggil `GET /v1beta/models` dengan header `x-goog-api-key` dan menampilkan daftar model yang mendukung `generateContent` tanpa prefix `models/`.
+   - `php artisan ai:ping`: Melakukan ping ringan menggunakan model yang dikonfigurasi (`GEMINI_MODEL`), menampilkan status HTTP, pesan error mentah yang disanitasi (tanpa mengekspos API key), dan apakah hasilnya `"ai"` atau `"fallback"`.
 
 ---
 

@@ -14,7 +14,9 @@ import {
   Info,
   DollarSign,
   Loader2,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Sparkles,
+  X
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -47,6 +49,36 @@ export default function ProductHppPage({ onNavigateHome }) {
     { name: '', price: '' },
     { name: '', price: '' }
   ])
+
+  // State untuk Fitur AI "Minta Saran Harga" (Gemini AI)
+  const [selectedProductAdvice, setSelectedProductAdvice] = useState(null)
+  const [showAdviceModal, setShowAdviceModal] = useState(false)
+  const [isAdviceLoading, setIsAdviceLoading] = useState(false)
+  const [adviceError, setAdviceError] = useState('')
+  const [adviceData, setAdviceData] = useState(null)
+
+  const handleRequestAdvice = async (product) => {
+    setSelectedProductAdvice(product)
+    setShowAdviceModal(true)
+    setIsAdviceLoading(true)
+    setAdviceError('')
+    setAdviceData(null)
+
+    try {
+      const response = await api.get(`/products/${product.id}/advice`)
+      setAdviceData(response.data?.data || null)
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setAdviceError(err.response.data.message)
+      } else if (err.code === 'ERR_NETWORK') {
+        setAdviceError('Gagal terhubung ke backend server. Pastikan backend aktif.')
+      } else {
+        setAdviceError('Terjadi kendala saat meminta saran harga. Silakan coba kembali.')
+      }
+    } finally {
+      setIsAdviceLoading(false)
+    }
+  }
 
   // Ambil data produk dari backend GET /api/products
   const fetchProducts = async () => {
@@ -493,6 +525,18 @@ export default function ProductHppPage({ onNavigateHome }) {
                       </div>
                     </div>
 
+                    {/* Tombol AI: Minta Saran Harga */}
+                    <div className="pt-3 border-t border-[#EDEDED]">
+                      <button
+                        type="button"
+                        onClick={() => handleRequestAdvice(item)}
+                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-emerald-200/60 shadow-2xs active:scale-[0.99]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Minta saran harga</span>
+                      </button>
+                    </div>
+
                   </div>
                 )
               })}
@@ -731,6 +775,132 @@ export default function ProductHppPage({ onNavigateHome }) {
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL SARAN HARGA AI ================= */}
+      {showAdviceModal && selectedProductAdvice && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#EDEDED] relative my-auto animate-scaleUp">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#E6F9F0] text-[#009B5B] flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900">
+                    Saran Harga Jual
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Menu: <span className="font-semibold text-gray-800">{selectedProductAdvice.name}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAdviceModal(false)
+                  setSelectedProductAdvice(null)
+                  setAdviceData(null)
+                  setAdviceError('')
+                }}
+                className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="mt-5 space-y-4">
+              {/* State 1: Loading */}
+              {isAdviceLoading && (
+                <div className="py-8 text-center space-y-3">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-50 text-[#009B5B] animate-spin">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-900">
+                    Menganalisis Harga Menu...
+                  </h4>
+                  <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                    Menghitung margin optimal berdasarkan HPP bahan baku menggunakan AI.
+                  </p>
+                </div>
+              )}
+
+              {/* State 2: Error */}
+              {!isAdviceLoading && adviceError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3">
+                  <div className="flex items-start gap-2.5 text-red-700">
+                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                      <p className="font-bold">Gagal Memuat Saran Harga</p>
+                      <p className="mt-0.5 text-red-600">{adviceError}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRequestAdvice(selectedProductAdvice)}
+                    className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Coba Lagi</span>
+                  </button>
+                </div>
+              )}
+
+              {/* State 3: Success Data */}
+              {!isAdviceLoading && !adviceError && adviceData && (
+                <div className="space-y-4">
+                  {/* Source indicator */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-100">
+                      <Sparkles className="w-3 h-3" />
+                      <span>{adviceData.source === 'ai' ? 'Gemini AI Insights' : 'Rekomendasi Margin'}</span>
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">
+                      {adviceData.source === 'ai' ? 'Analisis Cerdas' : 'Aturan Heuristik'}
+                    </span>
+                  </div>
+
+                  {/* Headline & Body */}
+                  <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100 space-y-2">
+                    <h3 className="text-sm font-bold text-gray-900 leading-snug">
+                      {adviceData.headline}
+                    </h3>
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {adviceData.text}
+                    </p>
+                  </div>
+
+                  {/* Summary Comparison */}
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">Harga Saat Ini</span>
+                      <span className="text-sm font-bold text-gray-900 mt-0.5 block">{formatRupiah(adviceData.selling_price)}</span>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">Modal (HPP)</span>
+                      <span className="text-sm font-bold text-gray-900 mt-0.5 block">{formatRupiah(adviceData.modal_per_unit)}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdviceModal(false)}
+                      className="w-full py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
           </div>
         </div>

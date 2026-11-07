@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Produk & Kalkulasi HPP
+    Route::get('/products/{id}/advice', [ProductController::class, 'advice']);
     Route::apiResource('products', ProductController::class);
 
     // Kasir & Transaksi Penjualan

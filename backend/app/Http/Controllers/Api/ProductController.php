@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use App\Services\AiInsightService;
 use App\Services\HppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -87,6 +88,24 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Produk berhasil dihapus.',
             'data' => null,
+        ], 200);
+    }
+
+    /**
+     * Memberikan rekomendasi penetapan harga jual dari Gemini AI (dengan fallback heuristik).
+     */
+    public function advice(Request $request, int $id, AiInsightService $aiService): JsonResponse
+    {
+        $product = $request->user()
+            ->products()
+            ->with('ingredients')
+            ->findOrFail($id);
+
+        $advice = $aiService->priceAdvice($product);
+
+        return response()->json([
+            'message' => 'Saran harga produk berhasil dimuat.',
+            'data' => $advice,
         ], 200);
     }
 }

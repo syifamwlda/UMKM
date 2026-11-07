@@ -9,7 +9,8 @@ use Illuminate\Support\Collection;
 class DashboardService
 {
     public function __construct(
-        protected HppService $hppService
+        protected HppService $hppService,
+        protected AiInsightService $aiInsightService
     ) {}
 
     /**
@@ -107,8 +108,17 @@ class DashboardService
             return $a['margin_percent'] <=> $b['margin_percent'];
         })->values()->all();
 
-        // ================= 4. INSIGHT BERBASIS ATURAN (FALLBACK) =================
-        $insight = $this->generateRuleBasedInsight($sortedProducts, $todayOmzet, $todayLaba, $todayMargin, $todayCount);
+        // ================= 4. INSIGHT GEMINI (DENGAN FALLBACK) =================
+        $insight = $this->aiInsightService->dailyInsight($user, [
+            'today' => [
+                'omzet' => $todayOmzet,
+                'laba' => $todayLaba,
+                'modal' => $todayModal,
+                'transaksi_count' => $todayCount,
+                'margin_rata_rata' => $todayMargin,
+            ],
+            'products' => $sortedProducts,
+        ]);
 
         return [
             'today' => [
@@ -167,3 +177,4 @@ class DashboardService
         ];
     }
 }
+

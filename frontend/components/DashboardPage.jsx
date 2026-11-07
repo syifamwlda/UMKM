@@ -3522,28 +3522,44 @@ export default function DashboardPage({ onLogout }) {
                         
                         {/* Real Insight Card */}
                         <div className="bg-white rounded-2xl p-3 border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.03)] space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                              <Sparkles className="w-3 h-3" />
-                              <span>{insightData.source === 'fallback' ? 'Smart Insight' : 'AI Gemini'}</span>
-                            </span>
-                            <span className="text-[10px] text-gray-400 font-medium">
-                              {insightData.source === 'fallback' ? 'Berbasis Aturan' : 'Analisis AI'}
-                            </span>
-                          </div>
+                          {statsLoading ? (
+                            <div className="py-4 text-center space-y-2">
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-[#009B5B] animate-spin">
+                                <Sparkles className="w-4 h-4" />
+                              </div>
+                              <p className="text-xs font-semibold text-gray-700 animate-pulse">
+                                Lagi dianalisis...
+                              </p>
+                              <p className="text-[10px] text-gray-400">
+                                Menganalisis transaksi & margin dengan AI UntungJelas
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3" />
+                                  <span>{insightData.source === 'fallback' ? 'Smart Insight' : 'AI Gemini'}</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-medium">
+                                  {insightData.source === 'fallback' ? 'Berbasis Aturan' : 'Analisis AI'}
+                                </span>
+                              </div>
 
-                          <h4 className="text-xs font-bold text-gray-900 leading-snug">
-                            {insightData.headline}
-                          </h4>
+                              <h4 className="text-xs font-bold text-gray-900 leading-snug">
+                                {insightData.headline}
+                              </h4>
 
-                          <p className="text-[11px] text-gray-600 leading-relaxed">
-                            {insightData.text}
-                          </p>
+                              <p className="text-[11px] text-gray-600 leading-relaxed">
+                                {insightData.text}
+                              </p>
 
-                          <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
-                            <span>Saran harian kasir & HPP</span>
-                            <span className="text-[#009B5B] font-semibold">UntungJelas Engine</span>
-                          </div>
+                              <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
+                                <span>Saran harian kasir & HPP</span>
+                                <span className="text-[#009B5B] font-semibold">UntungJelas Engine</span>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* Quick action button to check product margins */}

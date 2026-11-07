@@ -200,3 +200,4 @@ class DashboardTest extends TestCase
             ->assertJsonCount(0, 'data.products');
     }
 }
+
