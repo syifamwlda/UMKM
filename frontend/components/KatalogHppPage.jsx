@@ -1054,9 +1054,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         </div>
                       </td>
 
-                      {/* Kategori Badge */}
+                      {/* Kategori (Clean Text - No Pill) */}
                       <td className="py-3.5 px-4">
-                        <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-100 font-medium text-xs rounded-full inline-block">
+                        <span className="text-gray-700 font-medium text-xs sm:text-[13px]">
                           {item.category === 'Pastry & Bakery' ? 'Pastry' : item.category}
                         </span>
                       </td>
@@ -1081,21 +1081,19 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         </span>
                       </td>
 
-                      {/* Status Pill */}
+                      {/* Status (Clean Text - No Pill: Hijau if untung, Merah if rugi) */}
                       <td className="py-3.5 px-4 text-center">
-                        {isRugi ? (
-                          <span className="px-3 py-1 bg-rose-50 text-[#D32F2F] border border-rose-200 font-bold text-xs rounded-full inline-block">
-                            Rugi
-                          </span>
-                        ) : isTipis ? (
-                          <span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-xs rounded-full inline-block">
-                            Tipis
-                          </span>
-                        ) : (
-                          <span className="px-3 py-1 bg-[#009F58] text-white font-bold text-xs rounded-full inline-block shadow-2xs">
-                            Sehat
-                          </span>
-                        )}
+                        <span
+                          className={`font-bold text-xs sm:text-[13px] ${
+                            isRugi
+                              ? 'text-[#D32F2F]'
+                              : isTipis
+                              ? 'text-amber-600'
+                              : 'text-[#009F58]'
+                          }`}
+                        >
+                          {statusText}
+                        </span>
                       </td>
 
                       {/* Action Edit */}
