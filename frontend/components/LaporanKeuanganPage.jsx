@@ -247,9 +247,9 @@ export default function LaporanKeuanganPage({ onToast }) {
             </p>
           </div>
 
-          {/* 3 Stats Grid: Compact gap right under header */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
+          {/* 3 Stats Grid: Fills remaining height cleanly with no awkward bottom gap */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 flex-1">
+            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
               <p className="text-lg font-black text-gray-900 mt-1">Rp42.500</p>
               <span className="text-[11px] text-[#009F58] font-bold block mt-0.5">
@@ -257,7 +257,7 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
+            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Produk Terlaris</span>
               <p className="text-lg font-black text-gray-900 mt-1 truncate">
                 Kopi Susu Aren
@@ -267,7 +267,7 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
+            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Rasio Efisiensi Bahan</span>
               <p className="text-lg font-black text-[#009F58] mt-1">98.4%</p>
               <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
