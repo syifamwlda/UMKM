@@ -112,7 +112,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     ? ((currentNetProfit / currentSellingPrice) * 100).toFixed(1)
     : '0'
 
-  // Summary Metrics (Image 3)
+  // Summary Metrics (Clean, accurate stats)
   const metrics = useMemo(() => {
     const totalMenu = catalog.length
     const minumanCount = catalog.filter((c) => c.category === 'Minuman').length
@@ -244,7 +244,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     setView('edit')
   }
 
-  // Add ingredient item to recipe
+  // Add ingredient item
   const handleAddIngredient = () => {
     if (!ingredientInput.name.trim()) {
       if (onToast) onToast('Silakan isi nama bahan baku')
@@ -352,11 +352,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   }
 
   // =========================================================================
-  // VIEW: EDIT RESEP PRODUK (Image 1) & TAMBAH PRODUK (Image 2)
+  // VIEW: EDIT RESEP PRODUK & TAMBAH PRODUK
   // =========================================================================
   if (view === 'add' || view === 'edit') {
     const isEdit = view === 'edit'
-    const marginNum = Number(currentMarginPct)
 
     return (
       <div className="space-y-5 animate-fade-in pb-12">
@@ -379,7 +378,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               onClick={() => {
                 if (onToast) onToast('Fitur Import CSV/Excel akan segera hadir!')
               }}
-              className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Upload className="w-3.5 h-3.5 text-gray-500" />
               <span>Import CSV / Excel</span>
@@ -388,7 +387,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             <button
               type="button"
               onClick={() => setView('list')}
-              className="px-3.5 py-2 bg-[#FFEBEE] hover:bg-rose-100 text-[#D32F2F] rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Batal / Kembali</span>
@@ -396,22 +395,22 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           </div>
         </div>
 
-        {/* 2-Column Responsive Layout */}
+        {/* 2-Column Clean Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* ================= LEFT COLUMN: INFORMASI PRODUK & RESEP (7 COLS) ================= */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-5 shadow-2xs">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-5 shadow-xs">
             
             {/* Header: Informasi Produk & SKU Badge */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Utensils className="w-4 h-4 text-gray-900" />
+                <Utensils className="w-4 h-4 text-[#009F58]" />
                 <h3 className="font-bold text-sm sm:text-base text-gray-900">
                   Informasi Produk
                 </h3>
               </div>
               {isEdit && formData.sku && (
-                <span className="px-3.5 py-1 bg-[#90CAF9] text-[#0D47A1] font-bold text-xs rounded-xl font-mono">
+                <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-200/80 font-bold text-xs rounded-xl font-mono">
                   SKU: {formData.sku}
                 </span>
               )}
@@ -427,7 +426,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Contoh: Kopi Susu Gula Aren"
-                className="w-full px-3.5 py-2.5 bg-[#F8F9FA] border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-medium"
+                className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-medium"
               />
             </div>
 
@@ -441,7 +440,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full appearance-none px-3.5 py-2.5 bg-[#F8F9FA] border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer font-medium"
+                    className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer font-medium"
                   >
                     <option value="Minuman">Minuman</option>
                     <option value="Pastry & Bakery">Pastry & Bakery</option>
@@ -462,12 +461,12 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       value={formData.sku}
                       onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                       placeholder="Contoh: BEV008"
-                      className="flex-1 px-3.5 py-2.5 bg-[#F8F9FA] border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-mono"
+                      className="flex-1 px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={handleAutoSku}
-                      className="px-3.5 py-2.5 bg-[#1E88E5] hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                      className="px-3.5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
                     >
                       Auto
                     </button>
@@ -483,9 +482,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               </h4>
 
               {/* Ingredients Table */}
-              <div className="border border-sky-200 rounded-xl overflow-hidden bg-white">
-                {/* Table Header: Solid Light Blue as in Mockup (Image 1 & 2) */}
-                <div className="grid grid-cols-12 bg-[#64B5F6] px-4 py-2 text-xs font-bold text-white">
+              <div className="border border-emerald-100 rounded-xl overflow-hidden bg-white">
+                {/* Table Header: Clean emerald background */}
+                <div className="grid grid-cols-12 bg-emerald-50/80 px-4 py-2.5 text-xs font-bold text-emerald-900 border-b border-emerald-100">
                   <div className="col-span-5">Nama Bahan Baku</div>
                   <div className="col-span-3 text-center">Takaran</div>
                   <div className="col-span-3 text-right">Modal Bahan</div>
@@ -507,7 +506,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         <div className="col-span-3 text-center text-gray-700 font-medium">
                           {item.amount}
                         </div>
-                        <div className="col-span-3 text-right font-bold text-[#1E88E5]">
+                        <div className="col-span-3 text-right font-bold text-[#009F58]">
                           Rp{Number(item.cost).toLocaleString('id-ID')}
                         </div>
                         <div className="col-span-1 text-center">
@@ -524,9 +523,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     ))}
                   </div>
                 ) : (
-                  /* Empty state as shown in Image 2 */
                   <div className="py-8 px-4 text-center">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 text-[#1E88E5] flex items-center justify-center mx-auto mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#009F58] flex items-center justify-center mx-auto mb-2">
                       <BookOpen className="w-5 h-5 stroke-[1.8]" />
                     </div>
                     <p className="text-xs font-bold text-gray-800">
@@ -541,7 +539,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* Add Ingredient Form or Button */}
               {(!isEdit || showAddIngredientForm) ? (
-                <div className="mt-3 p-3.5 bg-[#F8F9FA] rounded-xl border border-gray-200 space-y-2.5">
+                <div className="mt-3 p-3.5 bg-gray-50/70 rounded-xl border border-gray-200 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-bold text-gray-700">
                       Input Bahan Baru ke Resep
@@ -568,14 +566,14 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       type="text"
                       value={ingredientInput.amount}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, amount: e.target.value })}
-                      placeholder="Contoh: 10 gram"
+                      placeholder="Contoh: 15 gram"
                       className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
                     />
                     <input
                       type="number"
                       value={ingredientInput.cost}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, cost: e.target.value })}
-                      placeholder="Contoh: Rp250"
+                      placeholder="Contoh: Rp2500"
                       className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
                     />
                   </div>
@@ -599,10 +597,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </button>
               )}
 
-              {/* Total Modal Dasar (HPP) Card (Image 1 & 2) */}
-              <div className="mt-4 p-4 rounded-xl bg-[#EBF3FB] border border-[#D0E2F7] flex items-center justify-between">
+              {/* Total Modal Dasar (HPP) Card (Soft green tint) */}
+              <div className="mt-4 p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#1E88E5] text-white flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-[#009F58] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <div>
@@ -611,7 +609,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     </h5>
                     <p className="text-[10px] text-gray-500 mt-0.5">
                       {currentFormHpp > 0
-                        ? `100% Akurat Terhadap Stok (Bahan: Rp${(currentFormHpp - 450 > 0 ? currentFormHpp - 450 : currentFormHpp).toLocaleString('id-ID')} + Kemasan: Rp450)`
+                        ? `100% Akurat Terhadap Stok (${formData.ingredients.length} bahan terdaftar)`
                         : 'Modal dasar akan dihitung otomatis saat bahan dan kemasan ditambahkan.'}
                     </p>
                   </div>
@@ -628,7 +626,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               </div>
             </div>
 
-            {/* Tambahkan Catatan (Image 2) */}
+            {/* Tambahkan Catatan */}
             {!isEdit && (
               <div className="pt-2">
                 <label className="text-xs font-semibold text-gray-700 block mb-1.5">
@@ -639,7 +637,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Tuliskan catatan cara pembuatan atau takaran standar untuk panduan kasir / barista (opsional)... Contoh: Ekstraksi espresso 25 detik, tuang sirup terlebih dahulu sebelum es batu."
-                  className="w-full px-3.5 py-2.5 bg-[#F8F9FA] border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none"
+                  className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none"
                 />
               </div>
             )}
@@ -649,12 +647,12 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           {/* ================= RIGHT COLUMN: SIMULATOR HARGA & AI INSIGHT (5 COLS) ================= */}
           <div className="lg:col-span-5 space-y-4">
             
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4 shadow-2xs">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4 shadow-xs">
               
               {/* Header: Simulator Harga Jual */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <TrendingUp className="w-4 h-4 text-[#009F58]" />
                   <h3 className="font-bold text-sm text-gray-900">
                     Simulator Harga Jual
                   </h3>
@@ -670,7 +668,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   Rencanakan Harga Jual Konsumen
                 </label>
                 <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 focus-within:border-[#009F58]">
-                  <span className="px-2.5 py-1 bg-[#1E88E5] text-white font-bold text-xs rounded-lg mr-3">
+                  <span className="px-2.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-lg mr-3">
                     Rp
                   </span>
                   <input
@@ -686,10 +684,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* 2 Metrics: Estimasi Untung Bersih & Persentase Margin */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-[#F8F9FA] border border-gray-100">
+                <div className="p-3.5 rounded-xl bg-gray-50/70 border border-gray-100">
                   <div className="flex items-center justify-between text-gray-500">
                     <span className="text-xs font-semibold">Estimasi Untung Bersih</span>
-                    <Banknote className="w-3.5 h-3.5 text-emerald-600" />
+                    <Banknote className="w-3.5 h-3.5 text-[#009F58]" />
                   </div>
                   <p className={`text-xl font-black mt-1 ${currentNetProfit >= 0 ? 'text-[#009F58]' : 'text-[#D32F2F]'}`}>
                     {currentNetProfit >= 0 ? '+' : ''}Rp{currentNetProfit.toLocaleString('id-ID')}
@@ -699,12 +697,12 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#F8F9FA] border border-gray-100">
+                <div className="p-3.5 rounded-xl bg-gray-50/70 border border-gray-100">
                   <div className="flex items-center justify-between text-gray-500">
                     <span className="text-xs font-semibold">Persentase Margin</span>
-                    <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+                    <TrendingUp className="w-3.5 h-3.5 text-[#009F58]" />
                   </div>
-                  <p className="text-xl font-black text-[#1E88E5] mt-1">
+                  <p className="text-xl font-black text-[#009F58] mt-1">
                     {currentMarginPct}%
                   </p>
                   <span className="text-[10px] text-gray-400 block mt-0.5">
@@ -713,14 +711,14 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </div>
               </div>
 
-              {/* Status Margin Banner (Image 1 & 2) */}
-              <div className="p-3 rounded-xl bg-[#F8F9FA] border border-gray-100 flex items-center justify-between text-xs">
+              {/* Status Margin Banner */}
+              <div className="p-3 rounded-xl bg-gray-50/70 border border-gray-100 flex items-center justify-between text-xs">
                 {isEdit ? (
-                  <span className="px-3.5 py-1 bg-[#C8E6C9] text-[#2E7D32] font-bold text-xs rounded-xl">
+                  <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-200 font-bold text-xs rounded-xl">
                     Margin Sehat
                   </span>
                 ) : (
-                  <span className="px-3.5 py-1 bg-gray-200 text-gray-600 font-bold text-xs rounded-xl">
+                  <span className="px-3 py-1 bg-gray-200 text-gray-600 font-bold text-xs rounded-xl">
                     Status Margin
                   </span>
                 )}
@@ -729,17 +727,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </span>
               </div>
 
-              {/* Insight Bisnis AI Box: Solid Blue Top Bar (Image 1 & 2) */}
-              <div className="rounded-xl overflow-hidden border border-gray-200">
-                {/* Solid Blue Bar as in Figma Mockup */}
-                <div className="bg-[#1E88E5] px-3.5 py-2 text-white flex items-center justify-between">
+              {/* Insight Bisnis AI Box: Solid Green Top Bar */}
+              <div className="rounded-xl overflow-hidden border border-emerald-100">
+                {/* Header bar: Brand Green */}
+                <div className="bg-[#009F58] px-3.5 py-2.5 text-white flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-white text-[#1E88E5] flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-white text-[#009F58] flex items-center justify-center">
                       <Sparkles className="w-3 h-3 fill-current" />
                     </div>
                     <span className="font-bold text-xs">Insight Bisnis AI</span>
                   </div>
-                  <span className="text-[10px] text-blue-100">
+                  <span className="text-[10px] text-emerald-100">
                     AI Insights Real-Time
                   </span>
                 </div>
@@ -755,7 +753,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   </p>
 
                   <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1E88E5]" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#009F58]" />
                     <span>Dianalisis dari data pasar F&B Jakarta Selatan (Kuartal Terbaru)</span>
                   </div>
                 </div>
@@ -763,7 +761,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
             </div>
 
-            {/* Big Action Submit Button (Image 1 & 2) */}
+            {/* Big Action Submit Button */}
             <button
               type="button"
               onClick={handleSaveProduct}
@@ -780,7 +778,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   }
 
   // =========================================================================
-  // VIEW: KALKULATOR HPP & KATALOG PRODUK (LIST VIEW - Image 3)
+  // VIEW: KALKULATOR HPP & KATALOG PRODUK (LIST VIEW)
   // =========================================================================
   return (
     <div className="space-y-4 animate-fade-in pb-12">
@@ -801,7 +799,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             onClick={() => {
               if (onToast) onToast('Ekspor data katalog (.csv) berhasil diunduh!')
             }}
-            className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            className="px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Upload className="w-3.5 h-3.5 text-gray-500" />
             <span>Export Data</span>
@@ -818,38 +816,38 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
       </div>
 
-      {/* ================= 3 TOP SUMMARY CARDS (Image 3) ================= */}
-      <div className="p-3.5 rounded-2xl bg-[#EBF7F0] grid grid-cols-1 md:grid-cols-3 gap-3">
+      {/* ================= 3 CLEAN TOP SUMMARY CARDS (NO OUTER GREEN CONTAINER) ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         {/* Card 1: Total Menu Aktif */}
-        <div className="bg-white rounded-xl p-4 border border-emerald-100/50 shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-gray-600">
-              <span className="text-xs font-semibold text-gray-500">Total Menu Aktif</span>
-              <Utensils className="w-4 h-4 text-gray-900" />
+            <div className="flex items-center justify-between text-gray-500 mb-1">
+              <span className="text-xs font-semibold">Total Menu Aktif</span>
+              <Utensils className="w-4 h-4 text-gray-800" />
             </div>
-            <p className="text-2xl font-black text-gray-900 mt-1">
+            <p className="text-2xl font-black text-gray-900 tracking-tight">
               {metrics.totalMenu} Produk
             </p>
-            <p className="text-[11px] text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               {metrics.minumanCount} Minuman, {metrics.pastryCount} Pastry, {metrics.makananCount} Makanan
             </p>
           </div>
 
-          {/* Segmented multi-color progress bar */}
-          <div className="h-2 w-full rounded-full bg-gray-100 mt-3 flex overflow-hidden">
+          {/* Multi-color segment progress bar: Green + Amber + Light Emerald */}
+          <div className="h-2 w-full rounded-full bg-gray-100 mt-4 flex overflow-hidden">
             <div
-              className="bg-[#1E88E5]"
+              className="bg-[#009F58]"
               style={{ width: `${(metrics.minumanCount / Math.max(1, metrics.totalMenu)) * 100}%` }}
               title="Minuman"
             />
             <div
-              className="bg-[#FFC107]"
+              className="bg-amber-400"
               style={{ width: `${(metrics.pastryCount / Math.max(1, metrics.totalMenu)) * 100}%` }}
               title="Pastry"
             />
             <div
-              className="bg-[#009F58]"
+              className="bg-emerald-300"
               style={{ width: `${(metrics.makananCount / Math.max(1, metrics.totalMenu)) * 100}%` }}
               title="Makanan"
             />
@@ -857,51 +855,53 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
 
         {/* Card 2: Rata-rata Margin Usaha */}
-        <div className="bg-white rounded-xl p-4 border border-emerald-100/50 shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-gray-600">
-              <span className="text-xs font-semibold text-gray-500">Rata-rata Margin Usaha</span>
+            <div className="flex items-center justify-between text-gray-500 mb-1">
+              <span className="text-xs font-semibold">Rata-rata Margin Usaha</span>
               <TrendingUp className="w-4 h-4 text-[#009F58]" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl font-black text-[#009F58]">
+            <div className="flex items-baseline gap-2.5">
+              <span className="text-2xl font-black text-[#009F58] tracking-tight">
                 {metrics.avgMargin}%
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 font-medium">
                 Target Min. 30%
               </span>
             </div>
           </div>
-          <p className="text-[11px] text-gray-400 mt-3">
+          <p className="text-xs text-gray-400 mt-4">
             Aman untuk beban operasional & sewa
           </p>
         </div>
 
-        {/* Card 3: Perlu Evaluasi Margin */}
-        <div className="bg-white rounded-xl p-4 border border-emerald-100/50 shadow-xs flex flex-col justify-between">
+        {/* Card 3: Perlu Evaluasi Margin (Fix: No collision with '1 Produk') */}
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-gray-600">
-              <span className="text-xs font-semibold text-gray-500">Perlu Evaluasi Margin</span>
+            <div className="flex items-center justify-between text-gray-500 mb-1">
+              <span className="text-xs font-semibold">Perlu Evaluasi Margin</span>
               <AlertTriangle className="w-4 h-4 text-[#D32F2F]" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-2xl font-black text-[#D32F2F]">
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-2xl font-black text-[#D32F2F] tracking-tight">
                 {metrics.evalCount} Produk
               </span>
-              <span className="text-xs text-[#D32F2F]/80">
-                Prioritas Koreksi
-              </span>
+              {metrics.evalCount > 0 && (
+                <span className="text-[11px] font-bold text-[#D32F2F] bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md">
+                  Prioritas Koreksi
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-[11px] text-gray-500">
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-xs text-gray-400">
               {metrics.rugiCount} Rugi, {metrics.tipisCount} Margin Tipis
             </span>
             <button
               type="button"
               onClick={() => setStatusFilter(statusFilter === 'Rugi' ? 'Semua Status' : 'Rugi')}
-              className="px-3 py-1 bg-[#FFEBEE] hover:bg-rose-100 text-[#D32F2F] font-bold text-xs rounded-lg transition-colors cursor-pointer"
+              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] font-bold text-xs rounded-lg transition-colors cursor-pointer"
             >
               Periksa
             </button>
@@ -910,7 +910,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
       </div>
 
-      {/* ================= SEARCH & STATUS FILTER ROW (Image 3) ================= */}
+      {/* ================= SEARCH & STATUS FILTER ROW ================= */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search input */}
         <div className="relative flex-1">
@@ -953,14 +953,18 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               }
             }}
             title="Urutkan Margin"
-            className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            className={`p-2.5 bg-white border rounded-xl transition-colors cursor-pointer ${
+              sortOrder !== 'default'
+                ? 'border-[#009F58] text-[#009F58] bg-emerald-50'
+                : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
           >
             <ArrowUpDown className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* ================= CATEGORY TABS (Image 3) ================= */}
+      {/* ================= CATEGORY TABS (Active: #009F58) ================= */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]">
         {[
           { id: 'Semua', label: `Semua (${catalog.length})`, icon: Layers },
@@ -980,7 +984,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               }}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-[#1E88E5] text-white'
+                  ? 'bg-[#009F58] text-white shadow-xs'
                   : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
               }`}
             >
@@ -991,13 +995,13 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         })}
       </div>
 
-      {/* ================= PRODUCT TABLE (Image 3) ================= */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-2xs">
+      {/* ================= PRODUCT TABLE (Clean, Professional) ================= */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            {/* Table Header: Light Blue background as in Mockup */}
+            {/* Table Header: Soft emerald tint */}
             <thead>
-              <tr className="bg-[#E3F2FD] text-[#1565C0] text-xs font-bold">
+              <tr className="bg-emerald-50/70 text-emerald-950 text-xs font-bold border-b border-emerald-100/70">
                 <th className="py-3 px-5">Nama Produk</th>
                 <th className="py-3 px-4">Kategori</th>
                 <th className="py-3 px-4">HPP</th>
@@ -1026,7 +1030,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       className={`transition-colors ${
                         isRugi
                           ? 'bg-[#FFF5F5] hover:bg-[#FFEAEA]'
-                          : 'hover:bg-gray-50/80'
+                          : 'hover:bg-gray-50/70'
                       }`}
                     >
                       {/* Product Name + Image + SKU */}
@@ -1052,7 +1056,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
                       {/* Kategori Badge */}
                       <td className="py-3.5 px-4">
-                        <span className="px-3 py-1 bg-[#E3F2FD] text-[#1E88E5] font-semibold text-xs rounded-full inline-block">
+                        <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-100 font-medium text-xs rounded-full inline-block">
                           {item.category === 'Pastry & Bakery' ? 'Pastry' : item.category}
                         </span>
                       </td>
@@ -1077,18 +1081,18 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         </span>
                       </td>
 
-                      {/* Status Pill (Solid Green for Sehat, Soft Pink for Rugi) */}
+                      {/* Status Pill */}
                       <td className="py-3.5 px-4 text-center">
                         {isRugi ? (
-                          <span className="px-3.5 py-1 bg-[#FFEBEE] text-[#D32F2F] font-bold text-xs rounded-full inline-block">
+                          <span className="px-3 py-1 bg-rose-50 text-[#D32F2F] border border-rose-200 font-bold text-xs rounded-full inline-block">
                             Rugi
                           </span>
                         ) : isTipis ? (
-                          <span className="px-3.5 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-full inline-block">
+                          <span className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-xs rounded-full inline-block">
                             Tipis
                           </span>
                         ) : (
-                          <span className="px-3.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-full inline-block">
+                          <span className="px-3 py-1 bg-[#009F58] text-white font-bold text-xs rounded-full inline-block shadow-2xs">
                             Sehat
                           </span>
                         )}
@@ -1100,7 +1104,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                           type="button"
                           onClick={() => handleOpenEdit(item)}
                           title="Edit Resep & Produk"
-                          className="p-1.5 text-gray-400 hover:text-[#1E88E5] rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                         >
                           <SquarePen className="w-4 h-4" />
                         </button>
@@ -1134,7 +1138,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 onClick={() => setCurrentPage(page)}
                 className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                   currentPage === page
-                    ? 'bg-[#1E88E5] text-white'
+                    ? 'bg-[#009F58] text-white shadow-xs'
                     : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
                 }`}
               >
