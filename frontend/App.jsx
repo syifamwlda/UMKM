@@ -13,11 +13,14 @@ import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
 import DashboardPage from './components/DashboardPage'
 import ProductHppPage from './components/ProductHppPage'
+import PublicReceiptPage from './components/PublicReceiptPage'
 
 function MainContent() {
   const { logout } = useAuth()
   const [currentPage, setCurrentPage] = useState(() => {
     const hash = window.location.hash
+    const path = window.location.pathname
+    if (hash.startsWith('#struk/') || path.startsWith('/struk/')) return 'struk'
     if (hash === '#login') return 'login'
     if (hash === '#daftar' || hash === '#register') return 'register'
     if (hash === '#dashboard') return 'dashboard'
@@ -28,12 +31,14 @@ function MainContent() {
   // Synchronize hash in URL with page state
   // NOTE: When on dashboard, ignore hash changes — the dashboard manages its
   // own internal navigation without touching the URL hash. Only react to hash
-  // changes that explicitly signal a page transition (login / register).
+  // changes that explicitly signal a page transition (login / register / struk).
   useEffect(() => {
     const handleHashChange = () => {
       // If currently on dashboard, only leave if explicitly navigating away
       setCurrentPage((prev) => {
         const hash = window.location.hash
+        const path = window.location.pathname
+        if (hash.startsWith('#struk/') || path.startsWith('/struk/')) return 'struk'
         if (prev === 'dashboard') {
           if (hash === '#login') return 'login'
           if (hash === '#daftar' || hash === '#register') return 'register'
@@ -132,6 +137,15 @@ function MainContent() {
         onNavigateLogin={() => navigateTo('login')}
         onRegisterSuccess={() => navigateTo('dashboard')}
         onSuccessRegister={() => navigateTo('dashboard')}
+      />
+    )
+  }
+
+  // Layar Struk Digital Publik (Public read-only)
+  if (currentPage === 'struk') {
+    return (
+      <PublicReceiptPage
+        onNavigateHome={() => navigateTo('home')}
       />
     )
   }

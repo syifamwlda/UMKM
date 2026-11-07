@@ -2096,6 +2096,32 @@ export default function DashboardPage({ onLogout }) {
                   </div>
 
                   <div className="space-y-2">
+                    {posReceiptModal.uuid && (
+                      <div className="grid grid-cols-2 gap-2 pb-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.open(`/#struk/${posReceiptModal.uuid}`, '_blank')
+                          }}
+                          className="py-2 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-emerald-200"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>Buka Struk</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const link = `${window.location.origin}/#struk/${posReceiptModal.uuid}`
+                            navigator.clipboard.writeText(link)
+                            showToast('Tautan struk digital disalin!')
+                          }}
+                          className="py-2 px-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-gray-200"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Salin Tautan</span>
+                        </button>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => {
