@@ -865,22 +865,20 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         {/* Card 1: Total Menu Aktif */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-gray-500 mb-1">
-              <span className="text-xs font-semibold">Total Menu Aktif</span>
-              <Utensils className="w-4 h-4 text-gray-800" />
-            </div>
-            <p className="text-2xl font-black text-gray-900 tracking-tight">
-              {metrics.totalMenu} Produk
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {metrics.minumanCount} Minuman, {metrics.pastryCount} Pastry, {metrics.makananCount} Makanan
-            </p>
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-0.5">
+          <div className="flex items-center justify-between text-gray-500 mb-1">
+            <span className="text-xs font-semibold">Total Menu Aktif</span>
+            <Utensils className="w-4 h-4 text-gray-800" />
           </div>
+          <p className="text-2xl font-black text-gray-900 tracking-tight">
+            {metrics.totalMenu} Produk
+          </p>
+          <p className="text-xs text-gray-400">
+            {metrics.minumanCount} Minuman, {metrics.pastryCount} Pastry, {metrics.makananCount} Makanan
+          </p>
 
           {/* Multi-color segment progress bar: Green + Amber + Light Emerald */}
-          <div className="h-2 w-full rounded-full bg-gray-100 mt-4 flex overflow-hidden">
+          <div className="h-1.5 w-full rounded-full bg-gray-100 !mt-3 flex overflow-hidden">
             <div
               className="bg-[#009F58]"
               style={{ width: `${(metrics.minumanCount / Math.max(1, metrics.totalMenu)) * 100}%` }}
@@ -900,53 +898,49 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
 
         {/* Card 2: Rata-rata Margin Usaha */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-gray-500 mb-1">
-              <span className="text-xs font-semibold">Rata-rata Margin Usaha</span>
-              <TrendingUp className="w-4 h-4 text-[#009F58]" />
-            </div>
-            <p className="text-2xl font-black text-[#009F58] tracking-tight">
-              {metrics.avgMargin}%
-            </p>
-            <p className="text-xs text-gray-400 mt-1 font-medium">
-              Target Min. 30%
-            </p>
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-0.5">
+          <div className="flex items-center justify-between text-gray-500 mb-1">
+            <span className="text-xs font-semibold">Rata-rata Margin Usaha</span>
+            <TrendingUp className="w-4 h-4 text-[#009F58]" />
           </div>
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-2xl font-black text-[#009F58] tracking-tight">
+            {metrics.avgMargin}%
+          </p>
+          <p className="text-xs text-gray-400 font-medium">
+            Target Min. 30%
+          </p>
+          <p className="text-xs text-gray-400 !mt-3">
             Aman untuk beban operasional & sewa
           </p>
         </div>
 
         {/* Card 3: Perlu Evaluasi Margin */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-gray-500 mb-1">
-              <span className="text-xs font-semibold">Perlu Evaluasi Margin</span>
-              <AlertTriangle className="w-4 h-4 text-[#D32F2F]" />
-            </div>
-            <p className="text-2xl font-black text-[#D32F2F] tracking-tight">
-              {metrics.evalCount} Produk
-            </p>
-            {metrics.evalCount > 0 ? (
-              <p className="text-xs text-[#D32F2F] font-bold mt-1">
-                Prioritas Koreksi
-              </p>
-            ) : (
-              <p className="text-xs text-emerald-600 font-medium mt-1">
-                Semua Margin Sehat
-              </p>
-            )}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] space-y-0.5">
+          <div className="flex items-center justify-between text-gray-500 mb-1">
+            <span className="text-xs font-semibold">Perlu Evaluasi Margin</span>
+            <AlertTriangle className="w-4 h-4 text-[#D32F2F]" />
           </div>
+          <p className="text-2xl font-black text-[#D32F2F] tracking-tight">
+            {metrics.evalCount} Produk
+          </p>
+          {metrics.evalCount > 0 ? (
+            <p className="text-xs text-[#D32F2F] font-bold">
+              Prioritas Koreksi
+            </p>
+          ) : (
+            <p className="text-xs text-emerald-600 font-medium">
+              Semua Margin Sehat
+            </p>
+          )}
 
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between !mt-3">
             <span className="text-xs text-gray-400">
               {metrics.rugiCount} Rugi, {metrics.tipisCount} Margin Tipis
             </span>
             <button
               type="button"
               onClick={() => setStatusFilter(statusFilter === 'Rugi' ? 'Semua Status' : 'Rugi')}
-              className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] font-bold text-xs rounded-lg transition-colors cursor-pointer"
+              className="px-2.5 py-0.5 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Periksa
             </button>
