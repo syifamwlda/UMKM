@@ -5,7 +5,7 @@ const statsData = [
   { value: '99.8%', label: 'Akurasi Gramatur Bahan', isGreen: false },
   { value: '3 Detik', label: 'Transaksi Kasir Cepat', isGreen: false },
   { value: '100%', label: 'Visibilitas Margin Laba', isGreen: true },
-  { value: '10.000+', label: 'UMKM Telah Bergabung', isGreen: false },
+  { value: '10.000+', label: 'UMKM Telah Bergabung (Target)', isGreen: false },
 ]
 
 export default function Stats() {
