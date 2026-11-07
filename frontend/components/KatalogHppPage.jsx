@@ -1004,19 +1004,19 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       </div>
 
       {/* ================= PRODUCT TABLE (Clean, Professional) ================= */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
+      <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            {/* Table Header: Soft emerald tint */}
+            {/* Table Header: Soft emerald tint matching Figma layout */}
             <thead>
-              <tr className="bg-emerald-50/70 text-emerald-950 text-xs font-bold border-b border-emerald-100/70">
-                <th className="py-3 px-5">Nama Produk</th>
-                <th className="py-3 px-4">Kategori</th>
-                <th className="py-3 px-4">HPP</th>
-                <th className="py-3 px-4">Harga Jual</th>
-                <th className="py-3 px-4">Margin</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center"></th>
+              <tr className="bg-[#EBF7F0] text-emerald-950 text-xs font-bold border-b border-emerald-100">
+                <th className="py-3.5 px-5 text-left font-bold text-emerald-950">Nama Produk</th>
+                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Kategori</th>
+                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">HPP</th>
+                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Harga Jual</th>
+                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Margin</th>
+                <th className="py-3.5 px-4 text-left font-bold text-emerald-950">Status</th>
+                <th className="py-3.5 px-4 text-center font-bold text-emerald-950 w-12"></th>
               </tr>
             </thead>
 
@@ -1038,12 +1038,12 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       key={item.id}
                       className={`transition-colors ${
                         isRugi
-                          ? 'bg-[#FFF5F5] hover:bg-[#FFEAEA]'
-                          : 'hover:bg-gray-50/70'
+                          ? 'bg-[#FFF5F5] hover:bg-[#FFEBEB]'
+                          : 'hover:bg-gray-50/80'
                       }`}
                     >
                       {/* Product Name + Image + SKU */}
-                      <td className="py-3.5 px-5">
+                      <td className="py-4 px-5">
                         <div className="flex items-center gap-3">
                           <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 p-1 flex items-center justify-center flex-shrink-0">
                             <img
@@ -1053,10 +1053,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                             />
                           </div>
                           <div>
-                            <h5 className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                            <h5 className="font-bold text-gray-900 text-xs sm:text-[13px] leading-snug">
                               {item.name}
                             </h5>
-                            <span className="text-[11px] text-gray-400 font-mono">
+                            <span className="text-[11px] text-gray-400 font-mono block mt-0.5">
                               SKU: {item.sku || `BEV00${item.id}`}
                             </span>
                           </div>
@@ -1064,34 +1064,36 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       </td>
 
                       {/* Kategori (Clean Text - No Pill) */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-4">
                         <span className="text-gray-700 font-medium text-xs sm:text-[13px]">
                           {item.category === 'Pastry & Bakery' ? 'Pastry' : item.category}
                         </span>
                       </td>
 
                       {/* HPP */}
-                      <td className={`py-3.5 px-4 font-bold ${isRugi ? 'text-[#D32F2F]' : 'text-gray-800'}`}>
+                      <td className={`py-4 px-4 font-bold text-xs sm:text-[13px] ${isRugi ? 'text-[#D32F2F]' : 'text-gray-800'}`}>
                         Rp{hpp.toLocaleString('id-ID')}
                       </td>
 
                       {/* Harga Jual */}
-                      <td className="py-3.5 px-4 font-bold text-gray-900">
+                      <td className="py-4 px-4 font-bold text-gray-900 text-xs sm:text-[13px]">
                         Rp{price.toLocaleString('id-ID')}
                       </td>
 
                       {/* Margin (Nominal + %) */}
-                      <td className="py-3.5 px-4">
-                        <p className={`font-bold ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
-                          {profit >= 0 ? '+' : ''}Rp{profit.toLocaleString('id-ID')}
+                      <td className="py-4 px-4">
+                        <p className={`font-bold text-xs sm:text-[13px] ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
+                          {profit >= 0
+                            ? `+Rp${profit.toLocaleString('id-ID')}`
+                            : `-Rp${Math.abs(profit).toLocaleString('id-ID')}`}
                         </p>
-                        <span className={`text-[10px] ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
-                          {marginPct}% margin
+                        <span className={`text-[11px] block mt-0.5 ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
+                          {profit >= 0 ? `${marginPct}%` : `-${Math.abs(Number(marginPct)).toFixed(1)}%`} margin
                         </span>
                       </td>
 
                       {/* Status (Clean Text - No Pill: Hijau if untung, Merah if rugi) */}
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-4 px-4 text-left">
                         <span
                           className={`font-bold text-xs sm:text-[13px] ${
                             isRugi
@@ -1106,14 +1108,14 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       </td>
 
                       {/* Action Edit */}
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-4 px-4 text-center">
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(item)}
                           title="Edit Resep & Produk"
-                          className="p-1.5 text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 transition-colors cursor-pointer mx-auto"
                         >
-                          <SquarePen className="w-4 h-4" />
+                          <SquarePen className="w-4 h-4 stroke-[1.8]" />
                         </button>
                       </td>
                     </tr>
@@ -1137,16 +1139,16 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             <span className="font-bold text-gray-800">{filteredCatalog.length}</span> produk katalog
           </p>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 type="button"
                 onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                   currentPage === page
                     ? 'bg-[#009F58] text-white shadow-xs'
-                    : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                    : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 {page}
@@ -1158,7 +1160,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="w-8 h-8 rounded-lg text-xs font-bold bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 &gt;
               </button>
