@@ -387,7 +387,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             <button
               type="button"
               onClick={() => setView('list')}
-              className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] border border-rose-100 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Batal / Kembali</span>
@@ -399,7 +399,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* ================= LEFT COLUMN: INFORMASI PRODUK & RESEP (7 COLS) ================= */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-5 shadow-xs">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-5 shadow-xs">
             
             {/* Header: Informasi Produk & SKU Badge */}
             <div className="flex items-center justify-between">
@@ -416,64 +416,98 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               )}
             </div>
 
-            {/* Nama Produk */}
-            <div>
-              <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                Nama Produk
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Contoh: Kopi Susu Gula Aren"
-                className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-medium"
-              />
-            </div>
-
-            {/* Kategori & SKU Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                  Kategori
-                </label>
-                <div className="relative">
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer font-medium"
-                  >
-                    <option value="Minuman">Minuman</option>
-                    <option value="Pastry & Bakery">Pastry & Bakery</option>
-                    <option value="Makanan">Makanan</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {!isEdit && (
+            {/* Nama Produk & Kategori Grid (Side by side on Edit, matching Figma) */}
+            {isEdit ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                    SKU Produk
+                    Nama Produk
                   </label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      value={formData.sku}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                      placeholder="Contoh: BEV008"
-                      className="flex-1 px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 focus:bg-white focus:border-[#009F58] outline-none transition-all font-mono"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAutoSku}
-                      className="px-3.5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Contoh: Kopi Susu Gula Aren"
+                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                    Kategori
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer"
                     >
-                      Auto
-                    </button>
+                      <option value="Minuman">Minuman</option>
+                      <option value="Pastry & Bakery">Pastry & Bakery</option>
+                      <option value="Makanan">Makanan</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                    Nama Produk
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Contoh: Kopi Susu Gula Aren"
+                    className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                      Kategori
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full appearance-none px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-medium focus:bg-white focus:border-[#009F58] outline-none transition-all pr-8 cursor-pointer"
+                      >
+                        <option value="Minuman">Minuman</option>
+                        <option value="Pastry & Bakery">Pastry & Bakery</option>
+                        <option value="Makanan">Makanan</option>
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                      SKU Produk
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={formData.sku}
+                        onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                        placeholder="Contoh: BEV008"
+                        className="flex-1 px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-900 font-mono focus:bg-white focus:border-[#009F58] outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAutoSku}
+                        className="px-3.5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
+                      >
+                        Auto
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Komposisi Takaran Resep Header */}
             <div className="pt-2">
@@ -483,8 +517,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* Ingredients Table */}
               <div className="border border-emerald-100 rounded-xl overflow-hidden bg-white">
-                {/* Table Header: Clean emerald background */}
-                <div className="grid grid-cols-12 bg-emerald-50/80 px-4 py-2.5 text-xs font-bold text-emerald-900 border-b border-emerald-100">
+                {/* Table Header: Clean emerald background matching table */}
+                <div className="grid grid-cols-12 bg-[#EBF7F0] px-4 py-2.5 text-xs font-bold text-emerald-950 border-b border-emerald-100">
                   <div className="col-span-5">Nama Bahan Baku</div>
                   <div className="col-span-3 text-center">Takaran</div>
                   <div className="col-span-3 text-right">Modal Bahan</div>
@@ -506,14 +540,14 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         <div className="col-span-3 text-center text-gray-700 font-medium">
                           {item.amount}
                         </div>
-                        <div className="col-span-3 text-right font-bold text-[#009F58]">
+                        <div className="col-span-3 text-right font-semibold text-gray-900">
                           Rp{Number(item.cost).toLocaleString('id-ID')}
                         </div>
                         <div className="col-span-1 text-center">
                           <button
                             type="button"
                             onClick={() => handleDeleteIngredient(item.id)}
-                            className="text-gray-400 hover:text-rose-500 p-1 transition-colors cursor-pointer"
+                            className="w-7 h-7 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer mx-auto"
                             title="Hapus Bahan"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -539,7 +573,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* Add Ingredient Form or Button */}
               {(!isEdit || showAddIngredientForm) ? (
-                <div className="mt-3 p-3.5 bg-gray-50/70 rounded-xl border border-gray-200 space-y-2.5">
+                <div className="mt-3 p-3.5 bg-gray-50/80 rounded-xl border border-gray-200 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-bold text-gray-700">
                       Input Bahan Baru ke Resep
@@ -573,41 +607,41 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       type="number"
                       value={ingredientInput.cost}
                       onChange={(e) => setIngredientInput({ ...ingredientInput, cost: e.target.value })}
-                      placeholder="Contoh: Rp2500"
+                      placeholder="Biaya (Rp)"
                       className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 outline-none focus:border-[#009F58]"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleAddIngredient}
-                    className="w-full py-2 bg-white hover:bg-gray-100 text-gray-700 border border-dashed border-gray-300 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5 text-[#009F58]" />
-                    <span>+ Tambah Bahan Baku</span>
+                    <span>Simpan Bahan ke Resep</span>
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowAddIngredientForm(true)}
-                  className="mt-3 w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  className="mt-3 w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold text-xs rounded-xl border border-gray-200/90 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5 text-gray-600" />
-                  <span>+ Tambah Bahan Baku</span>
+                  <span>Tambah Bahan Baku</span>
                 </button>
               )}
 
               {/* Total Modal Dasar (HPP) Card (Soft green tint) */}
-              <div className="mt-4 p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between">
+              <div className="mt-4 p-4 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#009F58] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-                    <BookOpen className="w-4 h-4" />
+                  <div className="w-10 h-10 rounded-xl bg-[#009F58] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <BookOpen className="w-5 h-5 stroke-[1.8]" />
                   </div>
                   <div>
                     <h5 className="text-xs font-bold text-gray-900">
                       Total Modal Dasar (HPP)
                     </h5>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
+                    <p className="text-[11px] text-gray-500 mt-0.5">
                       {currentFormHpp > 0
                         ? `100% Akurat Terhadap Stok (${formData.ingredients.length} bahan terdaftar)`
                         : 'Modal dasar akan dihitung otomatis saat bahan dan kemasan ditambahkan.'}
@@ -619,7 +653,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   <span className="text-xl sm:text-2xl font-black text-[#009F58] leading-none block">
                     Rp{currentFormHpp.toLocaleString('id-ID')}
                   </span>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">
+                  <span className="text-[10px] text-gray-400 block mt-1">
                     /porsi racikan
                   </span>
                 </div>
@@ -636,7 +670,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Tuliskan catatan cara pembuatan atau takaran standar untuk panduan kasir / barista (opsional)... Contoh: Ekstraksi espresso 25 detik, tuang sirup terlebih dahulu sebelum es batu."
-                className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none"
+                className="w-full px-3.5 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none transition-all"
               />
             </div>
 
@@ -645,7 +679,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           {/* ================= RIGHT COLUMN: SIMULATOR HARGA & AI INSIGHT (5 COLS) ================= */}
           <div className="lg:col-span-5 space-y-4">
             
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-4 shadow-xs">
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 space-y-4 shadow-xs">
               
               {/* Header: Simulator Harga Jual */}
               <div className="flex items-center justify-between">
@@ -665,16 +699,19 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 <label className="text-xs font-semibold text-gray-600 block mb-1.5">
                   Rencanakan Harga Jual Konsumen
                 </label>
-                <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 focus-within:border-[#009F58]">
-                  <span className="px-2.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-lg mr-3">
+                <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 focus-within:border-[#009F58] focus-within:ring-2 focus-within:ring-[#009F58]/10 transition-all">
+                  <span className="px-2.5 py-1 bg-[#009F58] text-white font-bold text-xs rounded-lg mr-3 shadow-xs">
                     Rp
                   </span>
                   <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="Masukan Target Harga"
-                    className="flex-1 text-xl sm:text-2xl font-bold text-gray-900 outline-none"
+                    type="text"
+                    value={formData.price ? Number(formData.price).toLocaleString('id-ID') : ''}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '')
+                      setFormData({ ...formData, price: raw ? Number(raw) : 0 })
+                    }}
+                    placeholder="18.000"
+                    className="flex-1 text-xl sm:text-2xl font-bold text-gray-900 outline-none bg-transparent"
                   />
                   <SquarePen className="w-4 h-4 text-gray-400" />
                 </div>
@@ -682,25 +719,25 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* 2 Metrics: Estimasi Untung Bersih & Persentase Margin */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-gray-50/70 border border-gray-100">
+                <div className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-100">
                   <div className="flex items-center justify-between text-gray-500">
                     <span className="text-xs font-semibold">Estimasi Untung Bersih</span>
                     <Banknote className="w-3.5 h-3.5 text-[#009F58]" />
                   </div>
                   <p className={`text-xl font-black mt-1 ${currentNetProfit >= 0 ? 'text-[#009F58]' : 'text-[#D32F2F]'}`}>
-                    {currentNetProfit >= 0 ? '+' : ''}Rp{currentNetProfit.toLocaleString('id-ID')}
+                    {currentNetProfit >= 0 ? `+Rp${currentNetProfit.toLocaleString('id-ID')}` : `-Rp${Math.abs(currentNetProfit).toLocaleString('id-ID')}`}
                   </p>
                   <span className="text-[10px] text-gray-400 block mt-0.5">
                     {isEdit ? 'Laba kotor per cup' : 'Laba kotor per porsi'}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-gray-50/70 border border-gray-100">
+                <div className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-100">
                   <div className="flex items-center justify-between text-gray-500">
                     <span className="text-xs font-semibold">Persentase Margin</span>
-                    <TrendingUp className="w-3.5 h-3.5 text-[#009F58]" />
+                    <TrendingUp className={`w-3.5 h-3.5 ${currentNetProfit < 0 ? 'text-[#D32F2F]' : Number(currentMarginPct) < 55 ? 'text-amber-600' : 'text-[#009F58]'}`} />
                   </div>
-                  <p className="text-xl font-black text-[#009F58] mt-1">
+                  <p className={`text-xl font-black mt-1 ${currentNetProfit < 0 ? 'text-[#D32F2F]' : Number(currentMarginPct) < 55 ? 'text-amber-600' : 'text-[#009F58]'}`}>
                     {currentMarginPct}%
                   </p>
                   <span className="text-[10px] text-gray-400 block mt-0.5">
@@ -710,33 +747,33 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               </div>
 
               {/* Status Margin Banner */}
-              <div className="p-3 rounded-xl bg-gray-50/70 border border-gray-100 flex items-center justify-between text-xs">
-                {currentNetProfit < 0 ? (
-                  <span className="font-bold text-xs text-[#D32F2F]">
-                    Margin Rugi ({currentMarginPct}%)
-                  </span>
-                ) : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55 ? (
-                  <span className="font-bold text-xs text-amber-600">
-                    Margin Tipis ({currentMarginPct}%)
-                  </span>
-                ) : Number(currentMarginPct) >= 55 ? (
-                  <span className="font-bold text-xs text-[#009F58]">
-                    Margin Sehat ({currentMarginPct}%)
-                  </span>
-                ) : (
-                  <span className="font-bold text-xs text-gray-600">
-                    Status Margin
-                  </span>
-                )}
-                <span className="text-xs text-gray-500">
+              <div className={`p-3 rounded-xl border flex items-center justify-between text-xs transition-colors ${
+                currentNetProfit < 0
+                  ? 'bg-rose-50/80 border-rose-200/70 text-[#D32F2F]'
+                  : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
+                  ? 'bg-amber-50/80 border-amber-200/70 text-amber-800'
+                  : Number(currentMarginPct) >= 55
+                  ? 'bg-emerald-50/80 border-emerald-200/70 text-[#009F58]'
+                  : 'bg-gray-50/80 border-gray-200/70 text-gray-600'
+              }`}>
+                <span className="font-bold">
+                  {currentNetProfit < 0
+                    ? `Margin Rugi (${currentMarginPct}%)`
+                    : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
+                    ? `Margin Tipis (${currentMarginPct}%)`
+                    : Number(currentMarginPct) >= 55
+                    ? `Margin Sehat (${currentMarginPct}%)`
+                    : 'Status Margin'}
+                </span>
+                <span className="text-[11px] text-gray-500">
                   Target minimal café: 55%
                 </span>
               </div>
 
               {/* Insight Bisnis AI Box: Solid Green Top Bar */}
-              <div className="rounded-xl overflow-hidden border border-emerald-100">
+              <div className="rounded-2xl overflow-hidden border border-emerald-100/90 shadow-2xs">
                 {/* Header bar: Brand Green */}
-                <div className="bg-[#009F58] px-3.5 py-2.5 text-white flex items-center justify-between">
+                <div className="bg-[#009F58] px-4 py-2.5 text-white flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-full bg-white text-[#009F58] flex items-center justify-center">
                       <Sparkles className="w-3 h-3 fill-current" />
@@ -744,17 +781,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     <span className="font-bold text-xs">Insight Bisnis AI</span>
                   </div>
                   <span className="text-[10px] text-emerald-100">
-                    AI Insights Real-Time
+                    Real-Time Analysis
                   </span>
                 </div>
 
                 {/* Body Text */}
-                <div className="p-3.5 bg-white space-y-2.5">
+                <div className="p-4 bg-white space-y-2.5">
                   <p className="text-xs text-gray-700 leading-relaxed">
                     {currentNetProfit < 0
                       ? `Peringatan: Harga jual lebih rendah dari modal dasar (HPP). Produk ini berpotensi merugi Rp${Math.abs(currentNetProfit).toLocaleString('id-ID')} per porsi. Disarankan menaikkan harga jual minimal ke Rp${Math.ceil((currentFormHpp / 0.45) / 1000) * 1000} agar mencapai margin aman 55%.`
                       : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
-                      ? `Margin produk ini tergolong tipis (${currentMarginPct}%). Benchmark industri café F&B minimal 55% agar dapat menutup beban sewa & operasional. Pertimbangkan efisiensi takaran bahan baku atau sedikit menaikkan harga.`
+                      ? `Margin produk ini tergolong tipis (${currentMarginPct}%). Standar industri café F&B minimal 55% untuk menutupi beban sewa & operasional. Pertimbangkan efisiensi takaran bahan baku atau optimasi harga jual.`
                       : Number(currentMarginPct) >= 55
                       ? `Margin produk ini sangat sehat (${currentMarginPct}%), berada di atas benchmark café F&B (55% - 70%). Anda memiliki ruang yang sangat fleksibel untuk promosi diskon, bundling, atau loyalty reward!`
                       : 'AI akan menganalisis kelayakan margin dan memberikan saran rekomendasi harga optimal berdasarkan data pasar F&B setelah Anda memasukkan komposisi resep.'}
@@ -773,7 +810,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             <button
               type="button"
               onClick={handleSaveProduct}
-              className="w-full py-4 px-6 rounded-2xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm sm:text-base shadow-sm hover:shadow transition-all cursor-pointer text-center"
+              className="w-full py-3.5 px-6 rounded-xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm shadow-xs hover:shadow transition-all cursor-pointer text-center"
             >
               {isEdit ? 'Simpan Perubahan Resep & Produk' : 'Simpan & Terbitkan Produk'}
             </button>
