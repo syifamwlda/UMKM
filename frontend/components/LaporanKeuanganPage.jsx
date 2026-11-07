@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Calendar,
   ArrowUpRight,
+  ArrowRight,
   ShieldCheck,
   CreditCard,
   QrCode,
@@ -185,8 +186,8 @@ export default function LaporanKeuanganPage({ onToast }) {
           <p className="text-2xl font-black text-gray-900 tracking-tight">
             Rp6.240.000
           </p>
-          <div className="flex items-center gap-1.5 text-blue-600 font-medium text-xs pt-1">
-            <ShieldCheck className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-gray-500 font-medium text-xs pt-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
             <span>32% dari omzet</span>
           </div>
         </div>
@@ -278,72 +279,88 @@ export default function LaporanKeuanganPage({ onToast }) {
 
         {/* Right Card: Top Menu Paling Untung (5 cols) */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100/80">
             <h3 className="font-bold text-sm text-gray-900">
               Top Menu Paling Untung
             </h3>
             <Award className="w-4 h-4 text-gray-400" />
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4 my-auto py-2">
             {/* Item 1 */}
             <div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-900">Kopi Susu Gula Aren</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    Margin 72%
-                  </span>
-                  <span className="font-bold text-[#009F58]">+Rp18.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span></span>
-                </div>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  Kopi Susu Gula Aren
+                </span>
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  +Rp18.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                </span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-gray-100 mt-1.5 overflow-hidden">
-                <div className="h-full bg-[#009F58] rounded-full w-[72%]" />
+              <div className="flex items-center gap-3">
+                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '72%' }} />
+                </div>
+                <span className="text-xs font-semibold text-gray-600 shrink-0">
+                  Margin 72%
+                </span>
               </div>
             </div>
 
             {/* Item 2 */}
             <div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-900">Cold Brew Coffee</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    Margin 62%
-                  </span>
-                  <span className="font-bold text-[#009F58]">+Rp24.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span></span>
-                </div>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  Cold Brew Coffee
+                </span>
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  +Rp24.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                </span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-gray-100 mt-1.5 overflow-hidden">
-                <div className="h-full bg-[#009F58] rounded-full w-[62%]" />
+              <div className="flex items-center gap-3">
+                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '62%' }} />
+                </div>
+                <span className="text-xs font-semibold text-gray-600 shrink-0">
+                  Margin 62%
+                </span>
               </div>
             </div>
 
             {/* Item 3 */}
             <div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-900">Matcha Latte Kyoto</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    Margin 65%
-                  </span>
-                  <span className="font-bold text-[#009F58]">+Rp19.600 <span className="text-[10px] text-gray-400 font-normal">/ cup</span></span>
-                </div>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  Matcha Latte Kyoto
+                </span>
+                <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
+                  +Rp19.600 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                </span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-gray-100 mt-1.5 overflow-hidden">
-                <div className="h-full bg-[#009F58] rounded-full w-[65%]" />
+              <div className="flex items-center gap-3">
+                <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '65%' }} />
+                </div>
+                <span className="text-xs font-semibold text-gray-600 shrink-0">
+                  Margin 65%
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 text-right">
+          <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[11px] text-gray-400">
+              3 produk margin tertinggi
+            </span>
             <button
               type="button"
               onClick={() => {
                 if (onToast) onToast('Beralih ke analisis detail margin produk...')
               }}
-              className="text-xs font-semibold text-[#1E88E5] hover:text-blue-700 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-[#009F58] hover:text-[#008246] transition-colors inline-flex items-center gap-1 cursor-pointer group"
             >
-              Analisis Margin Produk →
+              <span>Analisis Margin Produk</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>
