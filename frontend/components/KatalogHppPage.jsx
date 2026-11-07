@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Search,
   Plus,
@@ -27,8 +27,10 @@ import {
   Package,
   Info,
   Percent,
-  X
+  X,
+  Loader2
 } from 'lucide-react'
+import api from '../services/api'
 
 // Recipe ingredients default dataset
 const DEFAULT_RECIPES = {
@@ -204,6 +206,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     cost: ''
   })
   const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false)
+
+  // Loading & Backend Sync States
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // AI Advice States (GET /api/products/{id}/advice)
+  const [adviceLoading, setAdviceLoading] = useState(false)
+  const [adviceData, setAdviceData] = useState(null)
+  const [adviceError, setAdviceError] = useState(null)
+  const [showAdviceModal, setShowAdviceModal] = useState(false)
 
   // Live HPP calculation
   const currentFormHpp = useMemo(() => {
@@ -384,68 +397,159 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     }))
   }
 
-  // Save product
-  const handleSaveProduct = () => {
+  // Fetch real products from backend GET /api/products
+  const fetchCatalog = async () => {
+    try {
+      setIsLoading(true)
+      setLoadError(null)
+      const res = await api.get('/products')
+      const productsData = (res.data?.data || []).map((p) => {
+        const price = Number(p.selling_price) || 0
+        const hpp = Number(p.modal_per_unit) || 0
+        const profit = price - hpp
+        const marginPct = price > 0 ? ((profit / price) * 100).toFixed(1) : '0'
+
+        let img = '/assets/kasir/kopi-susu.png'
+        const lowerName = (p.name || '').toLowerCase()
+        if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
+        else if (lowerName.includes('latte')) img = '/assets/kasir/cafe-latte.png'
+        else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
+        else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
+        else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
+        else if (lowerName.includes('spaghetti') || lowerName.includes('pasta') || lowerName.includes('mie')) img = '/assets/kasir/spaghetti.png'
+
+        let category = 'Minuman'
+        if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
+        else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('ayam')) category = 'Makanan'
+
+        const formattedIngredients = (p.ingredients || []).map((ing, idx) => ({
+          id: ing.id || idx + 1,
+          name: ing.name,
+          detail: 'Takaran standar',
+          amount: '1 porsi',
+          cost: Number(ing.price) || 0,
+        }))
+
+        return {
+          id: p.id,
+          name: p.name,
+          category: category,
+          sku: `BEV${String(p.id).padStart(3, '0')}`,
+          price: price,
+          hpp: hpp,
+          profit: profit,
+          marginPct: marginPct,
+          image: img,
+          ingredients: formattedIngredients,
+          notes: 'Formula resep terverifikasi',
+          popular: false,
+          status: p.status,
+        }
+      })
+
+      if (onUpdateCatalog) onUpdateCatalog(productsData)
+    } catch (err) {
+      console.error('Gagal memuat katalog produk:', err)
+      setLoadError('Gagal memuat katalog produk dari backend. Pastikan server backend aktif.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCatalog()
+  }, [])
+
+  // Save product to backend POST /api/products or PUT /api/products/{id}
+  const handleSaveProduct = async () => {
     if (!formData.name.trim()) {
       if (onToast) onToast('Mohon masukkan nama produk!')
       return
     }
 
-    const calculatedHpp = currentFormHpp > 0 ? currentFormHpp : (editingProduct?.hpp || 5000)
-    const priceNum = Number(formData.price) || 18000
-    const profitNum = priceNum - calculatedHpp
-    const marginNum = priceNum > 0 ? Math.round((profitNum / priceNum) * 100) : 0
-
-    let imagePath = formData.image
-    if (!imagePath) {
-      if (formData.category === 'Pastry & Bakery') imagePath = '/assets/kasir/croissant.png'
-      else if (formData.category === 'Makanan') imagePath = '/assets/kasir/roti-bakar.png'
-      else imagePath = '/assets/kasir/kopi-susu.png'
+    if (!formData.ingredients || formData.ingredients.length === 0) {
+      if (onToast) onToast('Tambahkan minimal 1 bahan baku ke resep!')
+      return
     }
 
-    if (view === 'add') {
-      const newProd = {
-        id: Date.now(),
-        name: formData.name.trim(),
-        category: formData.category,
-        sku: formData.sku.trim() || `BEV00${catalog.length + 1}`,
-        price: priceNum,
-        hpp: calculatedHpp,
-        profit: profitNum,
-        marginPct: marginNum,
-        image: imagePath,
-        ingredients: formData.ingredients,
-        notes: formData.notes,
-        popular: false
+    const priceNum = Number(formData.price) || 0
+    if (priceNum <= 0) {
+      if (onToast) onToast('Harga jual produk harus lebih besar dari Rp 0!')
+      return
+    }
+
+    const payload = {
+      name: formData.name.trim(),
+      selling_price: priceNum,
+      yield_qty: 1,
+      ingredients: formData.ingredients.map((ing) => ({
+        name: ing.name.trim(),
+        price: Number(ing.cost) || 0,
+      })),
+    }
+
+    setIsSaving(true)
+    try {
+      if (view === 'add') {
+        await api.post('/products', payload)
+        if (onToast) onToast(`✨ Produk "${payload.name}" berhasil disimpan ke sistem!`)
+      } else if (view === 'edit' && editingProduct) {
+        await api.put(`/products/${editingProduct.id}`, payload)
+        if (onToast) onToast(`✨ Resep & harga "${payload.name}" berhasil diperbarui!`)
       }
-
-      const updated = [newProd, ...catalog]
-      if (onUpdateCatalog) onUpdateCatalog(updated)
-      if (onToast) onToast(`✨ Produk "${newProd.name}" berhasil diterbitkan!`)
+      await fetchCatalog()
       setView('list')
-    } else if (view === 'edit' && editingProduct) {
-      const updated = catalog.map((item) => {
-        if (item.id === editingProduct.id) {
-          return {
-            ...item,
-            name: formData.name.trim(),
-            category: formData.category,
-            sku: formData.sku.trim() || item.sku,
-            price: priceNum,
-            hpp: calculatedHpp,
-            profit: profitNum,
-            marginPct: marginNum,
-            ingredients: formData.ingredients,
-            notes: formData.notes,
-            image: imagePath
-          }
-        }
-        return item
-      })
+    } catch (err) {
+      console.error('Gagal menyimpan produk:', err)
+      const errorMsg =
+        err.response?.data?.message ||
+        (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(' ') : null) ||
+        'Gagal menyimpan produk ke backend. Cek koneksi Anda.'
+      if (onToast) onToast(`Gagal: ${errorMsg}`)
+      alert(`Pemberitahuan:\n${errorMsg}`)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
-      if (onUpdateCatalog) onUpdateCatalog(updated)
-      if (onToast) onToast(`✨ Resep & produk "${formData.name}" berhasil diperbarui!`)
-      setView('list')
+  // Delete product from backend DELETE /api/products/{id}
+  const handleDeleteProduct = async (product) => {
+    const targetProduct = product || editingProduct
+    if (!targetProduct?.id) return
+    if (!window.confirm(`Yakin ingin menghapus produk "${targetProduct.name}" dari katalog?`)) return
+
+    try {
+      await api.delete(`/products/${targetProduct.id}`)
+      if (onToast) onToast(`Produk "${targetProduct.name}" berhasil dihapus.`)
+      await fetchCatalog()
+      if (view === 'edit') setView('list')
+    } catch (err) {
+      console.error('Gagal menghapus produk:', err)
+      const errorMsg = err.response?.data?.message || 'Gagal menghapus produk dari backend.'
+      if (onToast) onToast(`Gagal: ${errorMsg}`)
+      alert(`Pemberitahuan:\n${errorMsg}`)
+    }
+  }
+
+  // Request AI Price Advice from backend GET /api/products/{id}/advice
+  const handleRequestAdvice = async (productId) => {
+    const targetId = productId || editingProduct?.id
+    if (!targetId) return
+
+    setAdviceLoading(true)
+    setAdviceError(null)
+    setAdviceData(null)
+    setShowAdviceModal(true)
+
+    try {
+      const res = await api.get(`/products/${targetId}/advice`)
+      setAdviceData(res.data?.data || null)
+    } catch (err) {
+      console.error('Gagal meminta saran harga AI:', err)
+      const errorMsg = err.response?.data?.message || 'Gagal terhubung ke layanan AI Gemini. Menampilkan fallback aturan.'
+      setAdviceError(errorMsg)
+    } finally {
+      setAdviceLoading(false)
     }
   }
 
@@ -499,6 +603,17 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {isEdit && (
+              <button
+                type="button"
+                onClick={() => handleDeleteProduct(editingProduct)}
+                className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Hapus Produk Ini"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Hapus</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setView('list')}
@@ -509,11 +624,21 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             </button>
             <button
               type="button"
+              disabled={isSaving}
               onClick={handleSaveProduct}
-              className="px-5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs hover:shadow"
+              className="px-5 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs hover:shadow disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              <span>{isEdit ? 'Simpan Perubahan' : 'Terbitkan Menu'}</span>
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{isEdit ? 'Simpan Perubahan' : 'Terbitkan Menu'}</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -1049,21 +1174,177 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </div>
               )}
 
+              {/* AI Advice Button (GET /api/products/{id}/advice) */}
+              {isEdit && editingProduct?.id && (
+                <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 rounded-xl border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#009F58]" />
+                      <span>Rekomendasi Harga AI Gemini</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-full">
+                      AI Powered
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-600 leading-relaxed">
+                    Dapatkan rekomendasi harga jual optimal berdasarkan biaya modal HPP dan margin industri F&B.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={adviceLoading}
+                    onClick={() => handleRequestAdvice(editingProduct.id)}
+                    className="w-full py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {adviceLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Menganalisis margin dengan AI...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Minta Saran Harga AI</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
             </div>
 
             {/* Tombol Simpan Utama */}
             <button
               type="button"
+              disabled={isSaving}
               onClick={handleSaveProduct}
-              className="w-full py-3.5 px-6 rounded-xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-xl bg-[#009F58] hover:bg-[#008f4f] text-white font-bold text-sm shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
-              <span>{isEdit ? 'Simpan Perubahan Menu' : 'Simpan & Terbitkan Menu'}</span>
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Menyimpan ke Server...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{isEdit ? 'Simpan Perubahan Menu' : 'Simpan & Terbitkan Menu'}</span>
+                </>
+              )}
             </button>
 
           </div>
 
         </div>
+
+        {/* Modal: Saran Harga AI Gemini */}
+        {showAdviceModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-[#009F58] flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900">Saran Harga AI Gemini</h3>
+                    <p className="text-[11px] text-gray-500">{editingProduct?.name}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdviceModal(false)}
+                  className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {adviceLoading ? (
+                <div className="py-8 text-center space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#009F58] mx-auto" />
+                  <p className="text-xs font-semibold text-gray-700">Sedang menganalisis struktur HPP & margin...</p>
+                  <p className="text-[11px] text-gray-400">Menghubungi layanan Gemini AI...</p>
+                </div>
+              ) : adviceError ? (
+                <div className="py-4 space-y-3">
+                  <div className="p-3 bg-rose-50 text-rose-700 rounded-xl text-xs border border-rose-100">
+                    {adviceError}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdviceModal(false)}
+                    className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              ) : adviceData ? (
+                <div className="space-y-4">
+                  {/* Rekomendasi Nominal */}
+                  <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-100 text-center">
+                    <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider block">
+                      Rekomendasi Harga Jual Optimal
+                    </span>
+                    <span className="text-2xl font-black text-[#009F58] block my-1">
+                      Rp{Number(adviceData.suggested_price || 0).toLocaleString('id-ID')}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      Margin ekspektasi:{' '}
+                      <span className="font-bold text-emerald-700">{adviceData.expected_margin_percent}%</span>
+                      {' • '}
+                      <span className="font-medium">
+                        {adviceData.source === 'ai' ? 'Analisis Gemini AI' : 'Smart Rule Engine'}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Alasan / Reasons */}
+                  {adviceData.reasons && adviceData.reasons.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-xs font-bold text-gray-800 block">Dasar Pertimbangan:</span>
+                      <ul className="text-[11px] text-gray-600 space-y-1 list-disc list-inside">
+                        {adviceData.reasons.map((r, i) => (
+                          <li key={i} className="leading-relaxed">{r}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Narasi Ringkas */}
+                  {adviceData.narrative && (
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-600 italic leading-relaxed">
+                      &ldquo;{adviceData.narrative}&rdquo;
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdviceModal(false)}
+                      className="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, price: Number(adviceData.suggested_price) || prev.price }))
+                        setShowAdviceModal(false)
+                        if (onToast) onToast(`Harga disesuaikan ke Rp${Number(adviceData.suggested_price).toLocaleString('id-ID')}`)
+                      }}
+                      className="w-2/3 py-2.5 bg-[#009F58] hover:bg-[#008f4f] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Terapkan Harga Ini</span>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
       </div>
     )
   }
@@ -1340,6 +1621,30 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         })}
       </div>
 
+      {/* Backend Status Alerts */}
+      {loadError && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchCatalog}
+            className="font-bold underline text-rose-800 hover:text-rose-950 cursor-pointer"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-xs text-gray-600 flex items-center justify-center gap-2.5">
+          <Loader2 className="w-4 h-4 animate-spin text-[#009F58]" />
+          <span>Menyinkronkan data katalog produk dari backend...</span>
+        </div>
+      )}
+
       {/* ================= PRODUCT LIST & TABLE (Full Responsive Mobile & Desktop) ================= */}
       <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
         
@@ -1398,14 +1703,24 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(item)}
-                      className="p-2 rounded-xl bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-[#009F58] border border-gray-200/80 transition-colors cursor-pointer shrink-0"
-                      title="Edit Menu"
-                    >
-                      <SquarePen className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(item)}
+                        className="p-2 rounded-xl bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-[#009F58] border border-gray-200/80 transition-colors cursor-pointer"
+                        title="Edit Menu"
+                      >
+                        <SquarePen className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(item)}
+                        className="p-2 rounded-xl bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-600 border border-gray-200/80 transition-colors cursor-pointer"
+                        title="Hapus Menu"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Bottom: 3-Metric Grid (HPP, Harga Jual, Margin) */}
@@ -1553,16 +1868,26 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                         </span>
                       </td>
 
-                      {/* Action Edit */}
+                      {/* Action Edit & Delete */}
                       <td className="py-4 px-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(item)}
-                          title="Edit Resep & Produk"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 transition-colors cursor-pointer mx-auto"
-                        >
-                          <SquarePen className="w-4 h-4 stroke-[1.8]" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(item)}
+                            title="Edit Resep & Produk"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 transition-colors cursor-pointer"
+                          >
+                            <SquarePen className="w-4 h-4 stroke-[1.8]" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProduct(item)}
+                            title="Hapus Produk"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4 stroke-[1.8]" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
