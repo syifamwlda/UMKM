@@ -218,7 +218,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             68,0%
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className="px-2.5 py-0.5 bg-emerald-50 text-[#009F58] font-bold text-xs rounded-full">
+            <span className="font-bold text-xs text-[#009F58]">
               Sehat
             </span>
             <span className="text-xs text-gray-400 font-medium">
@@ -234,18 +234,16 @@ export default function LaporanKeuanganPage({ onToast }) {
         
         {/* Left Card: Performa Outlet Utama (7 cols) */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold text-gray-400">
-                Performa Outlet Utama
-              </p>
-              <h3 className="text-lg font-bold text-gray-900 mt-0.5">
-                Kedai Kopi Nabila
-              </h3>
-            </div>
-            <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-200/60 rounded-full text-xs font-bold whitespace-nowrap">
+          <div>
+            <p className="text-[11px] font-semibold text-gray-400">
+              Performa Outlet Utama
+            </p>
+            <h3 className="text-lg font-bold text-gray-900 mt-0.5">
+              Kedai Kopi Nabila
+            </h3>
+            <p className="text-xs font-bold text-[#009F58] mt-1">
               Target Bulanan Tercapai : 112%
-            </span>
+            </p>
           </div>
 
           {/* 3 Stats Grid */}
