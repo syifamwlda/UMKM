@@ -234,7 +234,7 @@ export default function LaporanKeuanganPage({ onToast }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         
         {/* Left Card: Performa Outlet Utama (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col">
           <div>
             <p className="text-[11px] font-semibold text-gray-400">
               Performa Outlet Utama
@@ -242,14 +242,14 @@ export default function LaporanKeuanganPage({ onToast }) {
             <h3 className="text-lg font-bold text-gray-900 mt-0.5">
               Kedai Kopi Nabila
             </h3>
-            <p className="text-xs text-gray-500 font-medium mt-0.5">
+            <p className="text-xs text-gray-500 font-medium mt-1">
               Target Bulanan Tercapai : <span className="font-bold text-gray-800">112%</span>
             </p>
           </div>
 
-          {/* 3 Stats Grid */}
+          {/* 3 Stats Grid: Compact gap right under header */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-            <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-100">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
               <p className="text-lg font-black text-gray-900 mt-1">Rp42.500</p>
               <span className="text-[11px] text-[#009F58] font-bold block mt-0.5">
@@ -257,7 +257,7 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-100">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Produk Terlaris</span>
               <p className="text-lg font-black text-gray-900 mt-1 truncate">
                 Kopi Susu Aren
@@ -267,7 +267,7 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 border border-gray-100">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500">Rasio Efisiensi Bahan</span>
               <p className="text-lg font-black text-[#009F58] mt-1">98.4%</p>
               <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
@@ -286,7 +286,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             <Award className="w-4 h-4 text-gray-400" />
           </div>
 
-          <div className="space-y-4 my-auto py-2">
+          <div className="space-y-3.5 my-3">
             {/* Item 1 */}
             <div>
               <div className="flex items-center justify-between text-xs mb-1.5">
