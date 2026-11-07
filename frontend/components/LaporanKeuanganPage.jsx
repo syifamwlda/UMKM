@@ -237,7 +237,7 @@ export default function LaporanKeuanganPage({ onToast }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         
         {/* Left Card: Performa Outlet Utama (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col">
           <div>
             <p className="text-[11px] font-semibold text-gray-400">
               Performa Outlet Utama
@@ -250,34 +250,34 @@ export default function LaporanKeuanganPage({ onToast }) {
             </p>
           </div>
 
-          {/* 3 Stats Grid: Compact, clean cards matching mockup */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3.5">
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
-              <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
-              <p className="text-xl font-black text-gray-900 mt-1.5 mb-1 tracking-tight">
+          {/* 3 Stats Grid: Diperbesar dan mengisi ruang agar tidak kosong */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4 flex-1">
+            <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
+              <span className="text-xs font-semibold text-gray-500">Tiket Rata-rata (AOV)</span>
+              <p className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-2">
                 <RollNumberTicker value={42500} prefix="Rp" />
               </p>
-              <span className="text-[11px] text-[#009F58] font-bold block">
+              <span className="text-xs text-[#009F58] font-bold block">
                 +4.2% per transaksi
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
-              <span className="text-xs font-medium text-gray-500">Produk Terlaris</span>
-              <p className="text-base sm:text-lg font-bold text-gray-900 mt-1.5 mb-1 tracking-tight truncate leading-snug" title="Kopi Susu Aren">
+            <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
+              <span className="text-xs font-semibold text-gray-500">Produk Terlaris</span>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight my-2 truncate leading-snug" title="Kopi Susu Aren">
                 Kopi Susu Aren
               </p>
-              <span className="text-[11px] text-gray-500 font-medium block">
+              <span className="text-xs text-gray-500 font-medium block">
                 <RollNumberTicker value={384} /> porsi terjual
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
-              <span className="text-xs font-medium text-gray-500">Rasio Efisiensi Bahan</span>
-              <p className="text-xl font-black text-[#009F58] mt-1.5 mb-1 tracking-tight">
+            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
+              <span className="text-xs font-semibold text-gray-500">Rasio Efisiensi Bahan</span>
+              <p className="text-2xl sm:text-[26px] font-black text-[#009F58] tracking-tight my-2">
                 <RollNumberTicker value="98.4" suffix="%" formatLocale={false} />
               </p>
-              <span className="text-[11px] text-gray-500 font-medium block">
+              <span className="text-xs text-gray-500 font-medium block">
                 Waste terukur 1.6%
               </span>
             </div>
