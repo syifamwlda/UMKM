@@ -747,9 +747,68 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
         </div>
 
-        {/* Transactions Table: Subtle light gray header */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        {/* MOBILE VIEW (CARDS): block md:hidden */}
+        <div className="block md:hidden divide-y divide-gray-100">
+          {paginatedTransactions.map((tx) => (
+            <div key={tx.id} className="p-4 bg-white hover:bg-gray-50/70 transition-colors">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-xs text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">
+                    {tx.id}
+                  </span>
+                  <span className="text-[11px] text-gray-400">
+                    {tx.date} • {tx.time}
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px]">
+                  {tx.method === 'QRIS' ? (
+                    <QrCode className="w-3 h-3" />
+                  ) : tx.method === 'Cash' ? (
+                    <Coins className="w-3 h-3 text-emerald-600" />
+                  ) : (
+                    <CreditCard className="w-3 h-3 text-purple-600" />
+                  )}
+                  <span>{tx.method}</span>
+                </div>
+              </div>
+
+              <p className="font-bold text-gray-900 text-xs sm:text-sm leading-snug">
+                {tx.items}
+              </p>
+
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-gray-100 text-xs">
+                <div className="bg-gray-50/80 rounded-xl p-2">
+                  <span className="text-[9px] text-gray-400 font-semibold block uppercase">
+                    Omzet
+                  </span>
+                  <span className="font-bold text-xs text-gray-900 block mt-0.5">
+                    Rp{tx.omzet.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="bg-gray-50/80 rounded-xl p-2">
+                  <span className="text-[9px] text-gray-400 font-semibold block uppercase">
+                    Modal HPP
+                  </span>
+                  <span className="font-bold text-xs text-gray-700 block mt-0.5">
+                    Rp{tx.hpp.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <div className="bg-emerald-50/70 rounded-xl p-2">
+                  <span className="text-[9px] text-gray-400 font-semibold block uppercase">
+                    Laba Bersih
+                  </span>
+                  <span className="font-bold text-xs text-[#009F58] block mt-0.5">
+                    +Rp{tx.profit.toLocaleString('id-ID')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* DESKTOP VIEW (TABLE): hidden md:block */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-gray-50/90 text-gray-700 text-xs font-bold border-b border-gray-100">
                 <th className="py-3.5 px-5 text-left font-bold text-gray-700">ID</th>

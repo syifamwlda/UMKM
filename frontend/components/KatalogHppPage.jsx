@@ -1208,25 +1208,27 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
 
         {/* Status Dropdown & Sort */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
             <button
               type="button"
               onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-              className={`inline-flex items-center gap-2 pl-3 pr-2.5 py-2.5 bg-white border rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+              className={`w-full sm:w-auto inline-flex items-center justify-between sm:justify-start gap-2 pl-3 pr-2.5 py-2.5 bg-white border rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs ${
                 isStatusDropdownOpen
                   ? 'border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
-              <Sliders className="w-3.5 h-3.5 text-gray-400" />
-              <span>
-                {statusFilter === 'Semua Status'
-                  ? 'Status: Semua Status'
-                  : statusFilter === 'Tipis'
-                  ? 'Status: Margin Tipis'
-                  : `Status: ${statusFilter}`}
-              </span>
+              <div className="flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-gray-400" />
+                <span>
+                  {statusFilter === 'Semua Status'
+                    ? 'Status: Semua Status'
+                    : statusFilter === 'Tipis'
+                    ? 'Status: Margin Tipis'
+                    : `Status: ${statusFilter}`}
+                </span>
+              </div>
               <ChevronDown
                 className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
                   isStatusDropdownOpen ? 'rotate-180 text-[#009F58]' : ''
@@ -1336,10 +1338,119 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         })}
       </div>
 
-      {/* ================= PRODUCT TABLE (Clean, Professional) ================= */}
+      {/* ================= PRODUCT LIST & TABLE (Full Responsive Mobile & Desktop) ================= */}
       <div className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        
+        {/* MOBILE VIEW (CARDS): block md:hidden */}
+        <div className="block md:hidden divide-y divide-gray-100">
+          {paginatedCatalog.length > 0 ? (
+            paginatedCatalog.map((item) => {
+              const price = item.price || 0
+              const hpp = item.hpp || 0
+              const profit = price - hpp
+              const marginPct = price > 0 ? ((profit / price) * 100).toFixed(1) : '0'
+
+              const isRugi = profit < 0
+              const isTipis = !isRugi && Number(marginPct) < 30
+              const statusText = isRugi ? 'Rugi' : isTipis ? 'Tipis' : 'Sehat'
+
+              return (
+                <div
+                  key={item.id}
+                  className={`p-4 transition-colors ${
+                    isRugi ? 'bg-[#FFF5F5]' : 'bg-white hover:bg-gray-50/60'
+                  }`}
+                >
+                  {/* Top: Photo + Name + Category + Status + Edit Button */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 p-1 flex items-center justify-center shrink-0">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h5 className="font-bold text-gray-900 text-sm leading-tight truncate">
+                            {item.name}
+                          </h5>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                            isRugi
+                              ? 'bg-rose-100 text-[#D32F2F]'
+                              : isTipis
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-emerald-100 text-[#009F58]'
+                          }`}>
+                            {statusText}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                          <span className="font-mono text-[11px]">{item.sku || `BEV00${item.id}`}</span>
+                          <span>•</span>
+                          <span className="text-gray-600 font-medium">
+                            {item.category === 'Pastry & Bakery' ? 'Pastry' : item.category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(item)}
+                      className="p-2 rounded-xl bg-gray-50 hover:bg-emerald-50 text-gray-500 hover:text-[#009F58] border border-gray-200/80 transition-colors cursor-pointer shrink-0"
+                      title="Edit Menu"
+                    >
+                      <SquarePen className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Bottom: 3-Metric Grid (HPP, Harga Jual, Margin) */}
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100/90 text-xs">
+                    <div className="bg-gray-50/80 rounded-xl p-2.5">
+                      <span className="text-[10px] text-gray-400 font-semibold block uppercase">
+                        HPP
+                      </span>
+                      <span className={`font-black text-xs sm:text-sm block mt-0.5 ${isRugi ? 'text-[#D32F2F]' : 'text-gray-800'}`}>
+                        Rp{hpp.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+
+                    <div className="bg-gray-50/80 rounded-xl p-2.5">
+                      <span className="text-[10px] text-gray-400 font-semibold block uppercase">
+                        Harga Jual
+                      </span>
+                      <span className="font-black text-xs sm:text-sm text-gray-900 block mt-0.5">
+                        Rp{price.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+
+                    <div className={`rounded-xl p-2.5 ${isRugi ? 'bg-rose-50/80' : 'bg-emerald-50/60'}`}>
+                      <span className="text-[10px] text-gray-400 font-semibold block uppercase">
+                        Margin
+                      </span>
+                      <span className={`font-black text-xs sm:text-sm block mt-0.5 ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
+                        {profit >= 0 ? `+Rp${profit.toLocaleString('id-ID')}` : `-Rp${Math.abs(profit).toLocaleString('id-ID')}`}
+                      </span>
+                      <span className={`text-[10px] font-bold block ${isRugi ? 'text-[#D32F2F]' : 'text-[#009F58]'}`}>
+                        {profit >= 0 ? `${marginPct}%` : `-${Math.abs(Number(marginPct)).toFixed(1)}%`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="py-12 text-center text-gray-400 text-xs">
+              Tidak ada produk yang cocok dengan pencarian atau filter.
+            </div>
+          )}
+        </div>
+
+        {/* DESKTOP VIEW (TABLE): hidden md:block */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[680px]">
             {/* Table Header: Subtle light gray background */}
             <thead>
               <tr className="bg-gray-50/90 text-gray-700 text-xs font-bold border-b border-gray-100">
