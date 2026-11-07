@@ -124,3 +124,4 @@ Untuk keseluruhan transaksi:
 $$\text{Total Transaksi} = \sum \text{Subtotal Penjualan Item}$$
 $$\text{Total Modal Transaksi} = \sum \text{Subtotal Modal Item}$$
 $$\text{Profit (Untung Bersih) Transaksi} = \text{Total Transaksi} - \text{Total Modal Transaksi}$$
+

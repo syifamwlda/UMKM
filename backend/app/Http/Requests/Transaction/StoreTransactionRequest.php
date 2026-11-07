@@ -94,3 +94,4 @@ class StoreTransactionRequest extends FormRequest
         });
     }
 }
+
