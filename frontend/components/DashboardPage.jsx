@@ -1677,7 +1677,7 @@ export default function DashboardPage({ onLogout }) {
                         onClick={() => setPosCategory(cat.id)}
                         className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-[#1E88E5] text-white shadow-xs'
+                            ? 'bg-[#009F58] text-white shadow-xs'
                             : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/90'
                         }`}
                       >

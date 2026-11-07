@@ -410,7 +410,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </h3>
               </div>
               {isEdit && formData.sku && (
-                <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-200/80 font-bold text-xs rounded-xl font-mono">
+                <span className="text-xs font-semibold text-gray-500 font-mono">
                   SKU: {formData.sku}
                 </span>
               )}
@@ -627,20 +627,18 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             </div>
 
             {/* Tambahkan Catatan */}
-            {!isEdit && (
-              <div className="pt-2">
-                <label className="text-xs font-semibold text-gray-700 block mb-1.5">
-                  Tambahkan Catatan
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Tuliskan catatan cara pembuatan atau takaran standar untuk panduan kasir / barista (opsional)... Contoh: Ekstraksi espresso 25 detik, tuang sirup terlebih dahulu sebelum es batu."
-                  className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none"
-                />
-              </div>
-            )}
+            <div className="pt-2">
+              <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                Tambahkan Catatan
+              </label>
+              <textarea
+                rows={2}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Tuliskan catatan cara pembuatan atau takaran standar untuk panduan kasir / barista (opsional)... Contoh: Ekstraksi espresso 25 detik, tuang sirup terlebih dahulu sebelum es batu."
+                className="w-full px-3.5 py-2.5 bg-gray-50/70 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:border-[#009F58] outline-none resize-none"
+              />
+            </div>
 
           </div>
 
@@ -713,12 +711,20 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
               {/* Status Margin Banner */}
               <div className="p-3 rounded-xl bg-gray-50/70 border border-gray-100 flex items-center justify-between text-xs">
-                {isEdit ? (
-                  <span className="px-3 py-1 bg-emerald-50 text-[#009F58] border border-emerald-200 font-bold text-xs rounded-xl">
-                    Margin Sehat
+                {currentNetProfit < 0 ? (
+                  <span className="font-bold text-xs text-[#D32F2F]">
+                    Margin Rugi ({currentMarginPct}%)
+                  </span>
+                ) : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55 ? (
+                  <span className="font-bold text-xs text-amber-600">
+                    Margin Tipis ({currentMarginPct}%)
+                  </span>
+                ) : Number(currentMarginPct) >= 55 ? (
+                  <span className="font-bold text-xs text-[#009F58]">
+                    Margin Sehat ({currentMarginPct}%)
                   </span>
                 ) : (
-                  <span className="px-3 py-1 bg-gray-200 text-gray-600 font-bold text-xs rounded-xl">
+                  <span className="font-bold text-xs text-gray-600">
                     Status Margin
                   </span>
                 )}
@@ -745,11 +751,13 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 {/* Body Text */}
                 <div className="p-3.5 bg-white space-y-2.5">
                   <p className="text-xs text-gray-700 leading-relaxed">
-                    {isEdit ? (
-                      'Margin produk ini sangat sehat (72,2%), berada di atas benchmark café F&B (55-70%). Anda memiliki ruang yang cukup untuk promosi bundling atau loyalty program!'
-                    ) : (
-                      'AI akan menganalisis kelayakan margin dan memberikan saran rekomendasi harga optimal berdasarkan data pasar F&B setelah Anda memasukkan komposisi resep.'
-                    )}
+                    {currentNetProfit < 0
+                      ? `Peringatan: Harga jual lebih rendah dari modal dasar (HPP). Produk ini berpotensi merugi Rp${Math.abs(currentNetProfit).toLocaleString('id-ID')} per porsi. Disarankan menaikkan harga jual minimal ke Rp${Math.ceil((currentFormHpp / 0.45) / 1000) * 1000} agar mencapai margin aman 55%.`
+                      : Number(currentMarginPct) > 0 && Number(currentMarginPct) < 55
+                      ? `Margin produk ini tergolong tipis (${currentMarginPct}%). Benchmark industri café F&B minimal 55% agar dapat menutup beban sewa & operasional. Pertimbangkan efisiensi takaran bahan baku atau sedikit menaikkan harga.`
+                      : Number(currentMarginPct) >= 55
+                      ? `Margin produk ini sangat sehat (${currentMarginPct}%), berada di atas benchmark café F&B (55% - 70%). Anda memiliki ruang yang sangat fleksibel untuk promosi diskon, bundling, atau loyalty reward!`
+                      : 'AI akan menganalisis kelayakan margin dan memberikan saran rekomendasi harga optimal berdasarkan data pasar F&B setelah Anda memasukkan komposisi resep.'}
                   </p>
 
                   <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1">
@@ -1023,6 +1031,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
                   const isRugi = profit < 0
                   const isTipis = !isRugi && Number(marginPct) < 30
+                  const statusText = isRugi ? 'Rugi' : isTipis ? 'Tipis' : 'Sehat'
 
                   return (
                     <tr
