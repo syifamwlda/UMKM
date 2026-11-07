@@ -26,20 +26,26 @@ function MainContent() {
   })
 
   // Synchronize hash in URL with page state
+  // NOTE: When on dashboard, ignore hash changes — the dashboard manages its
+  // own internal navigation without touching the URL hash. Only react to hash
+  // changes that explicitly signal a page transition (login / register).
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash
-      if (hash === '#login') {
-        setCurrentPage('login')
-      } else if (hash === '#daftar' || hash === '#register') {
-        setCurrentPage('register')
-      } else if (hash === '#dashboard') {
-        setCurrentPage('dashboard')
-      } else if (hash === '#produk') {
-        setCurrentPage('produk')
-      } else {
-        setCurrentPage('home')
-      }
+      // If currently on dashboard, only leave if explicitly navigating away
+      setCurrentPage((prev) => {
+        const hash = window.location.hash
+        if (prev === 'dashboard') {
+          if (hash === '#login') return 'login'
+          if (hash === '#daftar' || hash === '#register') return 'register'
+          if (hash === '#produk') return 'produk'
+          return 'dashboard'
+        }
+        if (hash === '#login') return 'login'
+        if (hash === '#daftar' || hash === '#register') return 'register'
+        if (hash === '#dashboard') return 'dashboard'
+        if (hash === '#produk') return 'produk'
+        return 'home'
+      })
     }
 
     window.addEventListener('hashchange', handleHashChange)

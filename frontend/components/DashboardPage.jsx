@@ -48,6 +48,8 @@ import {
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import KatalogHppPage from './KatalogHppPage'
+import LaporanKeuanganPage from './LaporanKeuanganPage'
 
 // Database records dinamis diambil dari GET /api/dashboard/stats
 const DAILY_RECORDS = {}
@@ -696,8 +698,6 @@ export default function DashboardPage({ onLogout }) {
 
   const [posCategory, setPosCategory] = useState('Semua')
   const [posSearch, setPosSearch] = useState('')
-  const [posTable, setPosTable] = useState('Meja 04')
-  const [posOrderType, setPosOrderType] = useState('Dine-in')
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
   const [posShiftProfit, setPosShiftProfit] = useState(0)
   const [posReceiptModal, setPosReceiptModal] = useState(null)
@@ -1001,8 +1001,6 @@ export default function DashboardPage({ onLogout }) {
         txId: `#TX-${shortUuid}`,
         uuid: data?.uuid,
         receiptUrl: data?.receipt_url,
-        table: posTable,
-        orderType: posOrderType,
         method: method,
         items: [...posCart],
         subtotal: totalReal,
@@ -1625,10 +1623,10 @@ export default function DashboardPage({ onLogout }) {
                 {/* Category Filter Pills Row */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {[
-                    { id: 'Semua', label: 'Semua (24)', icon: LayoutGrid },
-                    { id: 'Minuman', label: 'Minuman (12)', icon: Coffee },
-                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery (6)', icon: Croissant },
-                    { id: 'Makanan', label: 'Makanan (6)', icon: Utensils },
+                    { id: 'Semua', label: 'Semua', icon: LayoutGrid },
+                    { id: 'Minuman', label: 'Minuman', icon: Coffee },
+                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
+                    { id: 'Makanan', label: 'Makanan', icon: Utensils },
                   ].map((cat) => {
                     const CatIcon = cat.icon
                     const isSelected = posCategory === cat.id
@@ -1639,7 +1637,7 @@ export default function DashboardPage({ onLogout }) {
                         onClick={() => setPosCategory(cat.id)}
                         className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-[#1E88E5] text-white shadow-xs'
+                            ? 'bg-[#009F58] text-white shadow-xs'
                             : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/90'
                         }`}
                       >
@@ -1711,6 +1709,7 @@ export default function DashboardPage({ onLogout }) {
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/60">
                               <TrendingUp className="w-3 h-3 stroke-[2.2]" />
                               <span>+Rp{item.profit.toLocaleString('id-ID')} ({item.marginPct}%)</span>
+
                             </span>
                           </div>
 
@@ -1754,25 +1753,21 @@ export default function DashboardPage({ onLogout }) {
                   )}
                 </div>
 
-                {/* Bottom Bar: Akumulasi Untung Bersih Shift */}
-                <div className="pt-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-                  <div className="flex items-center gap-2 text-gray-700 font-medium">
-                    <span className="w-7 h-7 rounded-xl bg-emerald-50 text-[#009B5B] flex items-center justify-center font-bold text-base flex-shrink-0">
-                      💰
-                    </span>
-                    <span>
-                      Akumulasi Untung Bersih Shift Ini: <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong> <span className="text-gray-400">/ Target Rp600.000</span>
-                    </span>
+                {/* Bottom Bar: Shift Profit */}
+                <div className="pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-gray-400">Untung shift ini</span>
+                    <strong className="text-gray-900 font-bold">Rp{posShiftProfit.toLocaleString('id-ID')}</strong>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-24 sm:w-28 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-28 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#009B5B] rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, Math.round((posShiftProfit / 600000) * 100))}%` }}
                       />
                     </div>
-                    <span className="text-[11px] font-bold text-[#009B5B] bg-emerald-50 px-1.5 py-0.5 rounded">
-                      {((posShiftProfit / 600000) * 100).toFixed(1)}%
+                    <span className="text-[11px] font-semibold text-gray-500">
+                      {((posShiftProfit / 600000) * 100).toFixed(0)}%
                     </span>
                   </div>
                 </div>
@@ -1780,56 +1775,29 @@ export default function DashboardPage({ onLogout }) {
               </div>
 
               {/* ================= RIGHT PANE: ORDER / CART PANEL (4 COLS) ================= */}
-              <div className="xl:col-span-4 bg-[#EAF7EE] border border-emerald-100/90 rounded-3xl p-4 sm:p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="xl:col-span-4 bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.02)] space-y-4">
                 
-                {/* Header: Pesanan Saat Ini + #TX-554 */}
-                <div className="flex items-center justify-between pb-1">
-                  <h3 className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
-                    Pesanan Saat Ini
-                  </h3>
-                  <span className="text-[11px] font-extrabold text-[#009B5B] bg-emerald-100/80 px-2.5 py-1 rounded-xl">
-                    #TX-554
-                  </span>
-                </div>
-
-                {/* Table & Order Settings Buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const tables = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Bar Depan']
-                      const curIdx = tables.indexOf(posTable)
-                      const nextTable = tables[(curIdx + 1) % tables.length]
-                      setPosTable(nextTable)
-                      showToast(`Pindah ke ${nextTable}`)
-                    }}
-                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <Store className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{posTable}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextType = posOrderType === 'Dine-in' ? 'Take-away' : 'Dine-in'
-                      setPosOrderType(nextType)
-                      showToast(`Pesanan diset: ${nextType}`)
-                    }}
-                    className="py-1.5 px-2 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-gray-700 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <Utensils className="w-3.5 h-3.5 text-gray-500" />
-                    <span>{posOrderType}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleResetCart}
-                    className="py-1.5 px-2 bg-white hover:bg-rose-50 border border-gray-200/80 rounded-xl text-xs font-semibold text-rose-600 flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Reset</span>
-                  </button>
+                {/* Header Pesanan */}
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-gray-900 tracking-tight">Pesanan Saat Ini</h3>
+                    {posCart.length > 0 && (
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        {posCart.reduce((sum, it) => sum + it.qty, 0)} item
+                      </span>
+                    )}
+                  </div>
+                  {posCart.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetCart}
+                      className="text-xs font-semibold text-gray-400 hover:text-rose-600 transition-colors cursor-pointer flex items-center gap-1"
+                      title="Kosongkan Pesanan"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Cart Items List */}
@@ -1838,9 +1806,9 @@ export default function DashboardPage({ onLogout }) {
                     posCart.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-2xl p-3 border border-gray-100/90 shadow-2xs flex items-center gap-3 transition-all"
+                        className="bg-gray-50/70 hover:bg-gray-50 rounded-2xl p-3 border border-gray-100 flex items-center gap-3 transition-colors"
                       >
-                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center p-1 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center p-1.5 flex-shrink-0 shadow-2xs">
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="max-h-full max-w-full object-contain" />
                           ) : (
@@ -1856,19 +1824,21 @@ export default function DashboardPage({ onLogout }) {
                             <button
                               type="button"
                               onClick={() => handleRemoveFromCart(item.id)}
-                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer"
-                              title="Hapus menu"
+                              className="text-gray-300 hover:text-rose-500 p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                              title="Hapus"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note || item.desc}</p>
+                          {item.note && (
+                            <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.note}</p>
+                          )}
                           <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-1.5 bg-gray-100/80 rounded-lg p-0.5">
+                            <div className="flex items-center gap-1.5 bg-white border border-gray-200/80 rounded-lg p-0.5 shadow-2xs">
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, -1)}
-                                className="w-5 h-5 rounded-md bg-white hover:bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                                className="w-5 h-5 rounded-md hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
                               >
                                 -
                               </button>
@@ -1876,7 +1846,7 @@ export default function DashboardPage({ onLogout }) {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateQty(item.id, 1)}
-                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer"
+                                className="w-5 h-5 rounded-md bg-[#009B5B] hover:bg-[#00874e] text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-2xs transition-colors"
                               >
                                 +
                               </button>
@@ -1889,113 +1859,142 @@ export default function DashboardPage({ onLogout }) {
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 text-center text-xs text-gray-400 bg-white/70 rounded-2xl border border-dashed border-emerald-200 p-4">
-                      Keranjang kosong. Pilih menu di sebelah kiri untuk menambah pesanan.
+                    <div className="py-10 px-4 text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-2.5 text-gray-300">
+                        <Store className="w-6 h-6 stroke-[1.5]" />
+                      </div>
+                      <p className="text-xs font-bold text-gray-700">Belum ada pesanan</p>
+                      <p className="text-[11px] text-gray-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
+                        Klik produk di katalog untuk menambahkan pesanan ke keranjang
+                      </p>
                     </div>
                   )}
                 </div>
 
-                {/* Subtotal & Pajak */}
-                <div className="pt-2 border-t border-emerald-200/60 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-gray-700 block">Subtotal Pesanan</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Pajak Restoran / PB1 (0% UMKM)</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg sm:text-xl font-black text-[#009B5B] block">
+                {/* Financial Intelligence Breakdown Card */}
+                <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Subtotal Pesanan</span>
+                    <span className="font-bold text-gray-900 text-sm">
                       Rp{cartSubtotal.toLocaleString('id-ID')}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-medium">Rp0</span>
                   </div>
-                </div>
-
-                {/* Real-time HPP & Profit Card (UntungJelas Exclusive Feature) */}
-                <div className="bg-[#009B5B] text-white rounded-2xl p-3.5 space-y-2 shadow-sm">
-                  <div className="flex items-center justify-between text-xs text-emerald-100">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Package className="w-3.5 h-3.5" />
-                      <span>Modal Bahan Baku (HPP)</span>
-                    </div>
-                    <span className="font-semibold text-white">Rp{cartHpp.toLocaleString('id-ID')}</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500 font-medium">Estimasi Modal (HPP)</span>
+                    <span className="font-semibold text-gray-700">
+                      Rp{cartHpp.toLocaleString('id-ID')}
+                    </span>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-100">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                      <span>Untung Bersih (Estimasi):</span>
+                  
+                  <div className="pt-2.5 border-t border-gray-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-gray-900">Untung Bersih</span>
+                      {cartMarginPct > 0 && (
+                        <span className="text-[10px] font-black text-[#009F58] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                          {cartMarginPct}%
+                        </span>
+                      )}
                     </div>
-                    <span className="text-base sm:text-lg font-black text-white">
+                    <span className="text-base font-black text-[#009F58]">
                       +Rp{cartProfit.toLocaleString('id-ID')}
                     </span>
                   </div>
+                </div>
 
-                  {/* Inner White Margin Pill */}
-                  <div className="bg-white rounded-xl p-2 text-gray-800 flex items-center justify-between gap-2 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-[#009B5B]">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      <span>Margin {cartMarginPct}%</span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-medium truncate">
-                      Langsung sinkron ke Kas Untung Bersih hari ini
+                {/* Payment Methods */}
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    Pilih Pembayaran
+                  </p>
+                  <div className="p-1 bg-gray-100/90 rounded-2xl flex items-center gap-1 border border-gray-200/50">
+                    {/* 1. Tunai (Icon Money / Banknote) */}
+                    <button
+                      type="button"
+                      title="Pembayaran Tunai"
+                      onClick={() => setPosPaymentMethod('Tunai')}
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
+                        posPaymentMethod === 'Tunai'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
+                      }`}
+                    >
+                      <Banknote className={`w-5 h-5 transition-colors ${posPaymentMethod === 'Tunai' ? 'text-gray-900 stroke-[2]' : 'text-gray-400 stroke-[1.8]'}`} />
+                    </button>
+
+                    {/* 2. QRIS (Logo QRIS) */}
+                    <button
+                      type="button"
+                      title="Pembayaran QRIS"
+                      onClick={() => setPosPaymentMethod('QRIS')}
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
+                        posPaymentMethod === 'QRIS'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
+                      }`}
+                    >
+                      <img
+                        src="/assets/kasir/qris-logo.png"
+                        alt="QRIS"
+                        className={`h-4 max-w-[58px] object-contain transition-all ${
+                          posPaymentMethod === 'QRIS' ? 'opacity-100' : 'opacity-50 hover:opacity-80'
+                        }`}
+                      />
+                    </button>
+
+                    {/* 3. Debit (Logo Kartu Debit) */}
+                    <button
+                      type="button"
+                      title="Pembayaran Kartu Debit"
+                      onClick={() => setPosPaymentMethod('Kartu/Debit')}
+                      className={`flex-1 py-2 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center h-10 ${
+                        posPaymentMethod === 'Kartu/Debit'
+                          ? 'bg-white text-gray-900 shadow-xs border border-gray-200/70'
+                          : 'bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 border border-transparent'
+                      }`}
+                    >
+                      <img
+                        src="/assets/kasir/debit-logo.png"
+                        alt="Debit"
+                        className={`h-5 w-auto object-contain transition-all ${
+                          posPaymentMethod === 'Kartu/Debit' ? 'opacity-100' : 'opacity-50 hover:opacity-80'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Checkout Section: Clean, Professional POS Hierarchy */}
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-baseline justify-between px-0.5">
+                    <span className="text-xs font-semibold text-gray-500">Total Tagihan</span>
+                    <span className="text-xl font-black text-gray-900 tracking-tight">
+                      Rp{cartSubtotal.toLocaleString('id-ID')}
                     </span>
                   </div>
+
+                  <button
+                    type="button"
+                    disabled={posCart.length === 0 || checkoutLoading}
+                    onClick={() => handleCompletePayment(posPaymentMethod)}
+                    className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      posCart.length > 0 && !checkoutLoading
+                        ? 'bg-[#009F58] hover:bg-[#008f4f] text-white shadow-sm hover:shadow active:scale-[0.99] cursor-pointer'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200/60'
+                    }`}
+                  >
+                    {checkoutLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Memproses Transaksi...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{posCart.length > 0 ? 'Bayar Sekarang' : 'Pilih Menu Terlebih Dahulu'}</span>
+                        {posCart.length > 0 && <ArrowRight className="w-4 h-4 stroke-[2.5]" />}
+                      </>
+                    )}
+                  </button>
                 </div>
-
-                {/* Payment Methods Selector */}
-                <div>
-                  <span className="text-[11px] font-bold text-gray-700 block mb-1.5">Pilih Metode Pembayaran</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'Tunai', icon: Banknote, label: 'Tunai' },
-                      { id: 'QRIS', icon: QrCode, label: 'QRIS' },
-                      { id: 'Kartu/Debit', icon: CreditCard, label: 'Kartu/Debit' },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPosPaymentMethod(m.id)}
-                        className={`py-2 px-1.5 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                          posPaymentMethod === m.id
-                            ? 'bg-[#1E88E5] text-white shadow-sm ring-2 ring-blue-300'
-                            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200/80 shadow-2xs'
-                        }`}
-                      >
-                        <m.icon className="w-4 h-4" />
-                        <span className="text-[10px]">{m.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Checkout & Submit Button */}
-                <button
-                  type="button"
-                  disabled={posCart.length === 0 || checkoutLoading}
-                  onClick={() => handleCompletePayment(posPaymentMethod)}
-                  className="w-full py-3.5 px-4 bg-[#009B5B] hover:bg-[#00874e] disabled:opacity-50 text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2 text-left">
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      {checkoutLoading ? (
-                        <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold block leading-tight">
-                        {checkoutLoading ? 'Memproses Transaksi...' : 'Bayar & Catat Untung'}
-                      </span>
-                      <span className="text-[9px] text-emerald-100/90 font-medium block">
-                        {checkoutLoading ? 'Menyimpan ke server...' : 'HPP & Laba otomatis dibukukan'}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-sm sm:text-base font-black">
-                    Rp{cartSubtotal.toLocaleString('id-ID')}
-                  </span>
-                </button>
-
               </div>
 
             </div>
@@ -2021,7 +2020,7 @@ export default function DashboardPage({ onLogout }) {
                       <span>{posReceiptModal.time}</span>
                     </div>
                     <div className="text-[11px] text-gray-500">
-                      <span>{posReceiptModal.table} • {posReceiptModal.orderType} • {posReceiptModal.method}</span>
+                      <span>Pesanan Kasir • {posReceiptModal.method}</span>
                     </div>
 
                     <div className="py-2 border-y border-dashed border-gray-200 space-y-1">
@@ -2073,7 +2072,17 @@ export default function DashboardPage({ onLogout }) {
               </div>
             )}
 
+
+
           </div>
+        ) : activeMenu === 'Katalog & HPP' ? (
+          <KatalogHppPage
+            catalog={posCatalog}
+            onUpdateCatalog={setPosCatalog}
+            onToast={showToast}
+          />
+        ) : activeMenu === 'Laporan Keuangan' ? (
+          <LaporanKeuanganPage onToast={showToast} />
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
           <>
