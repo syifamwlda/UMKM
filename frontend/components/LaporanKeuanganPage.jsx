@@ -117,20 +117,20 @@ export default function LaporanKeuanganPage({ onToast }) {
   }, [filteredTransactions, currentPage])
 
   // Weekly Cash Flow & Real Profit Chart Data (Minggu 1 - 4)
-  // Coordinates for 4 weeks on SVG viewBox: 0 0 540 180
+  // Coordinates for 4 weeks on SVG viewBox: 0 0 540 220
   const chartPoints = [
-    { week: 'Minggu 1', omzet: 4.2, laba: 2.8, hpp: 1.4, x: 40 },
-    { week: 'Minggu 2', omzet: 4.8, laba: 3.3, hpp: 1.5, x: 190 },
-    { week: 'Minggu 3', omzet: 5.1, laba: 3.5, hpp: 1.6, x: 340 },
-    { week: 'Minggu 4', omzet: 5.4, laba: 3.7, hpp: 1.7, x: 490 }
+    { week: 'Minggu 1', omzet: 4.2, laba: 2.8, hpp: 1.4, x: 45 },
+    { week: 'Minggu 2', omzet: 4.8, laba: 3.3, hpp: 1.5, x: 195 },
+    { week: 'Minggu 3', omzet: 5.1, laba: 3.5, hpp: 1.6, x: 345 },
+    { week: 'Minggu 4', omzet: 5.4, laba: 3.7, hpp: 1.7, x: 495 }
   ]
 
-  // Y-Scale: 0 to 6 jt maps to Y 160 to 20 (height: 140px)
-  const getY = (val) => 160 - (val / 6) * 140
+  // Y-Scale: 0 to 6 jt maps to Y 185 to 25 (height: 160px for rich vertical display)
+  const getY = (val) => 185 - (val / 6) * 160
 
-  const omzetPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].omzet)} C 115 ${getY(4.5)}, 115 ${getY(4.8)}, ${chartPoints[1].x} ${getY(chartPoints[1].omzet)} C 265 ${getY(4.9)}, 265 ${getY(5.1)}, ${chartPoints[2].x} ${getY(chartPoints[2].omzet)} C 415 ${getY(5.2)}, 415 ${getY(5.4)}, ${chartPoints[3].x} ${getY(chartPoints[3].omzet)}`
-  const labaPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].laba)} C 115 ${getY(3.0)}, 115 ${getY(3.3)}, ${chartPoints[1].x} ${getY(chartPoints[1].laba)} C 265 ${getY(3.4)}, 265 ${getY(3.5)}, ${chartPoints[2].x} ${getY(chartPoints[2].laba)} C 415 ${getY(3.6)}, 415 ${getY(3.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].laba)}`
-  const hppPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].hpp)} C 115 ${getY(1.45)}, 115 ${getY(1.5)}, ${chartPoints[1].x} ${getY(chartPoints[1].hpp)} C 265 ${getY(1.55)}, 265 ${getY(1.6)}, ${chartPoints[2].x} ${getY(chartPoints[2].hpp)} C 415 ${getY(1.65)}, 415 ${getY(1.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].hpp)}`
+  const omzetPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].omzet)} C 120 ${getY(4.5)}, 120 ${getY(4.8)}, ${chartPoints[1].x} ${getY(chartPoints[1].omzet)} C 270 ${getY(4.9)}, 270 ${getY(5.1)}, ${chartPoints[2].x} ${getY(chartPoints[2].omzet)} C 420 ${getY(5.2)}, 420 ${getY(5.4)}, ${chartPoints[3].x} ${getY(chartPoints[3].omzet)}`
+  const labaPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].laba)} C 120 ${getY(3.0)}, 120 ${getY(3.3)}, ${chartPoints[1].x} ${getY(chartPoints[1].laba)} C 270 ${getY(3.4)}, 270 ${getY(3.5)}, ${chartPoints[2].x} ${getY(chartPoints[2].laba)} C 420 ${getY(3.6)}, 420 ${getY(3.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].laba)}`
+  const hppPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].hpp)} C 120 ${getY(1.45)}, 120 ${getY(1.5)}, ${chartPoints[1].x} ${getY(chartPoints[1].hpp)} C 270 ${getY(1.55)}, 270 ${getY(1.6)}, ${chartPoints[2].x} ${getY(chartPoints[2].hpp)} C 420 ${getY(1.65)}, 420 ${getY(1.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].hpp)}`
 
   return (
     <div className="space-y-4 animate-fade-in pb-12">
@@ -379,20 +379,37 @@ export default function LaporanKeuanganPage({ onToast }) {
         
         {/* Left Chart: Perkembangan Arus Kas & Laba Riil (7 cols) */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-sm text-gray-900">
-              Perkembangan Arus Kas & Laba Riil
-            </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Korelasi mingguan antara omzet kotor, beban modal bahan (HPP), dan laba bersih
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-gray-50">
+            <div>
+              <h3 className="font-bold text-sm text-gray-900">
+                Perkembangan Arus Kas & Laba Riil
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Korelasi mingguan antara omzet kotor, beban modal bahan (HPP), dan laba bersih
+              </p>
+            </div>
+            {/* Legend Indicators */}
+            <div className="flex items-center gap-3 text-[11px] font-semibold text-gray-600 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#F43F5E]" />
+                <span>Omzet</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                <span>Laba Bersih</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#6366F1]" />
+                <span>HPP</span>
+              </div>
+            </div>
           </div>
 
-          {/* SVG Area & Curved Chart */}
-          <div className="w-full mt-4">
+          {/* SVG Area & Curved Chart: Sized properly to fill vertical room */}
+          <div className="w-full my-auto py-2">
             <svg
-              viewBox="0 0 540 180"
-              className="w-full h-44 overflow-visible select-none"
+              viewBox="0 0 540 220"
+              className="w-full h-56 sm:h-60 overflow-visible select-none"
             >
               <defs>
                 <linearGradient id="gradientOmzet" x1="0" y1="0" x2="0" y2="1">
@@ -415,7 +432,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                 return (
                   <g key={val}>
                     <line
-                      x1="30"
+                      x1="35"
                       y1={y}
                       x2="520"
                       y2={y}
@@ -423,8 +440,8 @@ export default function LaporanKeuanganPage({ onToast }) {
                       strokeWidth="1"
                     />
                     <text
-                      x="20"
-                      y={y + 3}
+                      x="25"
+                      y={y + 3.5}
                       textAnchor="end"
                       className="text-[10px] fill-gray-400 font-sans"
                     >
@@ -436,15 +453,15 @@ export default function LaporanKeuanganPage({ onToast }) {
 
               {/* Area Fills */}
               <path
-                d={`${omzetPath} L 490 160 L 40 160 Z`}
+                d={`${omzetPath} L 495 185 L 45 185 Z`}
                 fill="url(#gradientOmzet)"
               />
               <path
-                d={`${labaPath} L 490 160 L 40 160 Z`}
+                d={`${labaPath} L 495 185 L 45 185 Z`}
                 fill="url(#gradientLaba)"
               />
               <path
-                d={`${hppPath} L 490 160 L 40 160 Z`}
+                d={`${hppPath} L 495 185 L 45 185 Z`}
                 fill="url(#gradientHpp)"
               />
 
@@ -453,19 +470,19 @@ export default function LaporanKeuanganPage({ onToast }) {
                 d={omzetPath}
                 fill="none"
                 stroke="#F43F5E"
-                strokeWidth="2"
+                strokeWidth="2.5"
               />
               <path
                 d={labaPath}
                 fill="none"
                 stroke="#10B981"
-                strokeWidth="2"
+                strokeWidth="2.5"
               />
               <path
                 d={hppPath}
                 fill="none"
                 stroke="#6366F1"
-                strokeWidth="2"
+                strokeWidth="2.5"
               />
 
               {/* Points for each curve */}
@@ -475,7 +492,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <circle
                     cx={pt.x}
                     cy={getY(pt.omzet)}
-                    r="3.5"
+                    r="4"
                     fill="white"
                     stroke="#F43F5E"
                     strokeWidth="2"
@@ -484,7 +501,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <circle
                     cx={pt.x}
                     cy={getY(pt.laba)}
-                    r="3.5"
+                    r="4"
                     fill="white"
                     stroke="#10B981"
                     strokeWidth="2"
@@ -493,7 +510,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <circle
                     cx={pt.x}
                     cy={getY(pt.hpp)}
-                    r="3.5"
+                    r="4"
                     fill="white"
                     stroke="#6366F1"
                     strokeWidth="2"
@@ -501,9 +518,9 @@ export default function LaporanKeuanganPage({ onToast }) {
                   {/* X-Axis labels */}
                   <text
                     x={pt.x}
-                    y="176"
+                    y="204"
                     textAnchor="middle"
-                    className="text-[11px] fill-gray-500 font-sans"
+                    className="text-[11px] fill-gray-500 font-medium font-sans"
                   >
                     {pt.week}
                   </text>
@@ -513,7 +530,7 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
 
           {/* Sync status */}
-          <div className="pt-2 text-right">
+          <div className="pt-2 text-right border-t border-gray-50">
             <span className="text-[10px] text-gray-400">
               Terakhir sinkronisasi: Hari ini, 16:42 WIB
             </span>
