@@ -234,10 +234,10 @@ export default function LaporanKeuanganPage({ onToast }) {
       </div>
 
       {/* ================= ROW 2: PERFORMA OUTLET & TOP MENU PALING UNTUNG ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         
         {/* Left Card: Performa Outlet Utama (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
             <p className="text-[11px] font-semibold text-gray-400">
               Performa Outlet Utama
@@ -251,7 +251,7 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
 
           {/* 3 Stats Grid: Compact, clean cards matching mockup */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3.5">
             <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
               <p className="text-xl font-black text-gray-900 mt-1.5 mb-1 tracking-tight">
@@ -284,19 +284,19 @@ export default function LaporanKeuanganPage({ onToast }) {
           </div>
         </div>
 
-        {/* Right Card: Top Menu Paling Untung (5 cols) */}
+        {/* Right Card: Top Menu Paling Untung (5 cols) - Matches Left Card Height */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-2 border-b border-gray-100/80">
+          <div className="flex items-center justify-between pb-1.5 border-b border-gray-100/80">
             <h3 className="font-bold text-sm text-gray-900">
               Top Menu Paling Untung
             </h3>
             <Award className="w-4 h-4 text-gray-400" />
           </div>
 
-          <div className="space-y-3.5 my-3">
+          <div className="space-y-2.5 my-auto py-1">
             {/* Item 1 */}
             <div>
-              <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
                   Kopi Susu Gula Aren
                 </span>
@@ -304,7 +304,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   +<RollNumberTicker value={18000} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '72%' }} />
                 </div>
@@ -316,7 +316,7 @@ export default function LaporanKeuanganPage({ onToast }) {
 
             {/* Item 2 */}
             <div>
-              <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
                   Cold Brew Coffee
                 </span>
@@ -324,7 +324,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   +<RollNumberTicker value={24000} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '62%' }} />
                 </div>
@@ -336,7 +336,7 @@ export default function LaporanKeuanganPage({ onToast }) {
 
             {/* Item 3 */}
             <div>
-              <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
                   Matcha Latte Kyoto
                 </span>
@@ -344,7 +344,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   +<RollNumberTicker value={19600} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '65%' }} />
                 </div>
@@ -355,7 +355,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <span className="text-[11px] text-gray-400">
               3 produk margin tertinggi
             </span>
