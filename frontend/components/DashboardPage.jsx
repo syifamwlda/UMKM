@@ -220,6 +220,7 @@ function RollNumberTicker({ value, prefix = '', suffix = '', formatLocale = true
 }
 
 export default function DashboardPage({ onLogout }) {
+  const { user } = useAuth()
   const [activeMenu, setActiveMenu] = useState('Dashboard')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [chartSeries, setChartSeries] = useState({ omzet: true, laba: true, costs: true })
@@ -255,7 +256,11 @@ export default function DashboardPage({ onLogout }) {
   const [isAiPanelMinimized, setIsAiPanelMinimized] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [showEditModal, setShowEditModal] = useState(null)
-  const [shiftInfo, setShiftInfo] = useState({ active: 'Pagi', time: '08:00 - 16:00', kasir: 'Nabila (Owner)' })
+  const [shiftInfo, setShiftInfo] = useState({
+    active: 'Pagi',
+    time: '08:00 - 16:00',
+    kasir: user?.name ? `${user.name} (Owner)` : 'Pemilik Usaha'
+  })
 
   // Refs for click outside detection
   const datePickerRef = useRef(null)
@@ -649,12 +654,54 @@ export default function DashboardPage({ onLogout }) {
     }
   }
 
+  // Health Score States (GET /api/health-score)
+  const [healthScoreData, setHealthScoreData] = useState({
+    score: null,
+    label: 'Memuat...',
+    alasan: [],
+    saran: [],
+    narasi: '',
+    source: 'fallback',
+    breakdown: null,
+    loading: true,
+    error: null,
+  })
+  const [showHealthScoreDetails, setShowHealthScoreDetails] = useState(false)
+
+  const fetchHealthScore = async () => {
+    try {
+      setHealthScoreData((prev) => ({ ...prev, loading: true, error: null }))
+      const res = await api.get('/health-score')
+      const d = res.data?.data
+      if (d) {
+        setHealthScoreData({
+          score: typeof d.score === 'number' ? d.score : 0,
+          label: d.label || 'Belum Ada Transaksi',
+          alasan: d.alasan || d.reasons || [],
+          saran: d.saran || d.recommendations || [],
+          narasi: d.narasi || '',
+          source: d.source || 'fallback',
+          breakdown: d.breakdown || null,
+          loading: false,
+          error: null,
+        })
+      }
+    } catch (err) {
+      console.error('Gagal memuat skor kesehatan:', err)
+      setHealthScoreData((prev) => ({
+        ...prev,
+        loading: false,
+        error: 'Gagal memuat skor kesehatan usaha. Pastikan server backend aktif.',
+      }))
+    }
+  }
+
   useEffect(() => {
     fetchDashboardStats()
+    fetchHealthScore()
   }, [])
 
   // ================= KASIR (POS) STATE =================
-  const { user } = useAuth()
   const [posCatalog, setPosCatalog] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
@@ -1015,6 +1062,7 @@ export default function DashboardPage({ onLogout }) {
       setPosReceiptModal(receiptData)
       updateRealtimeData(totalReal, profitReal, `Kasir: ${method}`)
       fetchDashboardStats()
+      fetchHealthScore()
       showToast(`Transaksi berhasil via ${method}! Laba Rp${profitReal.toLocaleString('id-ID')} dicatat.`)
     } catch (err) {
       console.error('Gagal mencatat transaksi:', err)
@@ -1504,15 +1552,11 @@ export default function DashboardPage({ onLogout }) {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center gap-2 sm:gap-2.5 py-1 hover:opacity-90 transition-opacity cursor-pointer text-left select-none"
               >
-                <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full overflow-hidden flex-shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
-                    alt="Kedai Kopi Nabila"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full overflow-hidden flex-shrink-0 bg-emerald-100 text-[#009B5B] flex items-center justify-center font-bold text-xs">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <span className="text-xs sm:text-[13px] font-semibold text-gray-900 tracking-tight hidden min-[400px]:inline-block">
-                  Kedai Kopi Nabila
+                  {user?.business_name || user?.name || 'Usaha Anda'}
                 </span>
               </button>
 
@@ -1521,8 +1565,11 @@ export default function DashboardPage({ onLogout }) {
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-fade-in">
                   {/* User Profile Card Header */}
                   <div className="px-3 py-2.5 border-b border-gray-100">
-                    <p className="text-xs font-bold text-gray-900">Nabila Putri</p>
-                    <p className="text-[11px] text-gray-500">nabila@kedaikopi.id</p>
+                    <p className="text-xs font-bold text-gray-900">{user?.name || 'Pemilik Usaha'}</p>
+                    <p className="text-[11px] text-gray-500">{user?.phone || user?.email || 'Akun Terdaftar'}</p>
+                    {user?.business_name && (
+                      <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">{user.business_name}</p>
+                    )}
                   </div>
 
                   {/* Profile Actions */}
@@ -2090,10 +2137,10 @@ export default function DashboardPage({ onLogout }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
                 <h1 className="text-2xl sm:text-[26px] font-extrabold text-gray-900 tracking-tight">
-                  Halo, Nabila!
+                  Halo, {user?.name ? user.name.split(' ')[0] : 'Juragan'}!
                 </h1>
                 <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">
-                  Berikut ringkasan performa finansial usahamu hari ini.
+                  Berikut ringkasan performa finansial <span className="font-semibold text-gray-700">{user?.business_name || 'usaha Anda'}</span> hari ini.
                 </p>
               </div>
 
@@ -2509,32 +2556,58 @@ export default function DashboardPage({ onLogout }) {
                 </div>
               </div>
 
-              {/* Card 4: Kesehatan Usaha */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex items-center justify-between">
+              {/* Card 4: Kesehatan Usaha (GET /api/health-score) */}
+              <div
+                onClick={() => setShowHealthScoreDetails(!showHealthScoreDetails)}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] flex items-center justify-between cursor-pointer hover:border-emerald-300 transition-all select-none group"
+                title="Klik untuk melihat detail skor kesehatan & evaluasi AI"
+              >
                 <div>
-                  <span className="text-xs font-medium text-gray-500 block mb-1">
-                    Kesehatan Usaha
-                  </span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-xs font-medium text-gray-500 block">
+                      Kesehatan Usaha
+                    </span>
+                    <span className="text-[10px] text-gray-400 group-hover:text-[#009B5B] transition-colors font-semibold">
+                      {showHealthScoreDetails ? '▲ Tutup' : '▼ Detail'}
+                    </span>
+                  </div>
                   <div className="flex items-baseline text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-1">
-                    <span>{kpiStats.kesehatan}</span>
-                    <span className="text-xs font-medium text-gray-400 ml-0.5">/100</span>
+                    {healthScoreData.loading ? (
+                      <span className="text-gray-400 text-base font-semibold">Memuat...</span>
+                    ) : (
+                      <>
+                        <span>{healthScoreData.score ?? 0}</span>
+                        <span className="text-xs font-medium text-gray-400 ml-0.5">/100</span>
+                      </>
+                    )}
                   </div>
                   <div className="mt-1">
-                    <span className="inline-flex items-center bg-[#009B5B] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                      {kpiStats.kesehatanLabel}
+                    <span
+                      className={`inline-flex items-center text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                        (healthScoreData.score ?? 0) >= 80
+                          ? 'bg-[#009B5B]'
+                          : (healthScoreData.score ?? 0) >= 60
+                          ? 'bg-emerald-600'
+                          : (healthScoreData.score ?? 0) >= 40
+                          ? 'bg-amber-500'
+                          : 'bg-rose-500'
+                      }`}
+                    >
+                      {healthScoreData.loading ? 'Menganalisis...' : healthScoreData.label}
                     </span>
                   </div>
                 </div>
 
                 {/* Semi-Circle Speedometer Gauge with Animated Needle & Arc */}
                 {(() => {
-                  const score = Math.min(100, Math.max(0, kpiStats.kesehatan || 80))
+                  const score = Math.min(100, Math.max(0, healthScoreData.score ?? 0))
                   const angleDeg = 180 - (score / 100) * 180
                   const angleRad = (angleDeg * Math.PI) / 180
                   const nx = (50 + 26 * Math.cos(angleRad)).toFixed(1)
                   const ny = (50 - 26 * Math.sin(angleRad)).toFixed(1)
                   const arcLength = 125.6
                   const arcOffset = (arcLength * (1 - score / 100)).toFixed(1)
+                  const arcColor = score >= 75 ? '#009B5B' : score >= 50 ? '#10B981' : score >= 30 ? '#F59E0B' : '#EF4444'
                   return (
                     <div className="relative w-24 h-14 flex items-end justify-center">
                       <svg className="w-24 h-14" viewBox="0 0 100 55">
@@ -2548,7 +2621,7 @@ export default function DashboardPage({ onLogout }) {
                         <path
                           d="M 10 50 A 40 40 0 0 1 90 50"
                           fill="none"
-                          stroke="#009B5B"
+                          stroke={arcColor}
                           strokeWidth="8"
                           strokeLinecap="round"
                           strokeDasharray={arcLength}
@@ -2574,6 +2647,89 @@ export default function DashboardPage({ onLogout }) {
 
             </div>
 
+            {/* Health Score Expandable Details Widget */}
+            {showHealthScoreDetails && (
+              <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50/50 via-white to-gray-50 rounded-2xl border border-emerald-100 shadow-sm animate-fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-xl bg-emerald-100 text-[#009B5B] flex items-center justify-center font-bold text-xs">
+                      {healthScoreData.score ?? 0}
+                    </span>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-gray-900">
+                        Evaluasi Kesehatan Bisnis: {healthScoreData.label}
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Skor otomatis dihitung dari rata-rata margin (40%), konsistensi penjualan 14 hari (30%), dan proporsi produk sehat (30%).
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100/70 text-[#009B5B] self-start sm:self-center">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{healthScoreData.source === 'ai' ? 'Gemini AI' : 'UntungJelas Heuristic'}</span>
+                  </span>
+                </div>
+
+                {healthScoreData.loading ? (
+                  <div className="py-6 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#009B5B]" />
+                    <span>Memuat rincian evaluasi kesehatan usaha...</span>
+                  </div>
+                ) : healthScoreData.error ? (
+                  <div className="py-4 text-xs text-rose-600 bg-rose-50 rounded-xl p-3 border border-rose-100 mt-3">
+                    {healthScoreData.error}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
+                    {/* Alasan Penilaian */}
+                    <div className="bg-white p-3.5 rounded-xl border border-gray-100 space-y-2">
+                      <span className="font-bold text-gray-900 block text-xs">
+                        Poin Evaluasi
+                      </span>
+                      {healthScoreData.alasan && healthScoreData.alasan.length > 0 ? (
+                        <ul className="space-y-1.5 text-gray-600 text-[11px] list-disc list-inside">
+                          {healthScoreData.alasan.map((r, i) => (
+                            <li key={i} className="leading-relaxed">{r}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-400 text-[11px]">Belum ada data transaksi untuk dievaluasi.</p>
+                      )}
+                    </div>
+
+                    {/* Saran Tindakan */}
+                    <div className="bg-white p-3.5 rounded-xl border border-gray-100 space-y-2">
+                      <span className="font-bold text-gray-900 block text-xs">
+                        Saran Perbaikan
+                      </span>
+                      {healthScoreData.saran && healthScoreData.saran.length > 0 ? (
+                        <ul className="space-y-1.5 text-gray-600 text-[11px] list-disc list-inside">
+                          {healthScoreData.saran.map((s, i) => (
+                            <li key={i} className="leading-relaxed">{s}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-400 text-[11px]">Tercatat aman, pertahankan kinerja usaha Anda.</p>
+                      )}
+                    </div>
+
+                    {/* Narasi AI */}
+                    <div className="bg-white p-3.5 rounded-xl border border-gray-100 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-gray-900 text-xs">Narasi Ringkas</span>
+                        <span className="text-[10px] text-gray-400">
+                          {healthScoreData.source === 'ai' ? 'Analisis AI' : 'Aturan Sistem'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 leading-relaxed italic bg-gray-50/70 p-2.5 rounded-lg border border-gray-100">
+                        "{healthScoreData.narasi || 'Catat transaksi setiap hari dan pastikan harga jual berada di atas HPP agar skor kesehatan meningkat.'}"
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ================= 2 COLUMN MAIN GRID ================= */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
               
@@ -2586,8 +2742,11 @@ export default function DashboardPage({ onLogout }) {
                   {/* Header Row: Title on Left, View Switcher & Options on Right */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
-                      <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-                        {chartTitle}
+                      <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <span>{chartTitle}</span>
+                        <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                          Contoh
+                        </span>
                       </h2>
                       <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
                         {chartSubtitle}
@@ -3594,9 +3753,14 @@ export default function DashboardPage({ onLogout }) {
                       <Store className="w-5 h-5 stroke-[2]" />
                     </div>
                     <div>
-                      <h4 className="text-xs sm:text-[13px] font-bold text-gray-900">
-                        Status Laci Kasir
-                      </h4>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-xs sm:text-[13px] font-bold text-gray-900">
+                          Status Laci Kasir
+                        </h4>
+                        <span className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                          Contoh
+                        </span>
+                      </div>
                       <p className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5">
                         Modal Awal: <span className="font-semibold text-gray-600">Rp200.000</span>
                       </p>
