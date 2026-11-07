@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { RollNumberTicker } from './RollNumberTicker'
 import {
   TrendingUp,
   Banknote,
@@ -167,7 +168,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            Rp19.500.000
+            <RollNumberTicker value={19500000} prefix="Rp" />
           </p>
           <div className="flex items-center gap-1 text-[#009F58] font-bold text-xs pt-1">
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -184,7 +185,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            Rp6.240.000
+            <RollNumberTicker value={6240000} prefix="Rp" />
           </p>
           <div className="flex items-center gap-1.5 text-gray-500 font-medium text-xs pt-1">
             <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
@@ -201,7 +202,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             </div>
           </div>
           <p className="text-2xl font-black text-white tracking-tight">
-            Rp13.260.000
+            <RollNumberTicker value={13260000} prefix="Rp" />
           </p>
           <div className="flex items-center gap-1 text-emerald-100 font-medium text-xs pt-1">
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -216,7 +217,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             <Gauge className="w-4 h-4 text-gray-700" />
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            68,0%
+            <RollNumberTicker value="68.0" suffix="%" formatLocale={false} />
           </p>
           <div className="flex items-center justify-between pt-1">
             <span className="font-bold text-xs text-[#009F58]">
@@ -231,7 +232,7 @@ export default function LaporanKeuanganPage({ onToast }) {
       </div>
 
       {/* ================= ROW 2: PERFORMA OUTLET & TOP MENU PALING UNTUNG ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         
         {/* Left Card: Performa Outlet Utama (7 cols) */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col">
@@ -243,34 +244,38 @@ export default function LaporanKeuanganPage({ onToast }) {
               Kedai Kopi Nabila
             </h3>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Target Bulanan Tercapai : <span className="font-bold text-gray-800">112%</span>
+              Target Bulanan Tercapai : <span className="font-bold text-gray-800"><RollNumberTicker value={112} suffix="%" formatLocale={false} /></span>
             </p>
           </div>
 
-          {/* 3 Stats Grid: Fills remaining height cleanly with no awkward bottom gap */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 flex-1">
-            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
+          {/* 3 Stats Grid: Compact, clean cards matching mockup */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
-              <p className="text-lg font-black text-gray-900 mt-1">Rp42.500</p>
-              <span className="text-[11px] text-[#009F58] font-bold block mt-0.5">
+              <p className="text-2xl font-black text-gray-900 mt-2 mb-1 tracking-tight">
+                <RollNumberTicker value={42500} prefix="Rp" />
+              </p>
+              <span className="text-[11px] text-[#009F58] font-bold block">
                 +4.2% per transaksi
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
+            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Produk Terlaris</span>
-              <p className="text-lg font-black text-gray-900 mt-1 truncate">
+              <p className="text-2xl font-black text-gray-900 mt-2 mb-1 tracking-tight truncate">
                 Kopi Susu Aren
               </p>
-              <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
-                384 porsi terjual
+              <span className="text-[11px] text-gray-500 font-medium block">
+                <RollNumberTicker value={384} /> porsi terjual
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex flex-col justify-center">
+            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Rasio Efisiensi Bahan</span>
-              <p className="text-lg font-black text-[#009F58] mt-1">98.4%</p>
-              <span className="text-[11px] text-gray-500 font-medium block mt-0.5">
+              <p className="text-2xl font-black text-[#009F58] mt-2 mb-1 tracking-tight">
+                <RollNumberTicker value="98.4" suffix="%" formatLocale={false} />
+              </p>
+              <span className="text-[11px] text-gray-500 font-medium block">
                 Waste terukur 1.6%
               </span>
             </div>
@@ -294,7 +299,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   Kopi Susu Gula Aren
                 </span>
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp18.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                  +<RollNumberTicker value={18000} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -302,7 +307,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '72%' }} />
                 </div>
                 <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 72%
+                  Margin <RollNumberTicker value={72} suffix="%" formatLocale={false} />
                 </span>
               </div>
             </div>
@@ -314,7 +319,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   Cold Brew Coffee
                 </span>
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp24.000 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                  +<RollNumberTicker value={24000} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -322,7 +327,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '62%' }} />
                 </div>
                 <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 62%
+                  Margin <RollNumberTicker value={62} suffix="%" formatLocale={false} />
                 </span>
               </div>
             </div>
@@ -334,7 +339,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   Matcha Latte Kyoto
                 </span>
                 <span className="font-bold text-gray-900 text-xs sm:text-[13px]">
-                  +Rp19.600 <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
+                  +<RollNumberTicker value={19600} prefix="Rp" /> <span className="text-[10px] text-gray-400 font-normal">/ cup</span>
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -342,7 +347,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                   <div className="h-full bg-[#009F58] rounded-full transition-all duration-500" style={{ width: '65%' }} />
                 </div>
                 <span className="text-xs font-semibold text-gray-600 shrink-0">
-                  Margin 65%
+                  Margin <RollNumberTicker value={65} suffix="%" formatLocale={false} />
                 </span>
               </div>
             </div>
@@ -573,7 +578,7 @@ export default function LaporanKeuanganPage({ onToast }) {
             {/* Center Label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
               <span className="text-2xl font-black text-gray-900 leading-none">
-                142
+                <RollNumberTicker value={142} />
               </span>
               <span className="text-[10px] text-gray-400 font-semibold mt-0.5">
                 100% Lunas
@@ -590,7 +595,9 @@ export default function LaporanKeuanganPage({ onToast }) {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-gray-400 font-medium text-[11px]">55%</span>
-                <span className="font-bold text-gray-900">Rp10.725.000</span>
+                <span className="font-bold text-gray-900">
+                  <RollNumberTicker value={10725000} prefix="Rp" />
+                </span>
               </div>
             </div>
 
@@ -601,7 +608,9 @@ export default function LaporanKeuanganPage({ onToast }) {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-gray-400 font-medium text-[11px]">40%</span>
-                <span className="font-bold text-gray-900">Rp7.800.000</span>
+                <span className="font-bold text-gray-900">
+                  <RollNumberTicker value={7800000} prefix="Rp" />
+                </span>
               </div>
             </div>
 
@@ -612,7 +621,9 @@ export default function LaporanKeuanganPage({ onToast }) {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-gray-400 font-medium text-[11px]">5%</span>
-                <span className="font-bold text-gray-900">Rp975.000</span>
+                <span className="font-bold text-gray-900">
+                  <RollNumberTicker value={975000} prefix="Rp" />
+                </span>
               </div>
             </div>
           </div>
