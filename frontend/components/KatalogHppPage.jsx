@@ -203,6 +203,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     amount: '',
     cost: ''
   })
+  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false)
 
   // Live HPP calculation
   const currentFormHpp = useMemo(() => {
@@ -322,6 +323,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       image: '/assets/kasir/kopi-susu.png'
     })
     setIngredientInput({ name: '', detail: '', amount: '', cost: '' })
+    setIsTemplateDropdownOpen(false)
     setShowAddIngredientForm(true)
     setView('add')
   }
@@ -329,6 +331,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   // Open Edit view
   const handleOpenEdit = (product) => {
     setEditingProduct(product)
+    setIsTemplateDropdownOpen(false)
     const existingRecipe = product.ingredients || DEFAULT_RECIPES[product.name] || [
       { id: 1, name: 'Bahan Baku Utama', detail: 'Formula Racikan Toko', amount: '1 porsi', cost: Math.round((product.hpp || 10000) * 0.8) },
       { id: 2, name: 'Kemasan Cup & Sedotan', detail: 'Standard Cup + Sedotan', amount: '1 set', cost: Math.round((product.hpp || 10000) * 0.2) }
@@ -542,45 +545,47 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </span>
               </div>
 
-              {/* Foto Produk Picker */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 block mb-2">
-                  Pilih Foto / Ikon Menu
-                </label>
-                <div className="flex items-center gap-3 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none]">
-                  {PRODUCT_IMAGE_PRESETS.map((preset) => {
-                    const isSelected = formData.image === preset.path
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image: preset.path })}
-                        className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 shrink-0 flex flex-col items-center gap-1 cursor-pointer ${
-                          isSelected
-                            ? 'border-[#009F58] bg-emerald-50/50 shadow-xs ring-2 ring-[#009F58]/20'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                        }`}
-                      >
-                        <img
-                          src={preset.path}
-                          alt={preset.label}
-                          className="w-11 h-11 object-cover rounded-lg"
-                        />
-                        <span className={`text-[10px] font-semibold leading-none ${
-                          isSelected ? 'text-[#009F58]' : 'text-gray-500'
-                        }`}>
-                          {preset.label}
-                        </span>
-                        {isSelected && (
-                          <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#009F58] text-white flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          </div>
-                        )}
-                      </button>
-                    )
-                  })}
+              {/* Foto Produk Picker (Hanya saat tambah menu baru) */}
+              {!isEdit && (
+                <div>
+                  <label className="text-xs font-bold text-gray-700 block mb-2">
+                    Pilih Foto / Ikon Menu
+                  </label>
+                  <div className="flex items-center gap-3 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {PRODUCT_IMAGE_PRESETS.map((preset) => {
+                      const isSelected = formData.image === preset.path
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image: preset.path })}
+                          className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 shrink-0 flex flex-col items-center gap-1 cursor-pointer ${
+                            isSelected
+                              ? 'border-[#009F58] bg-emerald-50/50 shadow-xs ring-2 ring-[#009F58]/20'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                          }`}
+                        >
+                          <img
+                            src={preset.path}
+                            alt={preset.label}
+                            className="w-11 h-11 object-cover rounded-lg"
+                          />
+                          <span className={`text-[10px] font-semibold leading-none ${
+                            isSelected ? 'text-[#009F58]' : 'text-gray-500'
+                          }`}>
+                            {preset.label}
+                          </span>
+                          {isSelected && (
+                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#009F58] text-white flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Nama Menu & Kategori */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -748,30 +753,60 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 )}
               </div>
 
-              {/* Template Bahan Cepat F&B */}
-              <div>
-                <p className="text-[11px] font-bold text-gray-600 mb-1.5 flex items-center gap-1">
-                  <span>Template Bahan Cepat F&B:</span>
-                  <span className="text-gray-400 font-normal">(Klik untuk isi otomatis)</span>
-                </p>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {QUICK_INGREDIENTS.map((qi, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setIngredientInput({
-                          name: qi.name,
-                          detail: qi.detail,
-                          amount: qi.amount,
-                          cost: String(qi.cost)
-                        })
-                      }}
-                      className="px-2.5 py-1 bg-gray-50 hover:bg-emerald-50 hover:text-[#009F58] hover:border-emerald-200 border border-gray-200 rounded-lg text-[11px] font-semibold text-gray-600 transition-colors cursor-pointer"
-                    >
-                      + {qi.name}
-                    </button>
-                  ))}
+              {/* Template Bahan Cepat F&B (Android Touch-Friendly Dropdown) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 block">
+                  Pilih Cepat dari Template Bahan:
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsTemplateDropdownOpen(!isTemplateDropdownOpen)}
+                    className="w-full min-h-[44px] flex items-center justify-between px-3.5 bg-white border border-gray-200 hover:border-gray-300 rounded-xl text-xs font-semibold text-gray-700 transition-all cursor-pointer shadow-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-[#009F58]" />
+                      <span>{ingredientInput.name ? `Terpilih: ${ingredientInput.name}` : 'Pilih dari Template Bahan Baku Populer...'}</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isTemplateDropdownOpen ? 'rotate-180 text-[#009F58]' : ''}`} />
+                  </button>
+
+                  {isTemplateDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsTemplateDropdownOpen(false)} />
+                      <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 max-h-64 overflow-y-auto">
+                        <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            Daftar Bahan Baku Populer
+                          </p>
+                        </div>
+                        {QUICK_INGREDIENTS.map((qi, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setIngredientInput({
+                                name: qi.name,
+                                detail: qi.detail,
+                                amount: qi.amount,
+                                cost: String(qi.cost)
+                              })
+                              setIsTemplateDropdownOpen(false)
+                            }}
+                            className="w-full min-h-[46px] flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs hover:bg-gray-50 transition-colors text-left cursor-pointer"
+                          >
+                            <div>
+                              <span className="font-bold text-gray-900 block">{qi.name}</span>
+                              <span className="text-[11px] text-gray-400 block mt-0.5">{qi.detail} • {qi.amount}</span>
+                            </div>
+                            <span className="font-bold text-[#009F58] shrink-0 font-mono text-xs">
+                              Rp{qi.cost.toLocaleString('id-ID')}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -828,32 +863,12 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </button>
               </div>
 
-              {/* Total Modal Dasar (HPP) Summary Banner */}
-              <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#009F58] text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Calculator className="w-5 h-5 stroke-[2]" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-gray-900">
-                      Total Modal Dasar Pokok (HPP)
-                    </h5>
-                    <p className="text-[11px] text-gray-500 mt-0.5">
-                      {currentFormHpp > 0
-                        ? `Terakumulasi dari ${totalIngredients.length} bahan baku dan kemasan racikan.`
-                        : 'Modal dasar akan otomatis terhitung saat bahan ditambahkan.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="sm:text-right shrink-0">
-                  <span className="text-xl sm:text-2xl font-black text-[#009F58] leading-none block">
-                    Rp{currentFormHpp.toLocaleString('id-ID')}
-                  </span>
-                  <span className="text-[10px] text-gray-400 block mt-1 font-semibold">
-                    per porsi sajian
-                  </span>
-                </div>
+              {/* Total HPP Summary Bar (Clean, Minimalist - Zero AI Slop) */}
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50/90 rounded-xl border border-gray-200 text-xs">
+                <span className="font-bold text-gray-700">Total HPP per Porsi</span>
+                <span className="text-lg font-black text-gray-900 font-mono">
+                  Rp{currentFormHpp.toLocaleString('id-ID')}
+                </span>
               </div>
             </div>
 
@@ -908,44 +923,31 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </div>
               </div>
 
-              {/* Rekomendasi Harga Cepat 1-Click Berdasarkan Target Margin */}
+              {/* Target Margin Selector */}
               <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-800">Rekomendasi Margin Otomatis</span>
-                  <span className="text-[10px] text-gray-400 font-medium">Klik untuk terapkan</span>
-                </div>
+                <span className="text-xs font-semibold text-gray-600 block">
+                  Pilih Target Margin:
+                </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { margin: 0.50, label: 'Margin 50%', desc: 'Ekonomis' },
-                    { margin: 0.65, label: 'Margin 65%', desc: 'Standar F&B', recommended: true },
-                    { margin: 0.75, label: 'Margin 75%', desc: 'Tinggi' },
-                  ].map((tier) => {
-                    const suggestedPrice = currentFormHpp > 0 ? Math.ceil((currentFormHpp / (1 - tier.margin)) / 500) * 500 : 0
-                    const isActive = Number(formData.price) === suggestedPrice && suggestedPrice > 0
+                  {[50, 65, 75].map((pct) => {
+                    const suggestedPrice = currentFormHpp > 0 ? Math.ceil((currentFormHpp / (1 - pct / 100)) / 500) * 500 : 0
+                    const isSelected = Number(formData.price) === suggestedPrice && suggestedPrice > 0
                     return (
                       <button
-                        key={tier.margin}
+                        key={pct}
                         type="button"
                         disabled={currentFormHpp <= 0}
                         onClick={() => setFormData({ ...formData, price: suggestedPrice })}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-emerald-50 border-[#009F58] ring-2 ring-[#009F58]/20'
-                            : 'bg-white hover:bg-gray-50 border-gray-200'
-                        } ${currentFormHpp <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer text-center ${
+                          isSelected
+                            ? 'bg-emerald-50 border-[#009F58] text-[#009F58] font-bold'
+                            : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700'
+                        } ${currentFormHpp <= 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-gray-900">{tier.label}</span>
-                          {tier.recommended && (
-                            <span className="text-[9px] font-bold text-[#009F58] bg-emerald-100/70 px-1 py-0.2 rounded">
-                              Ideal
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs font-black text-[#009F58] mt-1">
+                        <span className="block text-xs font-medium text-gray-500">{pct}%</span>
+                        <span className="block text-xs font-mono font-bold mt-0.5 text-gray-900">
                           {suggestedPrice > 0 ? `Rp${suggestedPrice.toLocaleString('id-ID')}` : '-'}
-                        </p>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">{tier.desc}</span>
+                        </span>
                       </button>
                     )
                   })}
