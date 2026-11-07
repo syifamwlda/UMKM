@@ -713,64 +713,111 @@ Statistik ringkasan keuntungan harian, tren performa 7 hari terakhir, evaluasi p
 
 ### Fitur 5: Struk Digital Publik (Read-Only via UUID)
 
-#### 1. `GET /api/receipts/{uuid}`
-Halaman publik struk digital. **Tanpa auth**.
-**Penting untuk privasi**: Data modal (`unit_cost`) dan laba/keuntungan bersih (`profit`) **TIDAK PERNAH** dimunculkan pada endpoint ini.
+#### 1. `GET /api/public/receipts/{uuid}` (Alias: `GET /api/receipts/{uuid}`)
+Halaman publik struk digital belanja pelanggan. **Tanpa autentikasi** dan dilindungi rate limiting **throttle 60 request per menit**.
+**Penting untuk privasi & keamanan data**: Data modal (`unit_cost`), laba bersih (`profit`), nomor HP pemilik (`phone`), ID database internal (`id`, `user_id`, `product_id`), maupun data user lain **TIDAK PERNAH** dimunculkan pada endpoint ini.
 - **Response `200 OK`**:
 ```json
 {
   "message": "Struk belanja ditemukan.",
   "data": {
-    "uuid": "8f3b7c2a-9e12-4f33-b412-1d57e84cb123",
-    "business_name": "Kopi Senja Bahagia",
-    "business_type": "Kuliner & Minuman",
-    "paid_at": "2026-11-01 10:30:00",
-    "total": 41000,
+    "business_name": "Kedai Kopi Barokah",
+    "paid_at": "2026-11-01T10:30:00.000000Z",
+    "date": "2026-11-01 10:30:00",
     "items": [
       {
         "name": "Es Kopi Susu Gula Aren",
         "qty": 2,
+        "unit_price": 18000,
         "price": 18000,
         "subtotal": 36000
       },
       {
         "name": "Brownies Panggang Mini",
         "qty": 1,
+        "unit_price": 5000,
         "price": 5000,
         "subtotal": 5000
       }
     ],
-    "footer_note": "Terima kasih sudah mendukung UMKM lokal!"
+    "total": 41000
   }
 }
 ```
+- **Response `404 Not Found`** (UUID tidak dikenal atau salah):
+```json
+{
+  "message": "Struk belanja tidak ditemukan atau tautan sudah tidak valid."
+}
+```
+- **Response `429 Too Many Requests`** (Melebihi 60 request per menit).
 
 ---
 
 ### Fitur 6: Skor Kesehatan Usaha (0-100)
 
-#### 1. `GET /api/business-health`
-Menampilkan skor kesehatan usaha (0-100) yang dihitung deterministik di backend + narasi evaluasi dari AI / fallback service.
+#### 1. `GET /api/health-score` (Alias: `GET /api/business-health`)
+Menampilkan skor kesehatan usaha (0-100) per user yang dihitung secara deterministik di backend sesuai konfigurasi `config/health.php` dan narasi evaluasi dari `AiInsightService`.
 - **Header**: `Authorization: Bearer <token>`
-- **Response `200 OK`**:
+- **Rumus Penilaian (Total 100 Poin)**:
+  1. **Margin Rata-rata Tertimbang Penjualan (40 poin)**: Dihitung dari seluruh penjualan kasir `(Total Laba / Total Omzet) * 100`, dengan target margin 40%.
+  2. **Konsistensi Penjualan 14 Hari Terakhir (30 poin)**: Proporsi jumlah hari aktif bertransaksi dalam rentang 14 hari terakhir `(Hari Aktif / 14) * 30`.
+  3. **Proporsi Produk Berstatus Sehat (30 poin)**: Persentase produk dengan margin sehat (>= 20%) dari seluruh katalog `(Produk Sehat / Total Produk) * 30`.
+- **Response `200 OK` (Ada Data & Gemini AI Aktif)**:
 ```json
 {
   "message": "Skor kesehatan usaha berhasil dimuat.",
   "data": {
-    "score": 82,
-    "category": "Sangat Prima",
-    "metrics": {
-      "margin_health_score": 85,
-      "product_profitability_ratio": 90,
-      "consistency_score": 75,
-      "clean_profit_ratio": 78
-    },
-    "narrative": "Bisnis Anda berada dalam kondisi prima dengan margin rata-rata di atas 45%. Sebagian besar produk Anda menghasilkan keuntungan nyata dan tidak boncos. Pertahankan stok bahan kopi agar tidak kehabisan saat jam sibuk.",
-    "action_items": [
-      "Pertahankan harga jual produk unggulan",
-      "Evaluasi ulang harga produk dengan margin tipis",
-      "Catat penjualan harian secara konsisten setiap tutup kasir"
-    ]
+    "score": 70,
+    "label": "Sehat",
+    "alasan": [
+      "Margin rata-rata tertimbang penjualan Anda berada di angka 50.0% (menyumbang 40 dari 40 poin).",
+      "Toko Anda aktif mencatat penjualan pada 7 dari 14 hari terakhir (menyumbang 15 dari 30 poin).",
+      "Sebanyak 1 dari 2 produk (50.0%) berstatus sehat dan menghasilkan untung aman (menyumbang 15 dari 30 poin)."
+    ],
+    "saran": [
+      "Evaluasi takaran bahan baku atau sesuaikan harga jual pada menu yang marginnya tipis atau merugi.",
+      "Tingkatkan konsistensi pencatatan transaksi kasir setiap hari agar performa keuangan terpantau secara penuh.",
+      "Pantau harga beli bahan baku secara berkala agar lonjakan inflasi tidak menggerus laba bersih Anda."
+    ],
+    "narasi": "Performa bisnis kedai Anda sangat prima dengan marjin yang kuat. Pertahankan pencatatan transaksi setiap hari agar pertumbuhan stabil.",
+    "source": "ai",
+    "breakdown": {
+      "margin_score": 40,
+      "consistency_score": 15,
+      "healthy_product_score": 15,
+      "weighted_margin": 50,
+      "active_days_14": 7,
+      "healthy_products_ratio": 50
+    }
+  }
+}
+```
+- **Response `200 OK` (Data Kosong - Belum ada Produk/Transaksi)**:
+```json
+{
+  "message": "Skor kesehatan usaha berhasil dimuat.",
+  "data": {
+    "score": 0,
+    "label": "Kritis",
+    "alasan": [
+      "Belum ada transaksi penjualan kasir yang tercatat.",
+      "Belum ada produk aktif dengan racikan HPP di sistem katalog."
+    ],
+    "saran": [
+      "Tambahkan menu produk dan rincian biaya bahan baku di menu Katalog & HPP.",
+      "Buka menu Kasir untuk mulai mencatat transaksi penjualan harian Anda."
+    ],
+    "narasi": "Belum ada aktivitas bisnis yang cukup untuk dianalisis. Masukkan produk di menu Katalog & HPP serta catat transaksi pertama Anda di menu Kasir.",
+    "source": "fallback",
+    "breakdown": {
+      "margin_score": 0,
+      "consistency_score": 0,
+      "healthy_product_score": 0,
+      "weighted_margin": 0,
+      "active_days_14": 0,
+      "healthy_products_ratio": 0
+    }
   }
 }
 ```

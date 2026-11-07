@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\HealthScoreController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\PublicReceiptController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +15,10 @@ use Illuminate\Support\Facades\Route;
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+
+// Struk Digital Publik (Read-Only via UUID, throttle 60 req/menit)
+Route::get('/public/receipts/{uuid}', [PublicReceiptController::class, 'show'])->middleware('throttle:60,1');
+Route::get('/receipts/{uuid}', [PublicReceiptController::class, 'show'])->middleware('throttle:60,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -36,4 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard & Laporan Statistik
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard', [DashboardController::class, 'stats']);
+
+    // Skor Kesehatan Usaha (0-100)
+    Route::get('/health-score', [HealthScoreController::class, 'show']);
+    Route::get('/business-health', [HealthScoreController::class, 'show']);
 });

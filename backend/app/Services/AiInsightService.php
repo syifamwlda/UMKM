@@ -293,4 +293,147 @@ class AiInsightService
             'status' => $status,
         ];
     }
+
+    /**
+     * Menghasilkan narasi evaluasi skor kesehatan usaha.
+     * Menggunakan Gemini AI jika tersedia dan aktif, dengan fallback otomatis ke aturan heuristik.
+     * Cache disimpan selama 6 jam per user dan hash data skor.
+     */
+    public function healthScoreNarrative(User $user, array $healthData): array
+    {
+        $score = (int) ($healthData['score'] ?? 0);
+        $label = (string) ($healthData['label'] ?? 'Kritis');
+        $margin = (float) ($healthData['weighted_margin'] ?? 0);
+        $activeDays = (int) ($healthData['active_days'] ?? 0);
+        $totalDays = (int) ($healthData['total_days'] ?? 14);
+        $healthyProducts = (int) ($healthData['healthy_products'] ?? 0);
+        $totalProducts = (int) ($healthData['total_products'] ?? 0);
+
+        // Siapkan fallback berbasis aturan
+        $fallback = $this->buildRuleBasedHealthNarrative($healthData);
+
+        // Jika skor 0 atau tidak ada data sama sekali, langsung berikan fallback ramah
+        if ($score === 0 && $totalProducts === 0 && $margin === 0.0) {
+            return $fallback;
+        }
+
+        $apiKey = config('services.gemini.key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $baseUrl = rtrim(config('services.gemini.url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
+
+        if (empty($apiKey)) {
+            return $fallback;
+        }
+
+        $hash = md5(json_encode([
+            'score' => $score,
+            'label' => $label,
+            'margin' => $margin,
+            'active_days' => $activeDays,
+            'healthy_products' => $healthyProducts,
+            'total_products' => $totalProducts,
+        ]));
+
+        $cacheKey = "gemini_health_score_{$user->id}_{$hash}";
+
+        return Cache::remember($cacheKey, now()->addHours(6), function () use ($apiKey, $model, $baseUrl, $score, $label, $margin, $activeDays, $totalDays, $healthyProducts, $totalProducts, $fallback) {
+            try {
+                $prompt = "Anda adalah konsultan keuangan UMKM UntungJelas. Berikan evaluasi skor kesehatan usaha untuk pemilik kedai/warung.\n"
+                    . "Instruksi wajib: Gunakan bahasa Indonesia santai dan akrab. Tepat 2 kalimat. HANYA gunakan angka yang tertera di data bawah ini, DILARANG MENGARANG angka baru.\n\n"
+                    . "Data Kesehatan Usaha:\n"
+                    . "- Skor Kesehatan: {$score}/100 (Status: {$label})\n"
+                    . "- Margin Rata-rata Tertimbang: {$margin}%\n"
+                    . "- Konsistensi Penjualan: {$activeDays} dari {$totalDays} hari terakhir\n"
+                    . "- Menu Berstatus Sehat: {$healthyProducts} dari {$totalProducts} produk";
+
+                $response = Http::withHeaders([
+                    'x-goog-api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->timeout(8)
+                ->post("{$baseUrl}/models/{$model}:generateContent", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.4,
+                        'maxOutputTokens' => 800,
+                    ]
+                ]);
+
+                if (! $response->successful()) {
+                    Log::warning('Gemini API healthScoreNarrative HTTP Error: ' . $response->status());
+                    return $fallback;
+                }
+
+                $aiText = trim((string) $response->json('candidates.0.content.parts.0.text'));
+                if (empty($aiText)) {
+                    return $fallback;
+                }
+
+                return [
+                    'headline' => "Evaluasi Kesehatan Usaha ({$score}/100)",
+                    'text' => $aiText,
+                    'source' => 'ai',
+                ];
+            } catch (Throwable $e) {
+                Log::warning('Gemini API healthScoreNarrative Exception: ' . $e->getMessage());
+                return $fallback;
+            }
+        });
+    }
+
+    /**
+     * Heuristic fallback untuk healthScoreNarrative.
+     */
+    protected function buildRuleBasedHealthNarrative(array $healthData): array
+    {
+        $score = (int) ($healthData['score'] ?? 0);
+        $label = (string) ($healthData['label'] ?? 'Kritis');
+        $margin = (float) ($healthData['weighted_margin'] ?? 0);
+        $totalProducts = (int) ($healthData['total_products'] ?? 0);
+
+        if ($score === 0 && $totalProducts === 0) {
+            return [
+                'headline' => 'Mulai Perjalanan Bisnis Anda',
+                'text' => 'Belum ada aktivitas bisnis yang cukup untuk dianalisis. Masukkan produk di menu Katalog & HPP serta catat transaksi pertama Anda di menu Kasir.',
+                'source' => 'fallback',
+            ];
+        }
+
+        if ($score >= 80) {
+            return [
+                'headline' => "Kondisi Usaha Sangat Prima ({$score}/100)",
+                'text' => "Bisnis Anda berada dalam kategori {$label} dengan margin solid {$margin}%. Pertahankan disiplin resep dan pencatatan kasir harian agar performa stabil.",
+                'source' => 'fallback',
+            ];
+        }
+
+        if ($score >= 60) {
+            return [
+                'headline' => "Kondisi Usaha Sehat ({$score}/100)",
+                'text' => "Usaha Anda tergolong {$label} dengan perputaran transaksi yang baik. Tingkatkan promosi di hari sepi agar skor kesehatan bisnis Anda makin optimal.",
+                'source' => 'fallback',
+            ];
+        }
+
+        if ($score >= 40) {
+            return [
+                'headline' => "Kondisi Usaha Cukup ({$score}/100)",
+                'text' => "Skor kesehatan usaha Anda berada pada kategori {$label} ({$score}/100). Fokus benahi menu dengan margin tipis dan dorong transaksi kasir lebih rutin.",
+                'source' => 'fallback',
+            ];
+        }
+
+        return [
+            'headline' => "Perlu Perhatian Khusus ({$score}/100)",
+            'text' => "Kesehatan bisnis Anda saat ini berstatus {$label} dengan skor {$score}/100. Segera evaluasi harga jual produk dan tekan pemborosan bahan baku.",
+            'source' => 'fallback',
+        ];
+    }
 }
+

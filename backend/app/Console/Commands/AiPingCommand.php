@@ -92,3 +92,4 @@ class AiPingCommand extends Command
         }
     }
 }
+
