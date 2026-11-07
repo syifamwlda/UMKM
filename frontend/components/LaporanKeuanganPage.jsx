@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   CreditCard,
   QrCode,
-  Coins
+  Coins,
+  Check
 } from 'lucide-react'
 
 // Mock transaction history dataset
@@ -89,6 +90,7 @@ const INITIAL_TRANSACTIONS = [
 export default function LaporanKeuanganPage({ onToast }) {
   // Filters & Pagination
   const [selectedMethod, setSelectedMethod] = useState('Semua')
+  const [isMethodDropdownOpen, setIsMethodDropdownOpen] = useState(false)
   const [sortOrder, setSortOrder] = useState('newest')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 4
@@ -250,9 +252,9 @@ export default function LaporanKeuanganPage({ onToast }) {
 
           {/* 3 Stats Grid: Compact, clean cards matching mockup */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Tiket Rata-rata (AOV)</span>
-              <p className="text-2xl font-black text-gray-900 mt-2 mb-1 tracking-tight">
+              <p className="text-xl font-black text-gray-900 mt-1.5 mb-1 tracking-tight">
                 <RollNumberTicker value={42500} prefix="Rp" />
               </p>
               <span className="text-[11px] text-[#009F58] font-bold block">
@@ -260,9 +262,9 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Produk Terlaris</span>
-              <p className="text-2xl font-black text-gray-900 mt-2 mb-1 tracking-tight truncate">
+              <p className="text-base sm:text-lg font-bold text-gray-900 mt-1.5 mb-1 tracking-tight truncate leading-snug" title="Kopi Susu Aren">
                 Kopi Susu Aren
               </p>
               <span className="text-[11px] text-gray-500 font-medium block">
@@ -270,9 +272,9 @@ export default function LaporanKeuanganPage({ onToast }) {
               </span>
             </div>
 
-            <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
+            <div className="bg-gray-50/70 rounded-xl p-3.5 sm:p-4 border border-gray-100 flex flex-col justify-between">
               <span className="text-xs font-medium text-gray-500">Rasio Efisiensi Bahan</span>
-              <p className="text-2xl font-black text-[#009F58] mt-2 mb-1 tracking-tight">
+              <p className="text-xl font-black text-[#009F58] mt-1.5 mb-1 tracking-tight">
                 <RollNumberTicker value="98.4" suffix="%" formatLocale={false} />
               </p>
               <span className="text-[11px] text-gray-500 font-medium block">
@@ -648,21 +650,72 @@ export default function LaporanKeuanganPage({ onToast }) {
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <select
-                value={selectedMethod}
-                onChange={(e) => {
-                  setSelectedMethod(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="appearance-none pl-8 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 outline-none focus:border-[#009F58] cursor-pointer"
+              <button
+                type="button"
+                onClick={() => setIsMethodDropdownOpen(!isMethodDropdownOpen)}
+                className={`inline-flex items-center gap-2 pl-3 pr-2.5 py-2 bg-white border rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+                  isMethodDropdownOpen
+                    ? 'border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
               >
-                <option value="Semua">Metode Pembayaran: Semua</option>
-                <option value="QRIS">Metode: QRIS</option>
-                <option value="Cash">Metode: Cash</option>
-                <option value="Debit">Metode: Debit/Kartu</option>
-              </select>
-              <Sliders className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Sliders className="w-3.5 h-3.5 text-gray-400" />
+                <span>
+                  {selectedMethod === 'Semua' ? 'Metode Pembayaran: Semua' : `Metode: ${selectedMethod}`}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
+                    isMethodDropdownOpen ? 'rotate-180 text-[#009F58]' : ''
+                  }`}
+                />
+              </button>
+
+              {isMethodDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsMethodDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.1)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+                    <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        Filter Metode
+                      </p>
+                    </div>
+                    {[
+                      { id: 'Semua', label: 'Semua Metode', icon: Sliders },
+                      { id: 'QRIS', label: 'QRIS', icon: QrCode },
+                      { id: 'Cash', label: 'Cash (Tunai)', icon: Coins },
+                      { id: 'Debit', label: 'Debit / Kartu', icon: CreditCard }
+                    ].map((opt) => {
+                      const Icon = opt.icon
+                      const isSelected = selectedMethod === opt.id
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMethod(opt.id)
+                            setCurrentPage(1)
+                            setIsMethodDropdownOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-50 text-[#009F58] font-bold'
+                              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#009F58]' : 'text-gray-400'}`} />
+                            <span>{opt.label}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#009F58]" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             <button
