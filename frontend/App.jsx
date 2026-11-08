@@ -109,9 +109,10 @@ function MainContent() {
   if (currentPage === 'produk') {
     return (
       <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
-        <ProductHppPage
-          onNavigateHome={() => navigateTo('home')}
-          onNavigateDashboard={() => navigateTo('dashboard')}
+        <DashboardPage
+          onLogout={handleLogout}
+          initialMenu="Katalog & HPP"
+          onNavigateProduct={() => navigateTo('produk')}
         />
       </ProtectedRoute>
     )

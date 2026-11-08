@@ -447,7 +447,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         }
       })
 
-      if (onUpdateCatalog) onUpdateCatalog(productsData)
+      if (Array.isArray(productsData) && productsData.length > 0 && onUpdateCatalog) {
+        onUpdateCatalog(productsData)
+      }
     } catch (err) {
       console.error('Gagal memuat katalog produk:', err)
       setLoadError('Gagal memuat katalog produk dari backend. Pastikan server backend aktif.')
