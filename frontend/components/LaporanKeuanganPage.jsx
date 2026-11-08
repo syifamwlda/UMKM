@@ -90,7 +90,7 @@ const INITIAL_TRANSACTIONS = [
   }
 ]
 
-export default function LaporanKeuanganPage({ onToast }) {
+export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
   const { user } = useAuth()
 
   // Real backend dataset states
@@ -457,7 +457,11 @@ export default function LaporanKeuanganPage({ onToast }) {
             <button
               type="button"
               onClick={() => {
-                window.location.hash = '#produk'
+                if (onNavigateMenu) {
+                  onNavigateMenu('Katalog & HPP')
+                } else {
+                  window.location.hash = '#produk'
+                }
               }}
               className="text-xs font-semibold text-[#009F58] hover:text-[#008246] transition-colors inline-flex items-center gap-1 cursor-pointer group"
             >

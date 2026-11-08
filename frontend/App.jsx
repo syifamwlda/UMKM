@@ -98,7 +98,9 @@ function MainContent() {
     return (
       <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
         <DashboardPage
+          key="dashboard"
           onLogout={handleLogout}
+          initialMenu="Dashboard"
           onNavigateProduct={() => navigateTo('produk')}
         />
       </ProtectedRoute>
@@ -110,6 +112,7 @@ function MainContent() {
     return (
       <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
         <DashboardPage
+          key="produk"
           onLogout={handleLogout}
           initialMenu="Katalog & HPP"
           onNavigateProduct={() => navigateTo('produk')}

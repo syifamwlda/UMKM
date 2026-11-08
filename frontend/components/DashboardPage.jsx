@@ -222,6 +222,35 @@ function RollNumberTicker({ value, prefix = '', suffix = '', formatLocale = true
 export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   const { user } = useAuth()
   const [activeMenu, setActiveMenu] = useState(initialMenu)
+
+  // Sync if initialMenu changes from parent
+  useEffect(() => {
+    if (initialMenu) {
+      setActiveMenu(initialMenu)
+    }
+  }, [initialMenu])
+
+  // Sync menu if URL hash changes
+  useEffect(() => {
+    const syncMenuFromHash = () => {
+      const h = window.location.hash
+      if (h === '#produk' || h === '#katalog') {
+        setActiveMenu('Katalog & HPP')
+      } else if (h === '#kasir') {
+        setActiveMenu('Kasir')
+      } else if (h === '#laporan') {
+        setActiveMenu('Laporan Keuangan')
+      } else if (h === '#ai') {
+        setActiveMenu('Asisten AI')
+      } else if (h === '#dashboard') {
+        setActiveMenu('Dashboard')
+      }
+    }
+    syncMenuFromHash()
+    window.addEventListener('hashchange', syncMenuFromHash)
+    return () => window.removeEventListener('hashchange', syncMenuFromHash)
+  }, [])
+
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [chartSeries, setChartSeries] = useState({ omzet: true, laba: true, costs: true })
   const [comparePrevious, setComparePrevious] = useState(false)
@@ -1440,13 +1469,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                   <button
                     key={item.name}
                     type="button"
-                    onClick={() => {
-                      if (item.name === 'Katalog & HPP') {
-                        window.location.hash = '#produk'
-                      } else {
-                        setActiveMenu(item.name)
-                      }
-                    }}
+                    onClick={() => setActiveMenu(item.name)}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium transition-all cursor-pointer relative ${
                       isActive
                         ? 'text-gray-900 font-bold bg-emerald-50/50'
@@ -1545,11 +1568,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                       <button
                         key={item.name}
                         onClick={() => {
-                          if (item.name === 'Katalog & HPP') {
-                            window.location.hash = '#produk'
-                          } else {
-                            setActiveMenu(item.name)
-                          }
+                          setActiveMenu(item.name)
                           setMobileSidebarOpen(false)
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold ${
@@ -1574,11 +1593,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                       <button
                         key={item.name}
                         onClick={() => {
-                          if (item.name === 'Katalog & HPP') {
-                            window.location.hash = '#produk'
-                          } else {
-                            setActiveMenu(item.name)
-                          }
+                          setActiveMenu(item.name)
                           setMobileSidebarOpen(false)
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
@@ -1967,7 +1982,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                       <p className="text-xs text-gray-400 mt-1 mb-4">Tambahkan resep dan modal produk Anda agar siap dijual di kasir.</p>
                       <button
                         type="button"
-                        onClick={() => { window.location.hash = '#produk' }}
+                        onClick={() => setActiveMenu('Katalog & HPP')}
                         className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -2399,7 +2414,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             onToast={showToast}
           />
         ) : activeMenu === 'Laporan Keuangan' ? (
-          <LaporanKeuanganPage onToast={showToast} />
+          <LaporanKeuanganPage onToast={showToast} onNavigateMenu={setActiveMenu} />
         ) : activeMenu === 'Asisten AI' ? (
           <div className="space-y-5 animate-fade-in max-w-5xl mx-auto pb-12">
             {/* Header Asisten AI */}
@@ -4208,7 +4223,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                         {/* Quick action button to check product margins */}
                         <button
                           type="button"
-                          onClick={() => { window.location.hash = '#produk' }}
+                          onClick={() => setActiveMenu('Katalog & HPP')}
                           className="w-full py-2 bg-emerald-50 hover:bg-emerald-100 text-[#009B5B] text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                         >
                           <span>Kelola Resep & Margin Menu</span>
