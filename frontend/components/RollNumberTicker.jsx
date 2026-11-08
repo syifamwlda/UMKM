@@ -10,17 +10,17 @@ export function SingleDigitReel({ digit, delay = 0 }) {
   useEffect(() => {
     // Delay rolling so on initial page mount it starts at 0 and rolls up to 10 + digit
     const timer = setTimeout(() => {
-      setTarget(10 + digit)
+      setTarget(10 + Number(digit))
     }, 40 + delay)
     return () => clearTimeout(timer)
   }, [digit, delay])
 
   return (
     <span
-      className="inline-block relative overflow-hidden text-center select-none"
+      className="inline-block relative overflow-hidden text-center select-none tabular-nums"
       style={{
-        height: '1.45em',
-        width: '0.65em',
+        height: '1.25em',
+        width: '1ch',
         verticalAlign: 'middle'
       }}
     >
@@ -35,7 +35,7 @@ export function SingleDigitReel({ digit, delay = 0 }) {
           <span
             key={i}
             className="flex items-center justify-center font-black"
-            style={{ height: '1.45em', lineHeight: 1 }}
+            style={{ height: '1.25em', lineHeight: '1.25em' }}
           >
             {num}
           </span>
@@ -56,8 +56,8 @@ export function RollNumberTicker({
   if (typeof value === 'number') {
     numStr = formatLocale ? Math.abs(value).toLocaleString('id-ID') : String(Math.abs(value))
   } else {
-    // String value (e.g. "98.4" or "19.500.000")
-    const str = String(value)
+    // String value (e.g. "39.9" or "19.500.000")
+    const str = String(value ?? 0)
     if (formatLocale && /^\d+$/.test(str)) {
       numStr = parseInt(str, 10).toLocaleString('id-ID')
     } else {
@@ -72,11 +72,11 @@ export function RollNumberTicker({
   let digitCount = 0
 
   return (
-    <span className={`inline-flex items-center tracking-tight ${className}`}>
+    <span className={`inline-flex items-center tracking-tight tabular-nums ${className}`}>
       {finalPrefix && (
         <span
-          className="select-none font-black mr-0.5 inline-flex items-center justify-center"
-          style={{ height: '1.45em' }}
+          className="select-none font-black inline-flex items-center justify-center"
+          style={{ height: '1.25em' }}
         >
           {finalPrefix}
         </span>
@@ -85,7 +85,7 @@ export function RollNumberTicker({
         const isDigit = /\d/.test(char)
         if (isDigit) {
           const digit = parseInt(char, 10)
-          const delay = digitCount * 45
+          const delay = digitCount * 40
           digitCount++
           const keyFromRight = `d-${chars.length - 1 - idx}`
           return (
@@ -99,8 +99,8 @@ export function RollNumberTicker({
         return (
           <span
             key={`sep-${idx}`}
-            className="select-none font-black px-[1px] inline-flex items-center justify-center text-center"
-            style={{ height: '1.45em', width: '0.28em' }}
+            className="select-none font-black inline-flex items-center justify-center text-center"
+            style={{ height: '1.25em' }}
           >
             {char}
           </span>
@@ -108,8 +108,8 @@ export function RollNumberTicker({
       })}
       {suffix && (
         <span
-          className="select-none font-black ml-1.5 inline-flex items-center justify-center"
-          style={{ height: '1.45em' }}
+          className="select-none font-black inline-flex items-center justify-center"
+          style={{ height: '1.25em' }}
         >
           {suffix}
         </span>
@@ -119,4 +119,3 @@ export function RollNumberTicker({
 }
 
 export default RollNumberTicker
-

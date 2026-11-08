@@ -1641,9 +1641,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       )}
 
       {isLoading && (
-        <div className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-xs text-gray-600 flex items-center justify-center gap-2.5">
-          <Loader2 className="w-4 h-4 animate-spin text-[#009F58]" />
-          <span>Menyinkronkan data katalog produk dari backend...</span>
+        <div className="p-6 bg-gray-50 border border-gray-200/80 rounded-2xl text-xs text-gray-500 flex items-center justify-center gap-2.5">
+          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+          <span className="font-medium text-gray-500">Menyinkronkan data katalog produk dari backend...</span>
         </div>
       )}
 
