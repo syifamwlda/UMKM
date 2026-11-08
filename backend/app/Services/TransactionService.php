@@ -20,9 +20,9 @@ class TransactionService
      * Mencatat transaksi baru dengan snapshot harga jual dan modal per unit saat transaksi berlangsung.
      * Dijalankan di dalam DB::transaction untuk integritas data.
      */
-    public function createTransaction(User $user, array $itemsData, ?string $paidAt = null): array
+    public function createTransaction(User $user, array $itemsData, ?string $paidAt = null, ?string $paymentMethod = 'Tunai'): array
     {
-        return DB::transaction(function () use ($user, $itemsData, $paidAt) {
+        return DB::transaction(function () use ($user, $itemsData, $paidAt, $paymentMethod) {
             $productIds = collect($itemsData)->pluck('product_id')->unique()->all();
 
             // Ambil semua produk milik user yang relevan beserta bahan bakunya
@@ -70,6 +70,7 @@ class TransactionService
             $transaction = $user->transactions()->create([
                 'uuid' => (string) Str::uuid(),
                 'total' => round($totalPrice, 2),
+                'payment_method' => $paymentMethod ?: 'Tunai',
                 'paid_at' => $paidAt ? Carbon::parse($paidAt) : now(),
             ]);
 
@@ -123,6 +124,7 @@ class TransactionService
             'total_cost' => round($totalCost, 2),
             'profit' => $totalProfit,
             'total_profit' => $totalProfit,
+            'payment_method' => $transaction->payment_method ?? 'Tunai',
             'paid_at' => $transaction->paid_at?->toISOString(),
             'receipt_url' => "/struk/{$transaction->uuid}",
             'items_count' => $items->count(),

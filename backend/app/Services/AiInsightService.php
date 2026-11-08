@@ -435,5 +435,131 @@ class AiInsightService
             'source' => 'fallback',
         ];
     }
+
+    /**
+     * Konsultasi tanya-jawab bisnis UMKM interaktif via Gemini AI dengan fallback cerdas.
+     */
+    public function chat(User $user, string $message): array
+    {
+        $message = trim($message);
+        if (empty($message)) {
+            return [
+                'reply' => 'Halo! Ada yang bisa saya bantu terkait strategi harga, modal bahan, atau keuntungan usaha Anda?',
+                'source' => 'fallback',
+            ];
+        }
+
+        // Siapkan ringkasan finansial usaha user untuk konteks Gemini
+        $products = $user->products()->with('ingredients')->get();
+        $enriched = $products->map(fn ($p) => $this->hppService->enrichProduct($p));
+        $rugiCount = $enriched->where('status', 'rugi')->count();
+        $tipisCount = $enriched->where('status', 'tipis')->count();
+        $sehatCount = $enriched->where('status', 'sehat')->count();
+
+        $todayTrx = $user->transactions()->whereDate('paid_at', now()->toDateString())->get();
+        $todayOmzet = (float) $todayTrx->sum('total');
+
+        $apiKey = config('services.gemini.key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $baseUrl = rtrim(config('services.gemini.url', 'https://generativelanguage.googleapis.com/v1beta'), '/');
+
+        if (! empty($apiKey)) {
+            try {
+                $businessName = $user->business_name ?: 'UMKM Anda';
+                $businessType = $user->business_type ?: 'Usaha Kuliner / Retail';
+
+                $prompt = <<<PROMPT
+Anda adalah "Asisten AI UntungJelas", konsultan keuangan & bisnis profesional khusus pelaku UMKM Indonesia.
+Gaya komunikasi Anda: ramah, ringkas, solutif, suportif, dan menggunakan bahasa Indonesia yang mudah dipahami (maksimal 2-3 paragraf singkat).
+
+Konteks Usaha Pengguna:
+- Nama Usaha: {$businessName}
+- Kategori Usaha: {$businessType}
+- Omzet Hari Ini: Rp {$todayOmzet}
+- Jumlah Menu Sehat: {$sehatCount}, Tipis: {$tipisCount}, Rugi: {$rugiCount}
+
+Pertanyaan / Permintaan Pengguna:
+"{$message}"
+
+Berikan jawaban atau saran bisnis yang praktis, cerdas, dan langsung bisa dieksekusi oleh pelaku usaha:
+PROMPT;
+
+                $response = Http::timeout(10)->post("{$baseUrl}/models/{$model}:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt],
+                            ],
+                        ],
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'maxOutputTokens' => 600,
+                    ],
+                ]);
+
+                if ($response->successful()) {
+                    $replyText = $response->json('candidates.0.content.parts.0.text');
+                    if (! empty($replyText)) {
+                        return [
+                            'reply' => trim($replyText),
+                            'source' => 'gemini',
+                        ];
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::warning("Gemini AI Chat Exception: {$e->getMessage()}");
+            }
+        }
+
+        return $this->buildFallbackChatReply($user, $message, $todayOmzet, $rugiCount, $tipisCount, $sehatCount);
+    }
+
+    /**
+     * Fallback jawaban cerdas berbasis aturan jika Gemini offline/limit tercapai.
+     */
+    protected function buildFallbackChatReply(User $user, string $message, float $todayOmzet, int $rugiCount, int $tipisCount, int $sehatCount): array
+    {
+        $lower = strtolower($message);
+
+        if (str_contains($lower, 'harga') || str_contains($lower, 'margin') || str_contains($lower, 'evaluasi') || str_contains($lower, 'rugi')) {
+            if ($rugiCount > 0) {
+                return [
+                    'reply' => "💡 **Saran Margin:** Anda memiliki {$rugiCount} produk berstatus **Rugi**. Segera buka menu *Katalog & HPP*, lalu sesuaikan harga jualnya minimal 30% di atas modal bahan agar usaha tidak bocor halus.",
+                    'source' => 'fallback',
+                ];
+            }
+            if ($tipisCount > 0) {
+                return [
+                    'reply' => "💡 **Saran Margin:** Anda memiliki {$tipisCount} produk berstatus **Margin Tipis**. Pertimbangkan untuk menaikkan harga jual Rp1.000 - Rp2.000 atau cari supplier bahan baku dengan harga lebih kompetitif.",
+                    'source' => 'fallback',
+                ];
+            }
+            return [
+                'reply' => "✨ **Katalog Sehat!** Seluruh produk Anda saat ini berstatus sehat. Untuk meningkatkan profitabilitas lebih lanjut, coba buat paket *bundling* produk favorit dengan minuman.",
+                'source' => 'fallback',
+            ];
+        }
+
+        if (str_contains($lower, 'stok') || str_contains($lower, 'bahan') || str_contains($lower, 'resep')) {
+            return [
+                'reply' => '📦 **Manajemen Bahan Baku:** Pastikan tim Anda menimbang bahan baku sesuai takaran resep di *Katalog & HPP*. Ketidakdisiplinan takaran seringkali menjadi penyebab utama hilangnya 15-20% margin harian.',
+                'source' => 'fallback',
+            ];
+        }
+
+        if (str_contains($lower, 'omzet') || str_contains($lower, 'laba') || str_contains($lower, 'jual') || str_contains($lower, 'kasir')) {
+            $formattedOmzet = number_format($todayOmzet, 0, ',', '.');
+            return [
+                'reply' => "💰 **Finansial Hari Ini:** Omzet tercatat hari ini sebesar **Rp{$formattedOmzet}**. Tingkatkan transaksi kasir dengan strategi *upselling* (menawarkan ukuran lebih besar atau topping tambahan di kasir).",
+                'source' => 'fallback',
+            ];
+        }
+
+        return [
+            'reply' => "🚀 **Tips Bisnis UntungJelas:** Fokus pada produk dengan margin tertinggi Anda dan promosikan sebagai menu andalan (*signature menu*). Pelanggan lebih menyukai produk dengan cerita khas daripada menu standar.",
+            'source' => 'fallback',
+        ];
+    }
 }
 

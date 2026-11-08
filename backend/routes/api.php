@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AiChatController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthScoreController;
@@ -46,4 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Skor Kesehatan Usaha (0-100)
     Route::get('/health-score', [HealthScoreController::class, 'show']);
     Route::get('/business-health', [HealthScoreController::class, 'show']);
+
+    // Asisten Konsultasi Bisnis AI (Gemini)
+    Route::post('/ai/chat', [AiChatController::class, 'chat'])->middleware('throttle:30,1');
 });

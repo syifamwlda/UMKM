@@ -44,6 +44,7 @@ class TransactionTest extends TestCase
         ]);
 
         $payload = [
+            'payment_method' => 'QRIS',
             'items' => [
                 ['product_id' => $product1->id, 'qty' => 2], // 2 x 18.000 = 36.000 (Modal 17.000 -> Untung 19.000)
                 ['product_id' => $product2->id, 'qty' => 1], // 1 x 5.000 = 5.000 (Modal 3.000 -> Untung 2.000)
@@ -57,6 +58,7 @@ class TransactionTest extends TestCase
             ->assertJsonPath('data.total', 41000)
             ->assertJsonPath('data.total_cost', 20000)
             ->assertJsonPath('data.profit', 21000)
+            ->assertJsonPath('data.payment_method', 'QRIS')
             ->assertJsonPath('data.items_count', 2)
             ->assertJsonPath('data.items.0.subtotal_price', 36000)
             ->assertJsonPath('data.items.0.subtotal_profit', 19000)
@@ -69,6 +71,7 @@ class TransactionTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'user_id' => $user->id,
             'total' => 41000,
+            'payment_method' => 'QRIS',
         ]);
 
         $this->assertDatabaseCount('transaction_items', 2);

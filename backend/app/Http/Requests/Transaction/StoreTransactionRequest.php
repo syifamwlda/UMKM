@@ -17,6 +17,7 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'paid_at' => ['nullable', 'date'],
+            'payment_method' => ['nullable', 'string', 'max:50'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer'],
             'items.*.qty' => ['required', 'integer', 'min:1'],

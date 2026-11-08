@@ -256,6 +256,16 @@ export default function DashboardPage({ onLogout }) {
   const [isAiPanelMinimized, setIsAiPanelMinimized] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [showEditModal, setShowEditModal] = useState(null)
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      sender: 'ai',
+      text: 'Halo! Saya Asisten AI UntungJelas. Saya siap membantu menganalisis laba, margin resep, evaluasi harga jual, dan strategi pengembangan usaha Anda. Apa yang ingin Anda diskusikan?',
+      time: 'Baru saja'
+    }
+  ])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
   const [shiftInfo, setShiftInfo] = useState({
     active: 'Pagi',
     time: '08:00 - 16:00',
@@ -607,10 +617,11 @@ export default function DashboardPage({ onLogout }) {
           kesehatanLabel: marginVal >= 20 ? 'Sangat Sehat' : marginVal > 0 ? 'Cukup Sehat' : 'Perlu Evaluasi'
         })
 
-        if (data.trend && Array.isArray(data.trend)) {
-          const formattedTrend = data.trend.map((t) => {
+        const rawTrend = data.trend_14_days || data.trend
+        if (rawTrend && Array.isArray(rawTrend)) {
+          const formattedTrend = rawTrend.map((t) => {
             const d = new Date(t.date)
-            const dayLabel = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+            const dayLabel = t.day || d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
             return {
               day: dayLabel,
               date: t.date,
@@ -922,26 +933,62 @@ export default function DashboardPage({ onLogout }) {
     showToast('Harga Croissant Cokelat berhasil disesuaikan ke Rp13.000! Laba naik.')
   }
 
+  const handleSendChatMessage = async (customPrompt = null) => {
+    const text = (typeof customPrompt === 'string' ? customPrompt : chatInput).trim()
+    if (!text || chatLoading) return
+
+    const userMsg = {
+      id: Date.now(),
+      sender: 'user',
+      text: text,
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    setChatMessages((prev) => [...prev, userMsg])
+    setChatInput('')
+    setChatLoading(true)
+
+    try {
+      const res = await api.post('/ai/chat', { message: text })
+      const reply = res.data?.data?.reply || 'Terima kasih atas pertanyaannya. Terus pantau laba dan margin resep Anda!'
+      const source = res.data?.data?.source || 'gemini'
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: reply,
+          source: source,
+          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        },
+      ])
+    } catch (err) {
+      console.error('Chat AI failed:', err)
+      const errReply =
+        err.response?.data?.message ||
+        'Maaf, koneksi ke asisten AI sedang sibuk. Namun Anda dapat memeriksa evaluasi margin produk langsung di menu Katalog & HPP.'
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: errReply,
+          source: 'fallback',
+          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        },
+      ])
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
   const handleAskAi = (e, customQuery = null) => {
     if (e && e.preventDefault) e.preventDefault()
     const query = (customQuery || aiQuestion).trim()
     if (!query) return
-
+    setActiveMenu('Asisten AI')
+    handleSendChatMessage(query)
     setAiQuestion('')
-    showToast(`AI sedang menganalisis: "${query}"...`)
-
-    setTimeout(() => {
-      const lower = query.toLowerCase()
-      if (lower.includes('harga') || lower.includes('margin') || lower.includes('evaluasi') || lower.includes('produk')) {
-        showToast('💡 Rekomendasi AI: Sesuaikan Croissant Cokelat ke Rp13.000 untuk amankan margin untung 23%.')
-      } else if (lower.includes('stok') || lower.includes('gula') || lower.includes('habis')) {
-        showToast('📦 Stok Sirup Gula Aren tersisa 5 cup. Segera pesan ke supplier!')
-      } else if (lower.includes('laci') || lower.includes('kas') || lower.includes('kasir')) {
-        showToast('💰 Kas di tangan tercatat Rp850.000 (Modal awal Rp200.000 + Penjualan Rp650.000). Kas fisik seimbang!')
-      } else {
-        showToast('✨ Saran AI: Bundle "Kopi Susu + Croissant" seharga Rp23.000 berpotensi genjot margin +28%!')
-      }
-    }, 900)
   }
 
   const handleSavePriceEdit = (id, newHpp, newPrice) => {
@@ -1030,6 +1077,7 @@ export default function DashboardPage({ onLogout }) {
     try {
       const payload = {
         paid_at: new Date().toISOString(),
+        payment_method: method || 'Tunai',
         items: posCart.map((item) => ({
           product_id: item.id,
           qty: item.qty,
@@ -2156,6 +2204,210 @@ export default function DashboardPage({ onLogout }) {
           />
         ) : activeMenu === 'Laporan Keuangan' ? (
           <LaporanKeuanganPage onToast={showToast} />
+        ) : activeMenu === 'Asisten AI' ? (
+          <div className="space-y-5 animate-fade-in max-w-5xl mx-auto pb-12">
+            {/* Header Asisten AI */}
+            <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-gray-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-sm">
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-300 text-xs font-semibold mb-3 border border-white/10">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Konsultan Bisnis UMKM Berbasis Gemini AI</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
+                  Tanya Apapun Seputar Finansial & Margin Usaha
+                </h1>
+                <p className="mt-2 text-xs sm:text-sm text-emerald-100/80 max-w-2xl leading-relaxed">
+                  Asisten AI membaca data resep, harga pokok penjualan (HPP), dan tren kasir toko Anda untuk memberikan saran bisnis nyata yang dapat langsung diterapkan.
+                </p>
+              </div>
+            </div>
+
+            {/* Top Cards: Rekomendasi Hari Ini & Status Usaha */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Card 1: Rekomendasi Utama (Real dari Gemini/Backend) */}
+              <div className="md:col-span-2 bg-white rounded-2xl p-5 border border-gray-100 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#009B5B]" />
+                    <span>Rekomendasi AI Hari Ini</span>
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                    insightData.source === 'ai' || insightData.source === 'gemini'
+                      ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                      : 'bg-emerald-50 text-[#009B5B] border border-emerald-200'
+                  }`}>
+                    {insightData.source === 'ai' || insightData.source === 'gemini' ? 'Gemini AI Real' : 'Analisis HPP'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 mb-1">
+                    {insightData.headline || 'Evaluasi Menu & Penjualan'}
+                  </h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {insightData.text || 'Lakukan pencatatan transaksi kasir secara rutin untuk memantau pergerakan laba bersih setiap menu usaha Anda.'}
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                  <span>Target Margin Sehat: &ge;30%</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSendChatMessage('Bagaimana langkah praktis untuk meningkatkan margin keuntungan usaha saya?')}
+                    className="text-[#009B5B] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Tanyakan detail</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Skor Kesehatan Usaha Ringkas */}
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-2xs flex flex-col justify-between">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  Skor Kesehatan Toko
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-gray-900">
+                    {healthScoreData.score}
+                  </span>
+                  <span className="text-xs text-gray-400 font-bold">/100</span>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ml-auto ${
+                    healthScoreData.score >= 80 ? 'bg-emerald-100 text-emerald-800' :
+                    healthScoreData.score >= 60 ? 'bg-blue-100 text-blue-800' :
+                    healthScoreData.score >= 40 ? 'bg-amber-100 text-amber-800' :
+                    'bg-rose-100 text-rose-800'
+                  }`}>
+                    {healthScoreData.label}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                  {healthScoreData.saran?.[0] || 'Pertahankan pencatatan rutin kasir untuk memperkuat skor usaha.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage(`Toko saya memiliki skor ${healthScoreData.score}/100 dengan status ${healthScoreData.label}. Berikan strategi 3 langkah untuk menaikkan skor ini!`)}
+                  className="mt-3 text-xs font-bold text-[#009B5B] hover:text-[#00874e] flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Minta Solusi AI</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Box Container */}
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col h-[520px]">
+              {/* Chat Header */}
+              <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/70 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-[#009B5B] flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xs sm:text-sm text-gray-900">
+                      Ruang Konsultasi Bisnis
+                    </h3>
+                    <p className="text-[10px] text-gray-400">
+                      Aktif terhubung ke Gemini AI & data toko Anda
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#009B5B] animate-pulse" />
+                  <span>Real-Time Online</span>
+                </div>
+              </div>
+
+              {/* Chat Messages Body */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50/30">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {msg.sender === 'ai' && (
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#009B5B] border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className={`max-w-[82%] sm:max-w-[75%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-[13px] leading-relaxed shadow-2xs ${
+                      msg.sender === 'user'
+                        ? 'bg-[#009B5B] text-white rounded-tr-none'
+                        : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none whitespace-pre-line'
+                    }`}>
+                      {msg.text}
+                      <div className={`text-[10px] mt-1.5 flex items-center gap-1.5 ${msg.sender === 'user' ? 'text-emerald-100 justify-end' : 'text-gray-400 justify-start'}`}>
+                        <span>{msg.time}</span>
+                        {msg.source && (
+                          <span className="font-semibold px-1 rounded bg-gray-100 text-gray-500 text-[9px]">
+                            {msg.source === 'gemini' ? 'Gemini AI' : 'Algoritma HPP'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {chatLoading && (
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-[#009B5B] border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none p-3.5 text-xs text-gray-500 flex items-center gap-2 shadow-2xs">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#009B5B]" />
+                      <span>AI sedang menganalisis data keuangan Anda...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Prompt Chips */}
+              <div className="p-2 sm:px-4 bg-white border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                {[
+                  'Bagaimana cara menaikkan margin usaha saya?',
+                  'Evaluasi menu yang berpotensi rugi',
+                  'Tips atur takaran bahan baku agar hemat',
+                  'Ide promosi & paket bundling menu'
+                ].map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSendChatMessage(prompt)}
+                    disabled={chatLoading}
+                    className="shrink-0 text-[11px] font-medium bg-gray-50 hover:bg-emerald-50 hover:text-[#009B5B] hover:border-emerald-200 text-gray-600 px-3 py-1.5 rounded-full border border-gray-200/80 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+
+              {/* Input Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSendChatMessage()
+                }}
+                className="p-3 sm:p-4 bg-white border-t border-gray-100 flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ketik pertanyaan bisnis (contoh: Bagaimana cara hitung harga jual kopi?)..."
+                  disabled={chatLoading}
+                  className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#009B5B] focus:bg-white transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="px-4 py-2.5 bg-[#009B5B] hover:bg-[#00874e] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  <span className="hidden sm:inline">Kirim</span>
+                </button>
+              </form>
+            </div>
+          </div>
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
           <>
@@ -2770,8 +3022,9 @@ export default function DashboardPage({ onLogout }) {
                     <div>
                       <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight flex items-center gap-2">
                         <span>{chartTitle}</span>
-                        <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                          Contoh
+                        <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#009B5B] animate-pulse" />
+                          <span>Real-Time</span>
                         </span>
                       </h2>
                       <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
@@ -3783,8 +4036,8 @@ export default function DashboardPage({ onLogout }) {
                         <h4 className="text-xs sm:text-[13px] font-bold text-gray-900">
                           Status Laci Kasir
                         </h4>
-                        <span className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                          Contoh
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                          Aktif
                         </span>
                       </div>
                       <p className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5">
@@ -3795,10 +4048,10 @@ export default function DashboardPage({ onLogout }) {
 
                   <div className="text-right">
                     <p className="text-sm sm:text-base font-extrabold text-[#009B5B]">
-                      Rp850.000
+                      Rp{(200000 + (Number(dashboardStats?.today?.cash_in) || 0)).toLocaleString('id-ID')}
                     </p>
                     <p className="text-[10px] text-gray-400 font-medium">
-                      Kas di Tangan
+                      Kas Masuk: Rp{(Number(dashboardStats?.today?.cash_in) || 0).toLocaleString('id-ID')}
                     </p>
                   </div>
                 </div>

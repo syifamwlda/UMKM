@@ -247,3 +247,4 @@ export default function PublicReceiptPage({ uuid: propUuid, onNavigateHome }) {
     </div>
   )
 }
+

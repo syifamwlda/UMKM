@@ -184,21 +184,73 @@ export default function LaporanKeuanganPage({ onToast }) {
     return filteredTransactions.slice(start, start + itemsPerPage)
   }, [filteredTransactions, currentPage])
 
-  // Weekly Cash Flow & Real Profit Chart Data (Minggu 1 - 4)
-  // Coordinates for 4 weeks on SVG viewBox: 0 0 540 220
-  const chartPoints = [
-    { week: 'Minggu 1', omzet: 4.2, laba: 2.8, hpp: 1.4, x: 45 },
-    { week: 'Minggu 2', omzet: 4.8, laba: 3.3, hpp: 1.5, x: 195 },
-    { week: 'Minggu 3', omzet: 5.1, laba: 3.5, hpp: 1.6, x: 345 },
-    { week: 'Minggu 4', omzet: 5.4, laba: 3.7, hpp: 1.7, x: 495 }
-  ]
+  // Real Payment Methods Breakdown (Tunai, QRIS, Kartu/Debit)
+  const pmData = useMemo(() => {
+    if (stats?.payment_methods) {
+      return stats.payment_methods
+    }
+    const counts = { Tunai: 0, QRIS: 0, 'Kartu/Debit': 0 }
+    const totals = { Tunai: 0, QRIS: 0, 'Kartu/Debit': 0 }
+    transactions.forEach((t) => {
+      const m = t.method || 'Tunai'
+      if (m.toLowerCase().includes('qris')) {
+        counts.QRIS += 1
+        totals.QRIS += t.omzet
+      } else if (m.toLowerCase().includes('kartu') || m.toLowerCase().includes('debit')) {
+        counts['Kartu/Debit'] += 1
+        totals['Kartu/Debit'] += t.omzet
+      } else {
+        counts.Tunai += 1
+        totals.Tunai += t.omzet
+      }
+    })
+    const totalCount = transactions.length || 1
+    return {
+      Tunai: { count: counts.Tunai, total: totals.Tunai, pct: Math.round((counts.Tunai / totalCount) * 100) },
+      QRIS: { count: counts.QRIS, total: totals.QRIS, pct: Math.round((counts.QRIS / totalCount) * 100) },
+      'Kartu/Debit': { count: counts['Kartu/Debit'], total: totals['Kartu/Debit'], pct: Math.round((counts['Kartu/Debit'] / totalCount) * 100) },
+    }
+  }, [stats, transactions])
 
-  // Y-Scale: 0 to 6 jt maps to Y 185 to 25 (height: 160px for rich vertical display)
-  const getY = (val) => 185 - (val / 6) * 160
+  // Real Cash Flow & Profit Chart Data computed from database transactions & stats
+  const chartPoints = useMemo(() => {
+    const rawTrend = stats?.trend_14_days || stats?.trend || []
+    if (rawTrend && rawTrend.length >= 4) {
+      const chunkSize = Math.ceil(rawTrend.length / 4)
+      const xPositions = [45, 195, 345, 495]
+      return [0, 1, 2, 3].map((idx) => {
+        const slice = rawTrend.slice(idx * chunkSize, (idx + 1) * chunkSize)
+        const omzetSum = slice.reduce((acc, curr) => acc + (Number(curr.omzet) || 0), 0)
+        const labaSum = slice.reduce((acc, curr) => acc + (Number(curr.laba) || 0), 0)
+        const modalSum = slice.reduce((acc, curr) => acc + (Number(curr.modal) || 0), 0)
+        const label = slice[slice.length - 1]?.day || `Periode ${idx + 1}`
+        return {
+          week: label,
+          omzet: Math.round(omzetSum / 1000) / 1000,
+          laba: Math.round(labaSum / 1000) / 1000,
+          hpp: Math.round(modalSum / 1000) / 1000,
+          x: xPositions[idx],
+        }
+      })
+    }
+    return [
+      { week: 'Pekan 1', omzet: 0, laba: 0, hpp: 0, x: 45 },
+      { week: 'Pekan 2', omzet: 0, laba: 0, hpp: 0, x: 195 },
+      { week: 'Pekan 3', omzet: 0, laba: 0, hpp: 0, x: 345 },
+      { week: 'Pekan 4', omzet: 0, laba: 0, hpp: 0, x: 495 },
+    ]
+  }, [stats])
 
-  const omzetPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].omzet)} C 120 ${getY(4.5)}, 120 ${getY(4.8)}, ${chartPoints[1].x} ${getY(chartPoints[1].omzet)} C 270 ${getY(4.9)}, 270 ${getY(5.1)}, ${chartPoints[2].x} ${getY(chartPoints[2].omzet)} C 420 ${getY(5.2)}, 420 ${getY(5.4)}, ${chartPoints[3].x} ${getY(chartPoints[3].omzet)}`
-  const labaPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].laba)} C 120 ${getY(3.0)}, 120 ${getY(3.3)}, ${chartPoints[1].x} ${getY(chartPoints[1].laba)} C 270 ${getY(3.4)}, 270 ${getY(3.5)}, ${chartPoints[2].x} ${getY(chartPoints[2].laba)} C 420 ${getY(3.6)}, 420 ${getY(3.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].laba)}`
-  const hppPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].hpp)} C 120 ${getY(1.45)}, 120 ${getY(1.5)}, ${chartPoints[1].x} ${getY(chartPoints[1].hpp)} C 270 ${getY(1.55)}, 270 ${getY(1.6)}, ${chartPoints[2].x} ${getY(chartPoints[2].hpp)} C 420 ${getY(1.65)}, 420 ${getY(1.7)}, ${chartPoints[3].x} ${getY(chartPoints[3].hpp)}`
+  const maxVal = useMemo(() => {
+    const maxData = Math.max(...chartPoints.map((p) => p.omzet), 0.5)
+    return Math.max(maxData * 1.25, 1.5)
+  }, [chartPoints])
+
+  const getY = (val) => 185 - (val / maxVal) * 160
+
+  const omzetPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].omzet)} C 120 ${getY((chartPoints[0].omzet + chartPoints[1].omzet) / 2)}, 120 ${getY(chartPoints[1].omzet)}, ${chartPoints[1].x} ${getY(chartPoints[1].omzet)} C 270 ${getY((chartPoints[1].omzet + chartPoints[2].omzet) / 2)}, 270 ${getY(chartPoints[2].omzet)}, ${chartPoints[2].x} ${getY(chartPoints[2].omzet)} C 420 ${getY((chartPoints[2].omzet + chartPoints[3].omzet) / 2)}, 420 ${getY(chartPoints[3].omzet)}, ${chartPoints[3].x} ${getY(chartPoints[3].omzet)}`
+  const labaPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].laba)} C 120 ${getY((chartPoints[0].laba + chartPoints[1].laba) / 2)}, 120 ${getY(chartPoints[1].laba)}, ${chartPoints[1].x} ${getY(chartPoints[1].laba)} C 270 ${getY((chartPoints[1].laba + chartPoints[2].laba) / 2)}, 270 ${getY(chartPoints[2].laba)}, ${chartPoints[2].x} ${getY(chartPoints[2].laba)} C 420 ${getY((chartPoints[2].laba + chartPoints[3].laba) / 2)}, 420 ${getY(chartPoints[3].laba)}, ${chartPoints[3].x} ${getY(chartPoints[3].laba)}`
+  const hppPath = `M ${chartPoints[0].x} ${getY(chartPoints[0].hpp)} C 120 ${getY((chartPoints[0].hpp + chartPoints[1].hpp) / 2)}, 120 ${getY(chartPoints[1].hpp)}, ${chartPoints[1].x} ${getY(chartPoints[1].hpp)} C 270 ${getY((chartPoints[1].hpp + chartPoints[2].hpp) / 2)}, 270 ${getY(chartPoints[2].hpp)}, ${chartPoints[2].x} ${getY(chartPoints[2].hpp)} C 420 ${getY((chartPoints[2].hpp + chartPoints[3].hpp) / 2)}, 420 ${getY(chartPoints[3].hpp)}, ${chartPoints[3].x} ${getY(chartPoints[3].hpp)}`
 
   return (
     <div className="space-y-4 animate-fade-in pb-12">
@@ -426,8 +478,9 @@ export default function LaporanKeuanganPage({ onToast }) {
             <div>
               <h3 className="font-bold text-sm text-gray-900 flex items-center gap-2">
                 <span>Perkembangan Arus Kas & Laba Riil</span>
-                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                  Contoh
+                <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#009B5B] animate-pulse" />
+                  <span>Real-Time</span>
                 </span>
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
@@ -587,8 +640,9 @@ export default function LaporanKeuanganPage({ onToast }) {
         <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <h3 className="font-bold text-sm text-gray-900 mb-2 flex items-center gap-2">
             <span>Sebaran Metode</span>
-            <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-              Contoh
+            <span className="text-[10px] font-bold text-[#009B5B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#009B5B] animate-pulse" />
+              <span>Real-Time</span>
             </span>
           </h3>
 
@@ -605,7 +659,7 @@ export default function LaporanKeuanganPage({ onToast }) {
                 strokeWidth="20"
               />
               {/* Circumference = 2 * PI * 60 = ~377 */}
-              {/* Purple (QRIS - 55%) -> 377 * 0.55 = 207.35 */}
+              {/* QRIS (#6366F1) */}
               <circle
                 cx="80"
                 cy="80"
@@ -613,11 +667,11 @@ export default function LaporanKeuanganPage({ onToast }) {
                 fill="transparent"
                 stroke="#6366F1"
                 strokeWidth="20"
-                strokeDasharray="207.35 377"
+                strokeDasharray={`${((377 * (pmData.QRIS?.pct || 0)) / 100).toFixed(2)} 377`}
                 strokeDashoffset="0"
                 strokeLinecap="round"
               />
-              {/* Emerald (Cash - 40%) -> 377 * 0.40 = 150.8 */}
+              {/* Tunai / Cash (#10B981) */}
               <circle
                 cx="80"
                 cy="80"
@@ -625,11 +679,11 @@ export default function LaporanKeuanganPage({ onToast }) {
                 fill="transparent"
                 stroke="#10B981"
                 strokeWidth="20"
-                strokeDasharray="150.8 377"
-                strokeDashoffset="-207.35"
+                strokeDasharray={`${((377 * (pmData.Tunai?.pct || 0)) / 100).toFixed(2)} 377`}
+                strokeDashoffset={`-${((377 * (pmData.QRIS?.pct || 0)) / 100).toFixed(2)}`}
                 strokeLinecap="round"
               />
-              {/* Coral (Debit - 5%) -> 377 * 0.05 = 18.85 */}
+              {/* Debit / Kartu (#FB7185) */}
               <circle
                 cx="80"
                 cy="80"
@@ -637,8 +691,8 @@ export default function LaporanKeuanganPage({ onToast }) {
                 fill="transparent"
                 stroke="#FB7185"
                 strokeWidth="20"
-                strokeDasharray="18.85 377"
-                strokeDashoffset="-358.15"
+                strokeDasharray={`${((377 * (pmData['Kartu/Debit']?.pct || 0)) / 100).toFixed(2)} 377`}
+                strokeDashoffset={`-${(((377 * (pmData.QRIS?.pct || 0)) / 100) + ((377 * (pmData.Tunai?.pct || 0)) / 100)).toFixed(2)}`}
                 strokeLinecap="round"
               />
             </svg>
@@ -646,10 +700,10 @@ export default function LaporanKeuanganPage({ onToast }) {
             {/* Center Label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
               <span className="text-2xl font-black text-gray-900 leading-none">
-                142
+                {transactions.length}
               </span>
               <span className="text-[10px] text-gray-400 font-semibold mt-0.5">
-                100% Lunas
+                Total Transaksi
               </span>
             </div>
           </div>
@@ -659,33 +713,33 @@ export default function LaporanKeuanganPage({ onToast }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#6366F1]" />
-                <span className="text-gray-700 font-medium">Qris</span>
+                <span className="text-gray-700 font-medium">QRIS ({pmData.QRIS?.count || 0})</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-gray-400 font-medium text-[11px]">55%</span>
-                <span className="font-bold text-gray-900">Rp10.725.000</span>
+                <span className="text-gray-400 font-medium text-[11px]">{pmData.QRIS?.pct || 0}%</span>
+                <span className="font-bold text-gray-900">Rp{(pmData.QRIS?.total || 0).toLocaleString('id-ID')}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-                <span className="text-gray-700 font-medium">Cash</span>
+                <span className="text-gray-700 font-medium">Tunai ({pmData.Tunai?.count || 0})</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-gray-400 font-medium text-[11px]">40%</span>
-                <span className="font-bold text-gray-900">Rp7.800.000</span>
+                <span className="text-gray-400 font-medium text-[11px]">{pmData.Tunai?.pct || 0}%</span>
+                <span className="font-bold text-gray-900">Rp{(pmData.Tunai?.total || 0).toLocaleString('id-ID')}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FB7185]" />
-                <span className="text-gray-700 font-medium">Debit/Kartu</span>
+                <span className="text-gray-700 font-medium">Kartu/Debit ({pmData['Kartu/Debit']?.count || 0})</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-gray-400 font-medium text-[11px]">5%</span>
-                <span className="font-bold text-gray-900">Rp975.000</span>
+                <span className="text-gray-400 font-medium text-[11px]">{pmData['Kartu/Debit']?.pct || 0}%</span>
+                <span className="font-bold text-gray-900">Rp{(pmData['Kartu/Debit']?.total || 0).toLocaleString('id-ID')}</span>
               </div>
             </div>
           </div>

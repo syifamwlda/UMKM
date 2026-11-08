@@ -208,5 +208,72 @@ class AiTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    /**
+     * 7. Sukses: POST /api/ai/chat mengembalikan konsultasi bisnis dari Gemini AI.
+     */
+    public function test_ai_chat_returns_gemini_reply(): void
+    {
+        $user = User::factory()->create(['business_name' => 'Kedai Sejahtera']);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                ['text' => 'Fokuslah pada menu dengan margin tertinggi untuk meningkatkan laba harian.'],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/ai/chat', [
+            'message' => 'Bagaimana cara meningkatkan margin usaha saya?',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.source', 'gemini')
+            ->assertJsonPath('data.reply', 'Fokuslah pada menu dengan margin tertinggi untuk meningkatkan laba harian.');
+    }
+
+    /**
+     * 8. Fallback: POST /api/ai/chat mengembalikan fallback cerdas saat Gemini API offline/error.
+     */
+    public function test_ai_chat_fallback_on_network_failure(): void
+    {
+        $user = User::factory()->create();
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response(null, 500),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/ai/chat', [
+            'message' => 'Tips margin usaha yang sehat',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.source', 'fallback')
+            ->assertJsonStructure(['data' => ['reply', 'source']]);
+    }
+
+    /**
+     * 9. Validasi: POST /api/ai/chat wajib menyertakan message dan terautentikasi.
+     */
+    public function test_ai_chat_validation_and_auth(): void
+    {
+        // Unauthenticated -> 401
+        $this->postJson('/api/ai/chat', ['message' => 'Halo'])->assertStatus(401);
+
+        $user = User::factory()->create();
+
+        // Empty message -> 422
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/ai/chat', ['message' => ''])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['message']);
+    }
 }
 

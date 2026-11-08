@@ -15,6 +15,7 @@ class Transaction extends Model
         'user_id',
         'uuid',
         'total',
+        'payment_method',
         'paid_at',
     ];
 

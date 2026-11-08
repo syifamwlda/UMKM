@@ -52,10 +52,12 @@ class TransactionController extends Controller
      */
     public function store(StoreTransactionRequest $request): JsonResponse
     {
+        $validated = $request->validated();
         $transactionData = $this->transactionService->createTransaction(
             $request->user(),
-            $request->validated()['items'],
-            $request->validated()['paid_at'] ?? null
+            $validated['items'],
+            $validated['paid_at'] ?? null,
+            $validated['payment_method'] ?? 'Tunai'
         );
 
         return response()->json([

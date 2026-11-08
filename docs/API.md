@@ -51,6 +51,7 @@ erDiagram
         bigint user_id FK "Relasi ke users"
         uuid uuid UK "Public Identifier untuk Struk Digital"
         decimal total "Total Nilai Transaksi (Rp)"
+        string payment_method "Metode Pembayaran (Tunai, QRIS, Debit)"
         timestamp paid_at "Waktu Pembayaran"
         timestamp created_at
         timestamp updated_at
@@ -834,7 +835,7 @@ Berikut yang akan diimplementasikan pada Tahap 1 setelah disetujui:
    - `users`: `name`, `phone` (unik), `business_name`, `business_type`, `password`.
    - `products`: `user_id`, `name`, `selling_price`, `yield_qty` (default 1).
    - `ingredients`: `product_id`, `name`, `price`.
-   - `transactions`: `user_id`, `uuid`, `total`, `paid_at`.
+   - `transactions`: `user_id`, `uuid`, `total`, `payment_method`, `paid_at`.
    - `transaction_items`: `transaction_id`, `product_id`, `qty`, `unit_price`, `unit_cost`.
 3. **Konfigurasi & Service**:
    - `config/hpp.php`: ambang batas status margin (`rugi`, `tipis`, `sehat`).
@@ -842,6 +843,7 @@ Berikut yang akan diimplementasikan pada Tahap 1 setelah disetujui:
 4. **Controllers, FormRequests, & Resources**:
    - `AuthController`: register, login, logout, me.
    - `ProductController`: index, store, show, update, destroy.
+   - `AiChatController`: chat interaktif tanya jawab finansial bisnis UMKM dengan Gemini AI (`POST /api/ai/chat`).
    - FormRequests dengan validasi pesan bahasa Indonesia ramah.
    - Scoping data per user: User A tidak bisa melihat atau memanipulasi produk milik User B.
 5. **Feature Tests**:
@@ -851,3 +853,49 @@ Berikut yang akan diimplementasikan pada Tahap 1 setelah disetujui:
 6. **Migrasi & Eksekusi Test**:
    - Menjalankan `php artisan migrate`.
    - Menjalankan seluruh test dan menampilkan hasilnya.
+
+---
+
+### 7. Konsultasi Bisnis Interaktif: `POST /api/ai/chat`
+Konsultasi interaktif seputar keuangan, strategi harga, dan peningkatan laba usaha UMKM yang diintegrasikan langsung dengan konteks data toko (nama usaha, omzet harian, status katalog produk) dan model Google Gemini AI.
+
+- **URL**: `POST /api/ai/chat`
+- **Middleware**: `auth:sanctum`, `throttle:30,1` (maksimal 30 request per menit per user)
+- **Header**: `Authorization: Bearer <token>`, `Accept: application/json`
+- **Request Body**:
+```json
+{
+  "message": "Bagaimana cara menaikkan margin keuntungan usaha saya tanpa kehilangan pelanggan?"
+}
+```
+- **Response `200 OK` (Gemini AI)**:
+```json
+{
+  "message": "Respon AI berhasil diperoleh.",
+  "data": {
+    "reply": "Untuk meningkatkan margin tanpa membebani pelanggan, terapkan strategi bundling menu signature Anda dengan minuman bersuhu dingin. Selain itu, lakukan standarisasi takaran resep agar tidak ada pemborosan bahan baku harian.",
+    "source": "gemini"
+  }
+}
+```
+- **Response `200 OK` (Fallback Cerdas jika Kuota/Jaringan Offline)**:
+```json
+{
+  "message": "Respon AI berhasil diperoleh.",
+  "data": {
+    "reply": "💡 Saran Margin: Periksa produk Anda yang berstatus margin tipis di menu Katalog & HPP. Naikkan harga Rp1.000 - Rp2.000 atau lakukan negosiasi harga bahan baku dengan supplier.",
+    "source": "fallback"
+  }
+}
+```
+- **Response `422 Unprocessable Content` (Validasi Gagal)**:
+```json
+{
+  "message": "Pesan untuk asisten AI tidak boleh kosong.",
+  "errors": {
+    "message": [
+      "Pesan untuk asisten AI tidak boleh kosong."
+    ]
+  }
+}
+```

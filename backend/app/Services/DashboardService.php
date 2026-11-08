@@ -47,8 +47,8 @@ class DashboardService
         $todayCount = $todayTransactions->count();
         $todayMargin = $todayOmzet > 0 ? round(($todayLaba / $todayOmzet) * 100, 2) : 0.0;
 
-        // ================= 2. TREN 7 HARI TERAKHIR =================
-        $startDate = $today->copy()->subDays(6)->startOfDay();
+        // ================= 2. TREN 14 HARI & 7 HARI TERAKHIR =================
+        $startDate = $today->copy()->subDays(13)->startOfDay();
         $endDate = $today->copy()->endOfDay();
 
         $rangeTransactions = $user->transactions()
@@ -60,8 +60,8 @@ class DashboardService
             return $trx->paid_at ? $trx->paid_at->format('Y-m-d') : '';
         });
 
-        $trend = [];
-        for ($i = 6; $i >= 0; $i--) {
+        $trend14 = [];
+        for ($i = 13; $i >= 0; $i--) {
             $curDateStr = $today->copy()->subDays($i)->format('Y-m-d');
             $dayTrxList = $groupedByDate->get($curDateStr, collect());
 
@@ -79,13 +79,59 @@ class DashboardService
             $dayModal = round($dayModal, 2);
             $dayLaba = round($dayOmzet - $dayModal, 2);
 
-            $trend[] = [
+            $trend14[] = [
                 'date' => $curDateStr,
+                'day' => Carbon::parse($curDateStr)->locale('id')->isoFormat('D MMM'),
                 'omzet' => $dayOmzet,
                 'modal' => $dayModal,
                 'laba' => $dayLaba,
                 'transaksi_count' => $dayTrxList->count(),
             ];
+        }
+
+        // Ambil 7 hari terakhir untuk backward-compatibility
+        $trend = array_slice($trend14, -7);
+
+        // ================= 3. SEBARAN METODE PEMBAYARAN & KAS FISIK =================
+        $paymentMethodsRaw = $user->transactions()
+            ->selectRaw("payment_method, count(*) as count, sum(total) as total")
+            ->groupBy('payment_method')
+            ->get();
+
+        $pmCounts = ['Tunai' => 0, 'QRIS' => 0, 'Kartu/Debit' => 0];
+        $pmTotals = ['Tunai' => 0.0, 'QRIS' => 0.0, 'Kartu/Debit' => 0.0];
+
+        foreach ($paymentMethodsRaw as $pm) {
+            $name = $pm->payment_method ?: 'Tunai';
+            $pmCounts[$name] = (int) $pm->count;
+            $pmTotals[$name] = (float) $pm->total;
+        }
+
+        $totalPmTrx = array_sum($pmCounts);
+        $pmBreakdown = [
+            'Tunai' => [
+                'count' => $pmCounts['Tunai'],
+                'total' => $pmTotals['Tunai'],
+                'pct' => $totalPmTrx > 0 ? round(($pmCounts['Tunai'] / $totalPmTrx) * 100, 1) : 0,
+            ],
+            'QRIS' => [
+                'count' => $pmCounts['QRIS'],
+                'total' => $pmTotals['QRIS'],
+                'pct' => $totalPmTrx > 0 ? round(($pmCounts['QRIS'] / $totalPmTrx) * 100, 1) : 0,
+            ],
+            'Kartu/Debit' => [
+                'count' => $pmCounts['Kartu/Debit'],
+                'total' => $pmTotals['Kartu/Debit'],
+                'pct' => $totalPmTrx > 0 ? round(($pmCounts['Kartu/Debit'] / $totalPmTrx) * 100, 1) : 0,
+            ],
+        ];
+
+        // Uang fisik kas masuk hari ini (Tunai)
+        $todayCashIn = 0.0;
+        foreach ($todayTransactions as $trx) {
+            if (($trx->payment_method ?? 'Tunai') === 'Tunai') {
+                $todayCashIn += (float) $trx->total;
+            }
         }
 
         // ================= 3. DAFTAR PRODUK (RUGI PALING ATAS) =================
@@ -130,8 +176,11 @@ class DashboardService
                 'transaksi_count' => $todayCount,
                 'jumlah_transaksi' => $todayCount,
                 'margin_rata_rata' => $todayMargin,
+                'cash_in' => round($todayCashIn, 2),
             ],
             'trend' => $trend,
+            'trend_14_days' => $trend14,
+            'payment_methods' => $pmBreakdown,
             'products' => $sortedProducts,
             'insight' => $insight,
         ];
