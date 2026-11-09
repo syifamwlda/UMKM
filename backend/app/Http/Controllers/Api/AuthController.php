@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -60,6 +61,48 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Berhasil keluar dari akun.',
             'data' => null,
+        ], 200);
+    }
+
+    /**
+     * Update profil pengguna yang sedang login.
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'          => 'sometimes|string|max:100',
+            'phone'         => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
+            'business_name' => 'sometimes|string|max:150',
+            'business_type' => 'sometimes|string|max:100',
+            'current_password' => 'required_with:new_password|string',
+            'new_password'     => 'sometimes|string|min:8|confirmed',
+        ]);
+
+        // Ubah kata sandi jika ada permintaan
+        if (isset($validated['new_password'])) {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'Kata sandi saat ini tidak sesuai.',
+                    'errors'  => ['current_password' => ['Kata sandi saat ini tidak sesuai.']],
+                ], 422);
+            }
+            $user->password = Hash::make($validated['new_password']);
+        }
+
+        // Update field profil
+        foreach (['name', 'phone', 'business_name', 'business_type'] as $field) {
+            if (isset($validated[$field])) {
+                $user->$field = $validated[$field];
+            }
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui.',
+            'data'    => new UserResource($user),
         ], 200);
     }
 }

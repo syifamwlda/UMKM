@@ -51,6 +51,7 @@ import { useAuth } from '../context/AuthContext'
 import RollNumberTicker from './RollNumberTicker'
 import KatalogHppPage from './KatalogHppPage'
 import LaporanKeuanganPage from './LaporanKeuanganPage'
+import SettingsPage from './SettingsPage'
 
 // Database records dinamis diambil dari GET /api/dashboard/stats
 const DAILY_RECORDS = {}
@@ -109,7 +110,7 @@ const formatDayMonth = (dateStr) => {
 }
 
 export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [activeMenu, setActiveMenu] = useState(initialMenu)
 
   // Sync if initialMenu changes from parent
@@ -2547,6 +2548,12 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             </div>
 
           </div>
+        ) : activeMenu === 'Pengaturan Toko' ? (
+          <SettingsPage
+            user={user}
+            onToast={showToast}
+            onUpdateUser={updateUser}
+          />
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */
           <>

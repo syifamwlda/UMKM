@@ -101,6 +101,13 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Perbarui data user di state dan localStorage setelah update profil berhasil
+  const updateUser = (updatedData) => {
+    const merged = { ...user, ...updatedData }
+    setUser(merged)
+    localStorage.setItem('auth_user', JSON.stringify(merged))
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -111,6 +118,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        updateUser,
       }}
     >
       {children}

@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth & Profil
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::patch('/profile', [AuthController::class, 'updateProfile']);
 
     // Produk & Kalkulasi HPP
     Route::get('/products/{id}/advice', [ProductController::class, 'advice']);
