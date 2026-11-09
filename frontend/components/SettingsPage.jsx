@@ -479,3 +479,4 @@ export default function SettingsPage({ user, onToast, onUpdateUser }) {
     </div>
   )
 }
+

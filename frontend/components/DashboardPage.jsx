@@ -52,6 +52,7 @@ import RollNumberTicker from './RollNumberTicker'
 import KatalogHppPage from './KatalogHppPage'
 import LaporanKeuanganPage from './LaporanKeuanganPage'
 import SettingsPage from './SettingsPage'
+import HelpPage from './HelpPage'
 
 // Database records dinamis diambil dari GET /api/dashboard/stats
 const DAILY_RECORDS = {}
@@ -220,38 +221,19 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
   // ================= DYNAMIC KPI STATS =================
   const [kpiStats, setKpiStats] = useState({
-    untung: 250000,
-    untungGrowth: '12% dari kemarin',
-    omzet: 650000,
-    omzetGrowth: '+8% rata-rata harian',
-    transaksi: 24,
-    transaksiSub: 'Rata-rata Rp27.083/struk',
-    kesehatan: 82,
-    kesehatanLabel: 'Sehat'
+    untung: 0,
+    untungGrowth: 'Belum ada transaksi hari ini',
+    omzet: 0,
+    omzetGrowth: 'Buka kasir untuk mulai transaksi',
+    transaksi: 0,
+    transaksiSub: 'Modal Bahan: Rp0',
+    kesehatan: 0,
+    kesehatanLabel: 'Belum Ada Transaksi'
   })
 
   // ================= REAL-TIME TREND CHART STATE =================
-  // 7 Days dataset (25 Okt - 01 Nov)
-  const [trendData, setTrendData] = useState([
-    { day: '25 Okt', omzet: 450000, laba: 175000 },
-    { day: '26 Okt', omzet: 410000, laba: 155000 },
-    { day: '27 Okt', omzet: 520000, laba: 220000 },
-    { day: '28 Okt', omzet: 440000, laba: 180000 },
-    { day: '29 Okt', omzet: 490000, laba: 200000 },
-    { day: '30 Okt', omzet: 460000, laba: 190000 },
-    { day: '01 Nov', omzet: 650000, laba: 250000 }
-  ])
-
-  // Corresponding actual historical previous 7 days dataset (18 Okt - 24 Okt)
-  const [prevTrendData, setPrevTrendData] = useState([
-    { day: '18 Okt', omzet: 630000, laba: 260000 },
-    { day: '19 Okt', omzet: 440000, laba: 170000 },
-    { day: '20 Okt', omzet: 460000, laba: 180000 },
-    { day: '21 Okt', omzet: 480000, laba: 190000 },
-    { day: '22 Okt', omzet: 510000, laba: 205000 },
-    { day: '23 Okt', omzet: 530000, laba: 215000 },
-    { day: '24 Okt', omzet: 570000, laba: 230000 }
-  ])
+  const [trendData, setTrendData] = useState([])
+  const [prevTrendData, setPrevTrendData] = useState([])
 
   // Universal Real-time update function: immediately moves Chart lines up or down
   const updateRealtimeData = (deltaOmzet, deltaLaba, label = '') => {
@@ -449,43 +431,96 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      type: 'warning',
-      title: 'Peringatan Stok Gula Aren',
-      message: 'Stok Gula Aren tinggal 100ml (~5 cup). Harap segera belanja stok suplai!',
-      time: '10 menit lalu',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'danger',
-      title: 'Kenaikan Harga Bahan Baku',
-      message: 'Harga Mentega naik 15%, membuat Croissant Cokelat saat ini rugi Rp500/biji.',
-      time: '1 jam lalu',
-      read: false
-    },
-    {
-      id: 3,
       type: 'info',
-      title: 'Laporan Keuangan Siap',
-      message: 'Laporan laba rugi & HPP bulan Oktober 2026 sudah selesai dan siap diunduh.',
-      time: '3 jam lalu',
+      title: 'Selamat Datang di UntungJelas!',
+      message: 'Mulai dengan menambahkan menu dan resep bahan baku Anda di menu Katalog & HPP.',
+      time: 'Baru saja',
       read: false
     }
   ])
 
-  // Search Autocomplete Database
-  const searchDatabase = [
-    { type: 'Produk', title: 'Croissant Cokelat', desc: 'Pastry • Fresh Bake • Rp10.000' },
-    { type: 'Produk', title: 'Es Kopi Milkshake', desc: 'Beverage • Cold Drink • Rp13.000' },
-    { type: 'Produk', title: 'Kopi Susu Gula Aren', desc: 'Beverage • Best Seller • Rp15.000' },
-    { type: 'Produk', title: 'Matcha Green Tea Latte', desc: 'Beverage • Hot/Cold • Rp18.000' },
-    { type: 'Transaksi', title: '#TRX-20261101-024', desc: 'Rp28.000 • 13:45 • Tunai (Lunas)' },
-    { type: 'Transaksi', title: '#TRX-20261101-023', desc: 'Rp45.000 • 13:20 • QRIS ShopeePay' },
-    { type: 'Transaksi', title: '#TRX-20261101-022', desc: 'Rp13.000 • 12:50 • BCA Debit' },
-    { type: 'Resep & Bahan', title: 'Resep Biji Kopi Arabika', desc: 'HPP Rp2.800/shot • Stok 4.2 kg' },
-    { type: 'Resep & Bahan', title: 'Sirup Gula Aren Asli', desc: 'HPP Rp1.500/porsi • Sisa 100ml (Kritis)' },
-    { type: 'Resep & Bahan', title: 'Mentega Wijsman / Anchor', desc: 'Bahan Pastry • Kenaikan harga +15%' },
-  ]
+  // ================= KASIR & KATALOG HPP STATE =================
+  const [posCatalog, setPosCatalog] = useState([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [posCart, setPosCart] = useState([])
+
+  const fetchPosProducts = async () => {
+    try {
+      setLoadingProducts(true)
+      const res = await api.get('/products')
+      const rawProducts = res.data?.data || []
+      if (Array.isArray(rawProducts) && rawProducts.length > 0) {
+        const productsData = rawProducts.map((p) => {
+          const price = Number(p.selling_price) || 0
+          const hpp = Number(p.modal_per_unit) || 0
+          const profit = price - hpp
+          const marginPct = price > 0 ? Number(((profit / price) * 100).toFixed(1)) : 0
+
+          const lowerName = (p.name || '').toLowerCase()
+          let img = '/assets/kasir/kopi-susu.png'
+          if (lowerName.includes('croissant') && lowerName.includes('almond')) img = '/assets/kasir/almond-croissant.png'
+          else if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
+          else if (lowerName.includes('latte') && lowerName.includes('gayo')) img = '/assets/kasir/cafe-latte.png'
+          else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
+          else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
+          else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
+          else if (lowerName.includes('spaghetti') || lowerName.includes('pasta')) img = '/assets/kasir/spaghetti.png'
+
+          let category = 'Minuman'
+          if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
+          else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('mie') || lowerName.includes('pasta')) category = 'Makanan'
+
+          let status = 'Sehat'
+          if (profit < 0) status = 'Rugi'
+          else if (marginPct < 30) status = 'Tipis'
+
+          return {
+            id: p.id,
+            name: p.name,
+            category: category,
+            sku: `BEV${String(p.id).padStart(3, '0')}`,
+            desc: p.ingredients && p.ingredients.length > 0
+              ? p.ingredients.map((i) => i.name).join(', ')
+              : 'Resep terstandarisasi',
+            price: price,
+            hpp: hpp,
+            profit: profit,
+            marginPct: marginPct,
+            image: img,
+            popular: false,
+            status: status,
+            ingredients: (p.ingredients || []).map((ing, idx) => ({
+              id: ing.id || idx + 1,
+              name: ing.name,
+              detail: 'Takaran standar',
+              amount: '1 porsi',
+              cost: Number(ing.price) || 0,
+            })),
+          }
+        })
+        setPosCatalog(productsData)
+      } else {
+        setPosCatalog([])
+      }
+    } catch (err) {
+      console.error('Gagal memuat produk kasir:', err)
+      setPosCatalog([])
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPosProducts()
+  }, [])
+
+  // Search Autocomplete Database (dinamis dari katalog produk user)
+  const searchDatabase = (posCatalog || []).map((p) => ({
+    type: 'Produk',
+    title: p.name,
+    desc: `${p.category || 'Menu'} • Rp${(p.price || 0).toLocaleString('id-ID')}`
+  }))
 
   const filteredSearchResults = searchDatabase.filter((item) => {
     if (!searchQuery.trim()) return true
@@ -631,239 +666,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
     fetchHealthScore()
   }, [])
 
-  // ================= KASIR & KATALOG HPP STATE =================
-  const [posCatalog, setPosCatalog] = useState([
-    {
-      id: 2,
-      name: 'Kopi Susu Gula Aren',
-      category: 'Minuman',
-      sku: 'BEV001',
-      desc: 'Espresso blend, gula aren murni, susu segar',
-      price: 18000,
-      hpp: 5000,
-      profit: 13000,
-      marginPct: 72.2,
-      image: '/assets/kasir/kopi-susu.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: true,
-      defaultNote: 'Level Gula: 50%',
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Espresso Shot', detail: 'Arabica Blend House Roastery', amount: '15 gram', cost: 2250 },
-        { id: 2, name: 'Susu Segar', detail: 'UHT Fresh Milk Diamond', amount: '100 ml', cost: 1800 },
-        { id: 3, name: 'Gula Aren Cair', detail: 'Sirup Murni Merah Jaya', amount: '20 ml', cost: 500 },
-        { id: 4, name: 'Cup Plastik & Sedotan', detail: 'Adinda Plastik', amount: '1 set', cost: 450 },
-      ]
-    },
-    {
-      id: 5,
-      name: 'Croissant Cokelat',
-      category: 'Pastry & Bakery',
-      sku: 'BEV004',
-      desc: 'French butter pastry, dark chocolate',
-      price: 10000,
-      hpp: 10500,
-      profit: -500,
-      marginPct: -5.0,
-      image: '/assets/kasir/croissant.png',
-      tagColor: 'bg-orange-50 text-orange-700',
-      popular: true,
-      defaultNote: 'Penyajian: Dihangatkan',
-      status: 'Rugi',
-      ingredients: [
-        { id: 1, name: 'Adonan Croissant Butter', detail: 'French Butter Dough Sheet', amount: '1 pcs', cost: 8500 },
-        { id: 2, name: 'Cokelat Isian Batang', detail: 'Baking Chocolate 55%', amount: '20 gram', cost: 1500 },
-        { id: 3, name: 'Kemasan Paper Bag', detail: 'Kraft Food Grade Bag', amount: '1 set', cost: 500 },
-      ]
-    },
-    {
-      id: 1,
-      name: 'Cafe Latte Gayo',
-      category: 'Minuman',
-      sku: 'BEV003',
-      desc: 'Espresso double shot Gayo, steamed milk',
-      price: 22000,
-      hpp: 13900,
-      profit: 8100,
-      marginPct: 36.8,
-      image: '/assets/kasir/cafe-latte.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: true,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Double Shot Espresso', detail: 'Single Origin Gayo Honey', amount: '30 ml', cost: 4500 },
-        { id: 2, name: 'Fresh Milk Steam', detail: 'Greenfields Fresh Milk', amount: '180 ml', cost: 4400 },
-        { id: 3, name: 'Paper Hot Cup 8oz & Lid', detail: 'Eco Heat Cup Set', amount: '1 set', cost: 5000 },
-      ]
-    },
-    {
-      id: 3,
-      name: 'Matcha Latte Kyoto',
-      category: 'Minuman',
-      sku: 'BEV007',
-      desc: 'Pure Kyoto Matcha, fresh milk',
-      price: 24000,
-      hpp: 15000,
-      profit: 9000,
-      marginPct: 37.5,
-      image: '/assets/kasir/matcha-latte.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: false,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Pure Kyoto Uji Matcha', detail: 'Grade A Ceremonial Powder', amount: '8 gram', cost: 7200 },
-        { id: 2, name: 'Fresh Milk & Simple Syrup', detail: 'Diamond Milk + Cane Sugar', amount: '150 ml', cost: 3800 },
-        { id: 3, name: 'Plastic Cup 16oz + Seal', detail: 'Clear PP Cup Seal Film', amount: '1 set', cost: 4000 },
-      ]
-    },
-    {
-      id: 4,
-      name: 'Roti Bakar Coklat',
-      category: 'Makanan',
-      sku: 'FOD001',
-      desc: 'Roti brioche panggang selai coklat',
-      price: 16000,
-      hpp: 10800,
-      profit: 5200,
-      marginPct: 32.5,
-      image: '/assets/kasir/roti-bakar.png',
-      tagColor: 'bg-purple-50 text-purple-700',
-      popular: true,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Roti Brioche Tebal', detail: 'Homemade Brioche Bread', amount: '2 slice', cost: 4000 },
-        { id: 2, name: 'Selai Cokelat Hazelnut', detail: 'Rich Chocolate Spread', amount: '40 gram', cost: 4800 },
-        { id: 3, name: 'Mentega Wijsman / Butter', detail: 'Salted Butter Glaze', amount: '15 gram', cost: 2000 },
-      ]
-    },
-    {
-      id: 6,
-      name: 'Spaghetti Aglio Olio',
-      category: 'Makanan',
-      sku: 'FOD002',
-      desc: 'Tumisan smoked beef, olive oil & garlic',
-      price: 28000,
-      hpp: 16800,
-      profit: 11200,
-      marginPct: 40.0,
-      image: '/assets/kasir/spaghetti.png',
-      tagColor: 'bg-purple-50 text-purple-700',
-      popular: false,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Pasta Spaghetti No. 5', detail: 'Italian Durum Wheat', amount: '120 gram', cost: 4800 },
-        { id: 2, name: 'Smoked Beef Slice', detail: 'Daging Asap Premium', amount: '50 gram', cost: 6500 },
-        { id: 3, name: 'Extra Virgin Olive Oil & Garlic', detail: 'Minyak Zaitun + Bawang', amount: '1 porsi', cost: 5500 },
-      ]
-    },
-    {
-      id: 7,
-      name: 'Cold Brew Coffee',
-      category: 'Minuman',
-      sku: 'BEV005',
-      desc: 'Kopi Arabica steeped 12 jam, smooth & fruity',
-      price: 20000,
-      hpp: 12600,
-      profit: 7400,
-      marginPct: 37.0,
-      image: '/assets/kasir/cold-brew.png',
-      tagColor: 'bg-blue-50 text-blue-600',
-      popular: false,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Biji Kopi Arabica Toraja', detail: 'Coarse Grind Steeping 12 Jam', amount: '35 gram', cost: 7500 },
-        { id: 2, name: 'Air Mineral Filtered RO', detail: 'Reverse Osmosis Steeping', amount: '250 ml', cost: 1100 },
-        { id: 3, name: 'Botol Kaca 250ml & Label', detail: 'Glass Bottle Custom Logo', amount: '1 pcs', cost: 4000 },
-      ]
-    },
-    {
-      id: 8,
-      name: 'Almond Croissant',
-      category: 'Pastry & Bakery',
-      sku: 'BEV006',
-      desc: 'Flaky crust pastry with almond cream & sliced nuts',
-      price: 18000,
-      hpp: 12200,
-      profit: 5800,
-      marginPct: 32.2,
-      image: '/assets/kasir/almond-croissant.png',
-      tagColor: 'bg-orange-50 text-orange-700',
-      popular: false,
-      status: 'Sehat',
-      ingredients: [
-        { id: 1, name: 'Croissant Plain Butter', detail: 'Base Twice-Baked Pastry', amount: '1 pcs', cost: 6500 },
-        { id: 2, name: 'Almond Cream Frangipane', detail: 'Krim Almond Panggang', amount: '35 gram', cost: 3500 },
-        { id: 3, name: 'Topping Roasted Almond Slice', detail: 'Kacang Almond Panggang', amount: '15 gram', cost: 2200 },
-      ]
-    },
-  ])
-  const [loadingProducts, setLoadingProducts] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [posCart, setPosCart] = useState([])
 
-  const fetchPosProducts = async () => {
-    try {
-      const res = await api.get('/products')
-      const rawProducts = res.data?.data || []
-      if (Array.isArray(rawProducts) && rawProducts.length > 0) {
-        const productsData = rawProducts.map((p) => {
-          const price = Number(p.selling_price) || 0
-          const hpp = Number(p.modal_per_unit) || 0
-          const profit = price - hpp
-          const marginPct = price > 0 ? Number(((profit / price) * 100).toFixed(1)) : 0
-
-          const lowerName = (p.name || '').toLowerCase()
-          let img = '/assets/kasir/kopi-susu.png'
-          if (lowerName.includes('croissant') && lowerName.includes('almond')) img = '/assets/kasir/almond-croissant.png'
-          else if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
-          else if (lowerName.includes('latte') && lowerName.includes('gayo')) img = '/assets/kasir/cafe-latte.png'
-          else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
-          else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
-          else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
-          else if (lowerName.includes('spaghetti') || lowerName.includes('pasta')) img = '/assets/kasir/spaghetti.png'
-
-          let category = 'Minuman'
-          if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
-          else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('mie') || lowerName.includes('pasta')) category = 'Makanan'
-
-          let status = 'Sehat'
-          if (profit < 0) status = 'Rugi'
-          else if (marginPct < 30) status = 'Tipis'
-
-          return {
-            id: p.id,
-            name: p.name,
-            category: category,
-            sku: `BEV${String(p.id).padStart(3, '0')}`,
-            desc: p.ingredients && p.ingredients.length > 0
-              ? p.ingredients.map((i) => i.name).join(', ')
-              : 'Resep terstandarisasi',
-            price: price,
-            hpp: hpp,
-            profit: profit,
-            marginPct: marginPct,
-            image: img,
-            popular: false,
-            status: status,
-            ingredients: (p.ingredients || []).map((ing, idx) => ({
-              id: ing.id || idx + 1,
-              name: ing.name,
-              detail: 'Takaran standar',
-              amount: '1 porsi',
-              cost: Number(ing.price) || 0,
-            })),
-          }
-        })
-        setPosCatalog(productsData)
-      }
-    } catch (err) {
-      console.error('Gagal memuat produk kasir:', err)
-    }
-  }
-
-  useEffect(() => {
-    fetchPosProducts()
-  }, [])
 
   const [posCategory, setPosCategory] = useState('Semua')
   const [posSearch, setPosSearch] = useState('')
@@ -893,7 +696,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
     setSelectedEndDate(end)
 
     if (isSingleDay) {
-      const dData = DAILY_RECORDS[start] || { omzet: 450000, laba: 180000, transaksi: 18 }
+      const dData = DAILY_RECORDS[start] || { omzet: 0, laba: 0, transaksi: 0 }
       const isToday = start === '2026-11-01'
       const label = isToday ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(start)} 2026`
       
@@ -950,7 +753,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
       let totalTransaksi = 0
 
       const fullTrend = dates.map((dateStr) => {
-        const d = DAILY_RECORDS[dateStr] || { omzet: 450000, laba: 180000, transaksi: 18 }
+        const d = DAILY_RECORDS[dateStr] || { omzet: 0, laba: 0, transaksi: 0 }
         totalOmzet += d.omzet
         totalLaba += d.laba
         totalTransaksi += d.transaksi
@@ -981,7 +784,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
       }
 
       const fullPrevTrend = prevDates.map((dateStr) => {
-        const d = DAILY_RECORDS[dateStr] || { omzet: 420000, laba: 170000, transaksi: 16 }
+        const d = DAILY_RECORDS[dateStr] || { omzet: 0, laba: 0, transaksi: 0 }
         return {
           day: formatDayMonth(dateStr),
           omzet: d.omzet,
@@ -1317,9 +1120,9 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   const prevPath = getSmoothSvgPath(prevCoords)
 
   const activeIdx = activeChartIndex !== null && activeChartIndex < trendData.length ? activeChartIndex : trendData.length - 1
-  const activePointData = trendData[activeIdx] || { day: '01 Nov', omzet: 650000, laba: 250000 }
+  const activePointData = trendData[activeIdx] || { day: 'Hari Ini', omzet: 0, laba: 0 }
   const activePointCosts = activePointData.costs ?? Math.max(0, activePointData.omzet - activePointData.laba)
-  const prevPointData = prevTrendData[activeIdx] || { day: 'Lalu', omzet: Math.round(activePointData.omzet * 0.9), laba: Math.round(activePointData.laba * 0.9) }
+  const prevPointData = prevTrendData[activeIdx] || { day: 'Lalu', omzet: 0, laba: 0 }
   const prevDiffOmzet = activePointData.omzet - prevPointData.omzet
   const prevDiffPct = prevPointData.omzet > 0 ? ((prevDiffOmzet / prevPointData.omzet) * 100).toFixed(1) : '0'
   const isLatestPoint = activeIdx === trendData.length - 1
@@ -2553,6 +2356,11 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             user={user}
             onToast={showToast}
             onUpdateUser={updateUser}
+          />
+        ) : activeMenu === 'Help' ? (
+          <HelpPage
+            onNavigateMenu={setActiveMenu}
+            onToast={showToast}
           />
         ) : (
           /* ================= MAIN DASHBOARD CONTENT ================= */

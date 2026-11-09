@@ -257,7 +257,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       }
     })
 
-    const avgMargin = validCount > 0 ? (totalMarginSum / validCount).toFixed(1) : '36.2'
+    const avgMargin = validCount > 0 ? (totalMarginSum / validCount).toFixed(1) : '0.0'
 
     return {
       totalMenu,
@@ -1761,8 +1761,28 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               )
             })
           ) : (
-            <div className="py-12 text-center text-gray-400 text-xs">
-              Tidak ada produk yang cocok dengan pencarian atau filter.
+            <div className="py-12 text-center text-xs px-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
+                <Package className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <p className="text-sm font-bold text-gray-800">
+                {catalog.length === 0 ? 'Katalog Produk Masih Kosong' : 'Tidak Ada Menu yang Cocok'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1 mb-4">
+                {catalog.length === 0
+                  ? 'Tambahkan menu dan resep pertama Anda untuk mulai menghitung HPP otomatis.'
+                  : 'Coba ubah kata kunci pencarian atau ganti filter kategori di atas.'}
+              </p>
+              {catalog.length === 0 && (
+                <button
+                  type="button"
+                  onClick={handleOpenAdd}
+                  className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Menu Pertama</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1896,8 +1916,28 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400 text-xs">
-                    Tidak ada produk yang cocok dengan pencarian atau filter.
+                  <td colSpan={7} className="py-16 text-center text-xs">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
+                      <Package className="w-6 h-6 stroke-[1.8]" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-800">
+                      {catalog.length === 0 ? 'Katalog Produk Masih Kosong' : 'Tidak Ada Menu yang Cocok'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1 mb-4 max-w-sm mx-auto">
+                      {catalog.length === 0
+                        ? 'Tambahkan menu dan komposisi bahan baku (resep) pertama Anda untuk menghitung HPP & margin secara otomatis.'
+                        : 'Coba ubah kata kunci pencarian atau ganti filter kategori di atas.'}
+                    </p>
+                    {catalog.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleOpenAdd}
+                        className="inline-flex items-center gap-2 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Tambah Menu Pertama</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
               )}

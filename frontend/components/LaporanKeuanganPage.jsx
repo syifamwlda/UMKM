@@ -27,118 +27,13 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import RollNumberTicker from './RollNumberTicker'
 
-// Mock transaction history dataset
-const INITIAL_TRANSACTIONS = [
-  {
-    id: 'TX0554',
-    date: '01 Nov 2026',
-    time: '14:20 WIB',
-    items: '2x Kopi Susu Gula Aren, 1x Croissant Butter',
-    method: 'QRIS',
-    omzet: 73000,
-    hpp: 44100,
-    profit: 28900
-  },
-  {
-    id: 'TX0553',
-    date: '01 Nov 2026',
-    time: '13:45 WIB',
-    items: '1x Cold Brew Coffee, 1x Almond Croissant',
-    method: 'Cash',
-    omzet: 42000,
-    hpp: 19700,
-    profit: 22300
-  },
-  {
-    id: 'TX0552',
-    date: '01 Nov 2026',
-    time: '12:15 WIB',
-    items: '3x Cafe Latte Gayo, 2x Roti Bakar Coklat',
-    method: 'QRIS',
-    omzet: 98000,
-    hpp: 55700,
-    profit: 42300
-  },
-  {
-    id: 'TX0551',
-    date: '01 Nov 2026',
-    time: '11:30 WIB',
-    items: '1x Matcha Latte Kyoto, 1x Croissant Cokelat',
-    method: 'Debit/Kartu',
-    omzet: 34000,
-    hpp: 25500,
-    profit: 8500
-  },
-  {
-    id: 'TX0550',
-    date: '01 Nov 2026',
-    time: '10:05 WIB',
-    items: '2x Kopi Susu Gula Aren',
-    method: 'QRIS',
-    omzet: 36000,
-    hpp: 10000,
-    profit: 26000
-  },
-  {
-    id: 'TX0549',
-    date: '01 Nov 2026',
-    time: '09:15 WIB',
-    items: '1x Spaghetti Aglio Olio, 1x Cold Brew Coffee',
-    method: 'Cash',
-    omzet: 53000,
-    hpp: 29400,
-    profit: 23600
-  }
-]
-
-const DEFAULT_STATS = {
-  today: {
-    omzet: 846000,
-    laba: 398500,
-    modal: 447500,
-    transaksi_count: 11,
-    margin_rata_rata: 47.1,
-    cash_in: 846000
-  },
-  products: [
-    { name: 'Cafe Latte Gayo', selling_price: 22000, modal_per_unit: 10000, profit_per_unit: 12000, margin_percent: 54.5, status: 'sehat' },
-    { name: 'Kopi Susu Gula Aren', selling_price: 18000, modal_per_unit: 8500, profit_per_unit: 9500, margin_percent: 52.8, status: 'sehat' },
-    { name: 'Cold Brew Coffee', selling_price: 20000, modal_per_unit: 9500, profit_per_unit: 10500, margin_percent: 52.5, status: 'sehat' },
-    { name: 'Matcha Latte Kyoto', selling_price: 24000, modal_per_unit: 13500, profit_per_unit: 10500, margin_percent: 43.8, status: 'sehat' },
-    { name: 'Roti Bakar Coklat Keju', selling_price: 16000, modal_per_unit: 10000, profit_per_unit: 6000, margin_percent: 37.5, status: 'sehat' },
-    { name: 'Brownies Panggang Mini', selling_price: 12000, modal_per_unit: 10700, profit_per_unit: 1300, margin_percent: 10.8, status: 'tipis' },
-    { name: 'Croissant Cokelat Butter', selling_price: 10000, modal_per_unit: 11000, profit_per_unit: -1000, margin_percent: -10.0, status: 'rugi' },
-  ],
-  trend_14_days: [
-    { date: '2026-10-26', day: '26 Okt', omzet: 364000, modal: 242800, laba: 121200, transaksi_count: 5 },
-    { date: '2026-10-27', day: '27 Okt', omzet: 372000, modal: 260500, laba: 111500, transaksi_count: 7 },
-    { date: '2026-10-28', day: '28 Okt', omzet: 762000, modal: 512300, laba: 249700, transaksi_count: 9 },
-    { date: '2026-10-29', day: '29 Okt', omzet: 410000, modal: 285000, laba: 125000, transaksi_count: 6 },
-    { date: '2026-10-30', day: '30 Okt', omzet: 890000, modal: 520000, laba: 370000, transaksi_count: 12 },
-    { date: '2026-10-31', day: '31 Okt', omzet: 950000, modal: 560000, laba: 390000, transaksi_count: 13 },
-    { date: '2026-11-01', day: '1 Nov', omzet: 640000, modal: 390000, laba: 250000, transaksi_count: 8 },
-    { date: '2026-11-02', day: '2 Nov', omzet: 428000, modal: 246000, laba: 182000, transaksi_count: 6 },
-    { date: '2026-11-03', day: '3 Nov', omzet: 782000, modal: 457100, laba: 324900, transaksi_count: 9 },
-    { date: '2026-11-04', day: '4 Nov', omzet: 184000, modal: 142600, laba: 41400, transaksi_count: 4 },
-    { date: '2026-11-05', day: '5 Nov', omzet: 564000, modal: 316800, laba: 247200, transaksi_count: 8 },
-    { date: '2026-11-06', day: '6 Nov', omzet: 566000, modal: 353100, laba: 212900, transaksi_count: 9 },
-    { date: '2026-11-07', day: '7 Nov', omzet: 1130000, modal: 651000, laba: 479000, transaksi_count: 13 },
-    { date: '2026-11-08', day: '8 Nov', omzet: 846000, modal: 447500, laba: 398500, transaksi_count: 11 }
-  ],
-  payment_methods: {
-    'Tunai': { count: 85, total: 4250000, pct: 45 },
-    'QRIS': { count: 62, total: 3850000, pct: 40 },
-    'Kartu/Debit': { count: 12, total: 950000, pct: 15 }
-  }
-}
-
 export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
   const { user } = useAuth()
 
-  // Real backend dataset states (default fallback agar halaman tidak pernah blank)
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS)
-  const [stats, setStats] = useState(DEFAULT_STATS)
-  const [isLoading, setIsLoading] = useState(false)
+  // Real backend dataset states
+  const [transactions, setTransactions] = useState([])
+  const [stats, setStats] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
 
   // Filters & Pagination
@@ -161,7 +56,7 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
       ])
 
       const rawTrx = trxRes.data?.data || []
-      if (rawTrx.length > 0) {
+      if (Array.isArray(rawTrx)) {
         const formatted = rawTrx.map((t) => {
           const d = t.paid_at ? new Date(t.paid_at) : new Date()
           const dateFormatted = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -191,6 +86,8 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
         })
 
         setTransactions(formatted)
+      } else {
+        setTransactions([])
       }
 
       if (statsRes.data?.data) {
@@ -198,6 +95,7 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
       }
     } catch (err) {
       console.warn('Sinkronisasi laporan keuangan:', err?.message || err)
+      setTransactions([])
     } finally {
       setIsLoading(false)
     }
@@ -207,59 +105,47 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
     fetchReportsData()
   }, [])
 
-  // Dynamic Metrics computed from real transactions (default to exactly 159 demo transactions)
+  // Dynamic Metrics computed from real transactions
   const totalOmzet = useMemo(() => {
-    if (transactions.length > 6) {
-      return transactions.reduce((acc, t) => acc + t.omzet, 0)
-    }
-    return 11438000
+    return transactions.reduce((acc, t) => acc + t.omzet, 0)
   }, [transactions])
 
   const totalHpp = useMemo(() => {
-    if (transactions.length > 6) {
-      return transactions.reduce((acc, t) => acc + t.hpp, 0)
-    }
-    return 6873500
+    return transactions.reduce((acc, t) => acc + t.hpp, 0)
   }, [transactions])
 
   const totalProfit = useMemo(() => {
-    if (transactions.length > 6) {
-      return transactions.reduce((acc, t) => acc + t.profit, 0)
-    }
-    return 4564500
+    return transactions.reduce((acc, t) => acc + t.profit, 0)
   }, [transactions])
 
   const avgMargin = useMemo(() => {
     if (totalOmzet > 0) {
       return ((totalProfit / totalOmzet) * 100).toFixed(1)
     }
-    return '39.9'
+    return '0.0'
   }, [totalOmzet, totalProfit])
 
   const totalCount = useMemo(() => {
-    if (transactions.length > 6) {
-      return transactions.length
-    }
-    return 159
+    return transactions.length
   }, [transactions])
 
   const aov = useMemo(() => {
     if (totalCount > 0) {
       return Math.round(totalOmzet / totalCount)
     }
-    return 71937
+    return 0
   }, [totalOmzet, totalCount])
 
   // Top Menu Paling Untung (diurutkan margin tertinggi)
   const topProfitableProducts = useMemo(() => {
-    const list = stats?.products && stats.products.length > 0 ? stats.products : DEFAULT_STATS.products
+    const list = stats?.products || []
     return [...list]
       .filter((p) => Number(p.margin_percent) > 0)
       .sort((a, b) => Number(b.margin_percent) - Number(a.margin_percent))
       .slice(0, 3)
   }, [stats])
 
-  const menuAndalanName = topProfitableProducts[0]?.name || 'Kopi Susu Gula Aren'
+  const menuAndalanName = topProfitableProducts[0]?.name || 'Belum Ada Menu'
 
   // Filtered & Sorted Transactions
   const filteredTransactions = useMemo(() => {
