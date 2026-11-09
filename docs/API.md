@@ -210,6 +210,36 @@ Mencabut token sesi yang sedang aktif.
 
 ---
 
+#### 5. `PATCH /api/profile`
+Memperbarui profil akun pengguna dan data toko (nama usaha, kategori bisnis, nomor telepon, dan avatar).
+- **Header**: `Authorization: Bearer <token>`
+- **Request Body (JSON, opsional per field)**:
+```json
+{
+  "name": "Budi Santoso",
+  "phone": "081234567890",
+  "business_name": "Kedai Kopi Nabila",
+  "business_type": "Kuliner & Minuman",
+  "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+}
+```
+- **Response `200 OK`**:
+```json
+{
+  "message": "Profil berhasil diperbarui.",
+  "data": {
+    "id": 1,
+    "name": "Budi Santoso",
+    "phone": "081234567890",
+    "business_name": "Kedai Kopi Nabila",
+    "business_type": "Kuliner & Minuman",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+  }
+}
+```
+
+---
+
 ### Fitur 2: Produk & Perhitungan HPP (Modal Sebenarnya)
 
 Aturan Domain HPP (`config/hpp.php`):
