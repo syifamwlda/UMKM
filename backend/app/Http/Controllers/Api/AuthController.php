@@ -76,6 +76,7 @@ class AuthController extends Controller
             'phone'         => 'sometimes|string|max:20|unique:users,phone,' . $user->id,
             'business_name' => 'sometimes|string|max:150',
             'business_type' => 'sometimes|string|max:100',
+            'avatar'        => 'sometimes|nullable|string',
             'current_password' => 'required_with:new_password|string',
             'new_password'     => 'sometimes|string|min:8|confirmed',
         ]);
@@ -92,8 +93,8 @@ class AuthController extends Controller
         }
 
         // Update field profil
-        foreach (['name', 'phone', 'business_name', 'business_type'] as $field) {
-            if (isset($validated[$field])) {
+        foreach (['name', 'phone', 'business_name', 'business_type', 'avatar'] as $field) {
+            if (array_key_exists($field, $validated)) {
                 $user->$field = $validated[$field];
             }
         }

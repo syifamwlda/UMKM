@@ -16,7 +16,7 @@ import ProductHppPage from './components/ProductHppPage'
 import PublicReceiptPage from './components/PublicReceiptPage'
 
 function MainContent() {
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const [currentPage, setCurrentPage] = useState(() => {
     const hash = window.location.hash
     const path = window.location.pathname
@@ -98,7 +98,7 @@ function MainContent() {
     return (
       <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
         <DashboardPage
-          key="dashboard"
+          key={user?.id ? `dashboard-${user.id}` : 'dashboard'}
           onLogout={handleLogout}
           initialMenu="Dashboard"
           onNavigateProduct={() => navigateTo('produk')}
@@ -112,7 +112,7 @@ function MainContent() {
     return (
       <ProtectedRoute onNavigateLogin={() => navigateTo('login')}>
         <DashboardPage
-          key="produk"
+          key={user?.id ? `produk-${user.id}` : 'produk'}
           onLogout={handleLogout}
           initialMenu="Katalog & HPP"
           onNavigateProduct={() => navigateTo('produk')}

@@ -30,10 +30,36 @@ import RollNumberTicker from './RollNumberTicker'
 export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
   const { user } = useAuth()
 
-  // Real backend dataset states
-  const [transactions, setTransactions] = useState([])
-  const [stats, setStats] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Real backend dataset states with instant cache restoration
+  const [transactions, setTransactions] = useState(() => {
+    if (user?.id) {
+      try {
+        const cached = sessionStorage.getItem(`uj_reports_trx_${user.id}`)
+        if (cached) return JSON.parse(cached)
+      } catch (e) {}
+    }
+    return []
+  })
+
+  const [stats, setStats] = useState(() => {
+    if (user?.id) {
+      try {
+        const cached = sessionStorage.getItem(`uj_reports_stats_${user.id}`)
+        if (cached) return JSON.parse(cached)
+      } catch (e) {}
+    }
+    return null
+  })
+
+  const [isLoading, setIsLoading] = useState(() => {
+    if (user?.id) {
+      try {
+        const cached = sessionStorage.getItem(`uj_reports_trx_${user.id}`)
+        if (cached) return false
+      } catch (e) {}
+    }
+    return true
+  })
   const [loadError, setLoadError] = useState(null)
 
   // Filters & Pagination
@@ -50,52 +76,63 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
   const fetchReportsData = async () => {
     try {
       setLoadError(null)
-      const [trxRes, statsRes] = await Promise.all([
-        api.get('/transactions?date=all'),
-        api.get('/dashboard/stats')
-      ])
 
-      const rawTrx = trxRes.data?.data || []
-      if (Array.isArray(rawTrx)) {
-        const formatted = rawTrx.map((t) => {
-          const d = t.paid_at ? new Date(t.paid_at) : new Date()
-          const dateFormatted = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-          const timeFormatted = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
-          const itemsSummary = t.items && t.items.length > 0
-            ? t.items.map(it => `${it.qty}x ${it.product_name}`).join(', ')
-            : 'Transaksi Kasir'
-          const shortUuid = t.uuid ? t.uuid.substring(0, 8).toUpperCase() : String(t.id).padStart(4, '0')
-          const totalVal = Number(t.total) || 0
-          const costVal = Number(t.total_cost) || 0
-          const profitVal = Number(t.total_profit != null ? t.total_profit : (t.profit != null ? t.profit : (totalVal - costVal))) || 0
-          const marginVal = totalVal > 0 ? Math.round((profitVal / totalVal) * 1000) / 10 : 0
+      const trxPromise = api.get('/transactions?date=all').then((trxRes) => {
+        const rawTrx = trxRes.data?.data || []
+        if (Array.isArray(rawTrx)) {
+          const formatted = rawTrx.map((t) => {
+            const d = t.paid_at ? new Date(t.paid_at) : new Date()
+            const dateFormatted = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+            const timeFormatted = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+            const itemsSummary = t.items && t.items.length > 0
+              ? t.items.map(it => `${it.qty}x ${it.product_name}`).join(', ')
+              : 'Transaksi Kasir'
+            const shortUuid = t.uuid ? t.uuid.substring(0, 8).toUpperCase() : String(t.id).padStart(4, '0')
+            const totalVal = Number(t.total) || 0
+            const costVal = Number(t.total_cost) || 0
+            const profitVal = Number(t.total_profit != null ? t.total_profit : (t.profit != null ? t.profit : (totalVal - costVal))) || 0
+            const marginVal = totalVal > 0 ? Math.round((profitVal / totalVal) * 1000) / 10 : 0
 
-          return {
-            id: `#TX-${shortUuid}`,
-            rawId: t.id,
-            uuid: t.uuid,
-            date: dateFormatted,
-            time: timeFormatted,
-            items: itemsSummary,
-            method: t.payment_method || 'Tunai',
-            omzet: totalVal,
-            hpp: costVal,
-            profit: profitVal,
-            margin: marginVal,
+            return {
+              id: `#TX-${shortUuid}`,
+              rawId: t.id,
+              uuid: t.uuid,
+              date: dateFormatted,
+              time: timeFormatted,
+              items: itemsSummary,
+              method: t.payment_method || 'Tunai',
+              omzet: totalVal,
+              hpp: costVal,
+              profit: profitVal,
+              margin: marginVal,
+            }
+          })
+
+          setTransactions(formatted)
+          if (user?.id) {
+            try {
+              sessionStorage.setItem(`uj_reports_trx_${user.id}`, JSON.stringify(formatted))
+            } catch (e) {}
           }
-        })
+        } else {
+          setTransactions([])
+        }
+      })
 
-        setTransactions(formatted)
-      } else {
-        setTransactions([])
-      }
+      const statsPromise = api.get('/dashboard/stats').then((statsRes) => {
+        if (statsRes.data?.data) {
+          setStats(statsRes.data.data)
+          if (user?.id) {
+            try {
+              sessionStorage.setItem(`uj_reports_stats_${user.id}`, JSON.stringify(statsRes.data.data))
+            } catch (e) {}
+          }
+        }
+      })
 
-      if (statsRes.data?.data) {
-        setStats(statsRes.data.data)
-      }
+      await Promise.allSettled([trxPromise, statsPromise])
     } catch (err) {
       console.warn('Sinkronisasi laporan keuangan:', err?.message || err)
-      setTransactions([])
     } finally {
       setIsLoading(false)
     }
@@ -103,7 +140,7 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
 
   useEffect(() => {
     fetchReportsData()
-  }, [])
+  }, [user?.id])
 
   // Dynamic Metrics computed from real transactions
   const totalOmzet = useMemo(() => {
@@ -294,11 +331,21 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            <RollNumberTicker value={totalOmzet} prefix="Rp" />
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-36 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+            ) : (
+              <RollNumberTicker value={totalOmzet} prefix="Rp" />
+            )}
           </p>
           <div className="flex items-center gap-1 text-[#009F58] font-bold text-xs pt-1">
-            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>{totalCount > 0 ? `${totalCount} transaksi kasir` : 'Belum ada transaksi'}</span>
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-28 h-3.5 bg-gray-100 rounded animate-pulse" />
+            ) : (
+              <>
+                <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{totalCount > 0 ? `${totalCount} transaksi kasir` : 'Belum ada transaksi'}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -311,11 +358,21 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
             </div>
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            <RollNumberTicker value={totalHpp} prefix="Rp" />
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-36 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+            ) : (
+              <RollNumberTicker value={totalHpp} prefix="Rp" />
+            )}
           </p>
           <div className="flex items-center gap-1.5 text-gray-500 font-medium text-xs pt-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
-            <span>{totalOmzet > 0 ? `${((totalHpp / totalOmzet) * 100).toFixed(1)}% dari omzet` : '0% dari omzet'}</span>
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-24 h-3.5 bg-gray-100 rounded animate-pulse" />
+            ) : (
+              <>
+                <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
+                <span>{totalOmzet > 0 ? `${((totalHpp / totalOmzet) * 100).toFixed(1)}% dari omzet` : '0% dari omzet'}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -328,11 +385,21 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
             </div>
           </div>
           <p className="text-2xl font-black text-white tracking-tight">
-            <RollNumberTicker value={totalProfit} prefix="Rp" />
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-36 h-7 bg-white/30 rounded-lg animate-pulse" />
+            ) : (
+              <RollNumberTicker value={totalProfit} prefix="Rp" />
+            )}
           </p>
           <div className="flex items-center gap-1 text-emerald-100 font-medium text-xs pt-1">
-            <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>{totalProfit >= 0 ? 'Surplus laba usaha' : 'Defisit modal bahan'}</span>
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-28 h-3.5 bg-white/20 rounded animate-pulse" />
+            ) : (
+              <>
+                <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>{totalProfit >= 0 ? 'Surplus laba usaha' : 'Defisit modal bahan'}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -343,15 +410,25 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
             <Gauge className="w-4 h-4 text-gray-700" />
           </div>
           <p className="text-2xl font-black text-gray-900 tracking-tight">
-            {avgMargin}%
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-20 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+            ) : (
+              `${avgMargin}%`
+            )}
           </p>
           <div className="flex items-center justify-between pt-1">
-            <span className={`font-bold text-xs ${Number(avgMargin) >= 55 ? 'text-[#009F58]' : Number(avgMargin) >= 30 ? 'text-amber-600' : 'text-rose-600'}`}>
-              {Number(avgMargin) >= 55 ? 'Sehat' : Number(avgMargin) >= 30 ? 'Cukup Sehat' : 'Perlu Evaluasi'}
-            </span>
-            <span className="text-xs text-gray-400 font-medium">
-              Target &gt; 55%
-            </span>
+            {isLoading && transactions.length === 0 ? (
+              <span className="inline-block w-24 h-3.5 bg-gray-100 rounded animate-pulse" />
+            ) : (
+              <>
+                <span className={`font-bold text-xs ${Number(avgMargin) >= 55 ? 'text-[#009F58]' : Number(avgMargin) >= 30 ? 'text-amber-600' : 'text-rose-600'}`}>
+                  {Number(avgMargin) >= 55 ? 'Sehat' : Number(avgMargin) >= 30 ? 'Cukup Sehat' : 'Perlu Evaluasi'}
+                </span>
+                <span className="text-xs text-gray-400 font-medium">
+                  Target &gt; 55%
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -379,30 +456,54 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
             <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-semibold text-gray-500">Tiket Rata-rata (AOV)</span>
               <p className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight my-2">
-                Rp{aov.toLocaleString('id-ID')}
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-28 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+                ) : (
+                  `Rp${aov.toLocaleString('id-ID')}`
+                )}
               </p>
               <span className="text-xs text-[#009F58] font-bold block">
-                {totalCount} transaksi tercatat
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-24 h-3.5 bg-gray-100 rounded animate-pulse" />
+                ) : (
+                  `${totalCount} transaksi tercatat`
+                )}
               </span>
             </div>
 
             <div className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-semibold text-gray-500">Menu Andalan</span>
               <p className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight my-2 truncate leading-snug" title={menuAndalanName}>
-                {menuAndalanName}
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-32 h-6 bg-gray-200/70 rounded-lg animate-pulse" />
+                ) : (
+                  menuAndalanName
+                )}
               </p>
               <span className="text-xs text-[#009F58] font-bold block">
-                Margin Sehat
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-20 h-3.5 bg-gray-100 rounded animate-pulse" />
+                ) : (
+                  'Margin Sehat'
+                )}
               </span>
             </div>
 
             <div className="bg-gray-50/70 rounded-xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-semibold text-gray-500">Rasio Margin Kotor</span>
               <p className="text-2xl sm:text-[26px] font-black text-[#009F58] tracking-tight my-2">
-                {avgMargin}%
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-20 h-7 bg-emerald-100/70 rounded-lg animate-pulse" />
+                ) : (
+                  `${avgMargin}%`
+                )}
               </p>
               <span className="text-xs text-gray-500 font-medium block">
-                Bantalan profit kasir
+                {isLoading && transactions.length === 0 ? (
+                  <span className="inline-block w-24 h-3.5 bg-gray-100 rounded animate-pulse" />
+                ) : (
+                  'Bantalan profit kasir'
+                )}
               </span>
             </div>
           </div>
@@ -418,7 +519,13 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
           </div>
 
           <div className="space-y-2.5 my-auto py-1">
-            {topProfitableProducts && topProfitableProducts.length > 0 ? (
+            {isLoading && (!topProfitableProducts || topProfitableProducts.length === 0) ? (
+              <div className="space-y-3 py-2">
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-5/6" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-2/3" />
+              </div>
+            ) : topProfitableProducts && topProfitableProducts.length > 0 ? (
               topProfitableProducts.map((item, idx) => {
                 const price = Number(item.selling_price) || 0
                 const cost = Number(item.modal_per_unit || item.hpp) || 0

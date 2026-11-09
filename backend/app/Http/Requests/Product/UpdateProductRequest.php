@@ -15,6 +15,8 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'image' => ['nullable', 'string'],
             'selling_price' => ['sometimes', 'required', 'numeric', 'min:0'],
             'yield_qty' => ['sometimes', 'required', 'numeric', 'min:1'],
             'ingredients' => ['sometimes', 'required', 'array', 'min:1'],

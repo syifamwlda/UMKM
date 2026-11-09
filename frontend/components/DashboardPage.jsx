@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
   LayoutGrid,
   Store,
@@ -44,7 +44,8 @@ import {
   Star,
   Printer,
   Share2,
-  Loader2
+  Loader2,
+  Tag
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -220,15 +221,23 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   }, [])
 
   // ================= DYNAMIC KPI STATS =================
-  const [kpiStats, setKpiStats] = useState({
-    untung: 0,
-    untungGrowth: 'Belum ada transaksi hari ini',
-    omzet: 0,
-    omzetGrowth: 'Buka kasir untuk mulai transaksi',
-    transaksi: 0,
-    transaksiSub: 'Modal Bahan: Rp0',
-    kesehatan: 0,
-    kesehatanLabel: 'Belum Ada Transaksi'
+  const [kpiStats, setKpiStats] = useState(() => {
+    if (user?.id) {
+      try {
+        const cached = sessionStorage.getItem(`uj_kpi_${user.id}`)
+        if (cached) return JSON.parse(cached)
+      } catch (e) {}
+    }
+    return {
+      untung: 0,
+      untungGrowth: 'Belum ada transaksi hari ini',
+      omzet: 0,
+      omzetGrowth: 'Buka kasir untuk mulai transaksi',
+      transaksi: 0,
+      transaksiSub: 'Modal Bahan: Rp0',
+      kesehatan: 0,
+      kesehatanLabel: 'Belum Ada Transaksi'
+    }
   })
 
   // ================= REAL-TIME TREND CHART STATE =================
@@ -458,18 +467,23 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
           const marginPct = price > 0 ? Number(((profit / price) * 100).toFixed(1)) : 0
 
           const lowerName = (p.name || '').toLowerCase()
-          let img = '/assets/kasir/kopi-susu.png'
-          if (lowerName.includes('croissant') && lowerName.includes('almond')) img = '/assets/kasir/almond-croissant.png'
-          else if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
-          else if (lowerName.includes('latte') && lowerName.includes('gayo')) img = '/assets/kasir/cafe-latte.png'
-          else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
-          else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
-          else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
-          else if (lowerName.includes('spaghetti') || lowerName.includes('pasta')) img = '/assets/kasir/spaghetti.png'
+          let img = p.image || ''
+          if (!img) {
+            if (lowerName.includes('croissant') && lowerName.includes('almond')) img = '/assets/kasir/almond-croissant.png'
+            else if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
+            else if (lowerName.includes('latte') && lowerName.includes('gayo')) img = '/assets/kasir/cafe-latte.png'
+            else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
+            else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
+            else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
+            else if (lowerName.includes('spaghetti') || lowerName.includes('pasta')) img = '/assets/kasir/spaghetti.png'
+            else img = '/assets/kasir/kopi-susu.png'
+          }
 
-          let category = 'Minuman'
-          if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
-          else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('mie') || lowerName.includes('pasta')) category = 'Makanan'
+          let category = p.category || 'Minuman'
+          if (!p.category) {
+            if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
+            else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('mie') || lowerName.includes('pasta')) category = 'Makanan'
+          }
 
           let status = 'Sehat'
           if (profit < 0) status = 'Rugi'
@@ -513,7 +527,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
   useEffect(() => {
     fetchPosProducts()
-  }, [])
+  }, [user?.id])
 
   // Search Autocomplete Database (dinamis dari katalog produk user)
   const searchDatabase = (posCatalog || []).map((p) => ({
@@ -560,7 +574,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
         const countVal = Number(today.transaksi_count) || 0
         const marginVal = Number(today.margin_rata_rata) || 0
 
-        setKpiStats({
+        const newKpi = {
           untung: labaVal,
           untungGrowth: omzetVal > 0 ? `Margin rata-rata ${marginVal}%` : 'Belum ada transaksi hari ini',
           omzet: omzetVal,
@@ -569,7 +583,13 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
           transaksiSub: `Modal Bahan: Rp${modalVal.toLocaleString('id-ID')}`,
           kesehatan: Math.min(100, Math.max(0, Math.round(marginVal * 1.5 + 20))),
           kesehatanLabel: marginVal >= 20 ? 'Sangat Sehat' : marginVal > 0 ? 'Cukup Sehat' : 'Perlu Evaluasi'
-        })
+        }
+        setKpiStats(newKpi)
+        if (user?.id) {
+          try {
+            sessionStorage.setItem(`uj_kpi_${user.id}`, JSON.stringify(newKpi))
+          } catch (e) {}
+        }
 
         const rawTrend = data.trend_14_days || data.trend
         if (rawTrend && Array.isArray(rawTrend)) {
@@ -664,11 +684,69 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   useEffect(() => {
     fetchDashboardStats()
     fetchHealthScore()
-  }, [])
+  }, [user?.id])
 
 
 
   const [posCategory, setPosCategory] = useState('Semua')
+
+  const availablePosCategories = useMemo(() => {
+    const base = [
+      { id: 'Semua', label: 'Semua', icon: LayoutGrid },
+      { id: 'Minuman', label: 'Minuman', icon: Coffee },
+      { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
+      { id: 'Makanan', label: 'Makanan', icon: Utensils },
+    ]
+    const known = new Set(base.map((b) => b.id))
+    const extra = []
+    ;(posCatalog || []).forEach((p) => {
+      const cat = (p.category || '').trim()
+      if (cat && !known.has(cat)) {
+        known.add(cat)
+        let CatIcon = Tag
+        const lower = cat.toLowerCase()
+        if (
+          lower.includes('minum') ||
+          lower.includes('kopi') ||
+          lower.includes('tea') ||
+          lower.includes('teh') ||
+          lower.includes('drink') ||
+          lower.includes('jus') ||
+          lower.includes('latte')
+        ) {
+          CatIcon = Coffee
+        } else if (
+          lower.includes('pastry') ||
+          lower.includes('bakery') ||
+          lower.includes('croissant') ||
+          lower.includes('roti') ||
+          lower.includes('cake') ||
+          lower.includes('kue')
+        ) {
+          CatIcon = Croissant
+        } else if (
+          lower.includes('makan') ||
+          lower.includes('food') ||
+          lower.includes('nasi') ||
+          lower.includes('mie') ||
+          lower.includes('pasta') ||
+          lower.includes('ayam') ||
+          lower.includes('lauk')
+        ) {
+          CatIcon = Utensils
+        } else if (
+          lower.includes('snack') ||
+          lower.includes('camilan') ||
+          lower.includes('cemilan') ||
+          lower.includes('paket')
+        ) {
+          CatIcon = Package
+        }
+        extra.push({ id: cat, label: cat, icon: CatIcon })
+      }
+    })
+    return [...base, ...extra]
+  }, [posCatalog])
   const [posSearch, setPosSearch] = useState('')
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
   const [posShiftProfit, setPosShiftProfit] = useState(0)
@@ -1512,12 +1590,24 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center gap-2 sm:gap-2.5 py-1 hover:opacity-90 transition-opacity cursor-pointer text-left select-none"
               >
-                <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full overflow-hidden flex-shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
-                    alt={user?.business_name || 'Kedai Kopi Nabila'}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full overflow-hidden flex-shrink-0 bg-[#EBF8F2] border border-[#BCE8D3] flex items-center justify-center">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user?.business_name || user?.name || 'Profil'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[11px] font-bold text-[#009B5B]">
+                      {(user?.name || 'Owner')
+                        .trim()
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((w) => w[0]?.toUpperCase() || '')
+                        .join('') || 'UJ'}
+                    </span>
+                  )}
                 </div>
                 <span className="text-xs sm:text-[13px] font-semibold text-gray-900 tracking-tight hidden min-[400px]:inline-block">
                   {user?.business_name || 'Kedai Kopi Nabila'}
@@ -1528,12 +1618,33 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
               {isProfileOpen && (
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-fade-in">
                   {/* User Profile Card Header */}
-                  <div className="px-3 py-2.5 border-b border-gray-100">
-                    <p className="text-xs font-bold text-gray-900">{user?.name || 'Pemilik Usaha'}</p>
-                    <p className="text-[11px] text-gray-500">{user?.phone || user?.email || 'Akun Terdaftar'}</p>
-                    {user?.business_name && (
-                      <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">{user.business_name}</p>
-                    )}
+                  <div className="px-3 py-2.5 border-b border-gray-100 flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-[#EBF8F2] border border-[#BCE8D3] flex items-center justify-center">
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user?.name || 'Profil'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs font-bold text-[#009B5B]">
+                          {(user?.name || 'Owner')
+                            .trim()
+                            .split(' ')
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((w) => w[0]?.toUpperCase() || '')
+                            .join('') || 'UJ'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-gray-900 truncate">{user?.name || 'Pemilik Usaha'}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{user?.phone || user?.email || 'Akun Terdaftar'}</p>
+                      {user?.business_name && (
+                        <p className="text-[10px] text-emerald-600 font-semibold truncate mt-0.5">{user.business_name}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Profile Actions */}
@@ -1633,12 +1744,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
                 {/* Category Filter Pills Row */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {[
-                    { id: 'Semua', label: 'Semua', icon: LayoutGrid },
-                    { id: 'Minuman', label: 'Minuman', icon: Coffee },
-                    { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
-                    { id: 'Makanan', label: 'Makanan', icon: Utensils },
-                  ].map((cat) => {
+                  {availablePosCategories.map((cat) => {
                     const CatIcon = cat.icon
                     const isSelected = posCategory === cat.id
                     return (
@@ -2202,15 +2308,24 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                             </div>
                           </div>
                           {/* User Profile Avatar */}
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden shrink-0 mt-0.5 border border-gray-200/80 shadow-2xs bg-gray-100">
-                            <img
-                              src={user?.avatar || user?.photo || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"}
-                              alt={user?.name || "Profil"}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
-                              }}
-                            />
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden shrink-0 mt-0.5 border border-[#BCE8D3] shadow-2xs bg-[#EBF8F2] flex items-center justify-center">
+                            {user?.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user?.name || "Profil"}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-[11px] font-bold text-[#009B5B]">
+                                {(user?.name || 'Owner')
+                                  .trim()
+                                  .split(' ')
+                                  .filter(Boolean)
+                                  .slice(0, 2)
+                                  .map((w) => w[0]?.toUpperCase() || '')
+                                  .join('') || 'UJ'}
+                              </span>
+                            )}
                           </div>
                         </div>
                       )}
@@ -2739,12 +2854,22 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black tracking-tight">
-                    <RollNumberTicker value={kpiStats.untung} prefix="Rp" />
+                    {statsLoading && !dashboardStats ? (
+                      <span className="inline-block w-28 h-7 bg-white/25 rounded-lg animate-pulse" />
+                    ) : (
+                      <RollNumberTicker value={kpiStats.untung} prefix="Rp" />
+                    )}
                   </h3>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-emerald-100 font-medium">
-                  <span className="inline-block">▲</span>
-                  <span>{kpiStats.untungGrowth}</span>
+                  {statsLoading && !dashboardStats ? (
+                    <span className="inline-block w-36 h-3.5 bg-white/20 rounded animate-pulse" />
+                  ) : (
+                    <>
+                      <span className="inline-block">▲</span>
+                      <span>{kpiStats.untungGrowth}</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -2760,11 +2885,19 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    <RollNumberTicker value={kpiStats.omzet} prefix="Rp" />
+                    {statsLoading && !dashboardStats ? (
+                      <span className="inline-block w-28 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+                    ) : (
+                      <RollNumberTicker value={kpiStats.omzet} prefix="Rp" />
+                    )}
                   </h3>
                 </div>
                 <div className="text-[11px] text-[#009B5B] font-semibold">
-                  {kpiStats.omzetGrowth}
+                  {statsLoading && !dashboardStats ? (
+                    <span className="inline-block w-36 h-3.5 bg-gray-100 rounded animate-pulse" />
+                  ) : (
+                    kpiStats.omzetGrowth
+                  )}
                 </div>
               </div>
 
@@ -2780,11 +2913,19 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                 </div>
                 <div className="my-3">
                   <h3 className="text-2xl sm:text-[26px] font-black text-gray-900 tracking-tight">
-                    {kpiStats.transaksi} Struk
+                    {statsLoading && !dashboardStats ? (
+                      <span className="inline-block w-20 h-7 bg-gray-200/70 rounded-lg animate-pulse" />
+                    ) : (
+                      `${kpiStats.transaksi} Struk`
+                    )}
                   </h3>
                 </div>
                 <div className="text-[11px] text-gray-400 font-medium">
-                  {kpiStats.transaksiSub}
+                  {statsLoading && !dashboardStats ? (
+                    <span className="inline-block w-28 h-3.5 bg-gray-100 rounded animate-pulse" />
+                  ) : (
+                    kpiStats.transaksiSub
+                  )}
                 </div>
               </div>
 

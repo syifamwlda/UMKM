@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   Search,
   Plus,
@@ -28,7 +28,8 @@ import {
   Info,
   Percent,
   X,
-  Loader2
+  Loader2,
+  Tag
 } from 'lucide-react'
 import api from '../services/api'
 
@@ -99,33 +100,121 @@ const QUICK_INGREDIENTS = [
   { name: 'Dough Croissant Butter', detail: 'Frozen Raw Sheet Dough', amount: '1 pcs', cost: 7500, type: 'Bahan Baku' },
 ]
 
-function CategoryDropdown({ value, onChange }) {
+const DEFAULT_CATEGORIES = ['Minuman', 'Pastry & Bakery', 'Makanan']
+
+function getCategoryIcon(catName) {
+  if (!catName) return Tag
+  const lower = catName.toLowerCase()
+  if (
+    lower.includes('minum') ||
+    lower.includes('kopi') ||
+    lower.includes('tea') ||
+    lower.includes('teh') ||
+    lower.includes('drink') ||
+    lower.includes('beverage') ||
+    lower.includes('jus') ||
+    lower.includes('juice') ||
+    lower.includes('latte')
+  ) {
+    return Coffee
+  }
+  if (
+    lower.includes('pastry') ||
+    lower.includes('bakery') ||
+    lower.includes('croissant') ||
+    lower.includes('roti') ||
+    lower.includes('cake') ||
+    lower.includes('kue') ||
+    lower.includes('bread')
+  ) {
+    return Croissant
+  }
+  if (
+    lower.includes('makan') ||
+    lower.includes('food') ||
+    lower.includes('nasi') ||
+    lower.includes('mie') ||
+    lower.includes('pasta') ||
+    lower.includes('spaghetti') ||
+    lower.includes('ayam') ||
+    lower.includes('daging') ||
+    lower.includes('lauk')
+  ) {
+    return Utensils
+  }
+  if (
+    lower.includes('snack') ||
+    lower.includes('camilan') ||
+    lower.includes('cemilan') ||
+    lower.includes('paket') ||
+    lower.includes('box') ||
+    lower.includes('combo')
+  ) {
+    return Package
+  }
+  return Tag
+}
+
+function CategoryDropdown({
+  value,
+  onChange,
+  categories = DEFAULT_CATEGORIES,
+  onAddCategory,
+  onDeleteCategory
+}) {
   const [isOpen, setIsOpen] = useState(false)
-  const options = [
-    { id: 'Minuman', label: 'Minuman', icon: Coffee },
-    { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
-    { id: 'Makanan', label: 'Makanan', icon: Utensils }
-  ]
-  const current = options.find((o) => o.id === value) || options[0]
+  const [isAdding, setIsAdding] = useState(false)
+  const [newCatInput, setNewCatInput] = useState('')
+
+  const options = useMemo(() => {
+    return categories.map((cat) => ({
+      id: cat,
+      label: cat,
+      icon: getCategoryIcon(cat),
+      isDefault: DEFAULT_CATEGORIES.includes(cat)
+    }))
+  }, [categories])
+
+  const current = options.find((o) => o.id === value) || {
+    id: value || 'Minuman',
+    label: value || 'Minuman',
+    icon: getCategoryIcon(value),
+    isDefault: DEFAULT_CATEGORIES.includes(value)
+  }
   const CurrentIcon = current.icon
+
+  const handleCreate = () => {
+    const trimmed = newCatInput.trim()
+    if (!trimmed) return
+    if (onAddCategory) {
+      onAddCategory(trimmed)
+    }
+    onChange(trimmed)
+    setNewCatInput('')
+    setIsAdding(false)
+    setIsOpen(false)
+  }
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen)
+          setIsAdding(false)
+        }}
         className={`w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50/80 border rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
           isOpen
             ? 'bg-white border-[#009F58] ring-2 ring-[#009F58]/10 text-gray-900'
             : 'border-gray-200 hover:border-gray-300 text-gray-900'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <CurrentIcon className="w-4 h-4 text-[#009F58]" />
-          <span>{current.label}</span>
+        <div className="flex items-center gap-2 truncate">
+          <CurrentIcon className="w-4 h-4 text-[#009F58] shrink-0" />
+          <span className="truncate">{current.label}</span>
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+          className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
             isOpen ? 'rotate-180 text-[#009F58]' : ''
           }`}
         />
@@ -133,38 +222,117 @@ function CategoryDropdown({ value, onChange }) {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 top-full mt-1.5 w-full bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.1)] border border-gray-100 p-1.5 z-50 animate-fade-in">
-            <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1">
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => {
+              setIsOpen(false)
+              setIsAdding(false)
+            }}
+          />
+          <div className="absolute left-0 top-full mt-1.5 w-full min-w-[240px] bg-white rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-50 animate-fade-in">
+            <div className="px-2.5 py-1.5 border-b border-gray-100 mb-1 flex items-center justify-between">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 Pilih Kategori
               </p>
+              <span className="text-[10px] text-gray-400 font-semibold">{options.length} Kategori</span>
             </div>
-            {options.map((opt) => {
-              const Icon = opt.icon
-              const isSelected = value === opt.id
-              return (
+
+            <div className="max-h-[200px] overflow-y-auto space-y-0.5 pr-0.5 [-ms-overflow-style:none] [scrollbar-width:thin]">
+              {options.map((opt) => {
+                const Icon = opt.icon
+                const isSelected = value === opt.id
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => {
+                      onChange(opt.id)
+                      setIsOpen(false)
+                      setIsAdding(false)
+                    }}
+                    className={`group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50 text-[#009F58] font-bold'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#009F58]' : 'text-gray-400'}`} />
+                      <span className="truncate">{opt.label}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!opt.isDefault && onDeleteCategory && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDeleteCategory(opt.id)
+                          }}
+                          title="Hapus kategori buatan"
+                          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 rounded-md hover:bg-rose-50 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {isSelected && <Check className="w-4 h-4 text-[#009F58]" />}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100 my-1.5" />
+
+            {/* Tambah Kategori Baru */}
+            {!isAdding ? (
+              <button
+                type="button"
+                onClick={() => setIsAdding(true)}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-gray-400" />
+                <span>+ Tambah kategori baru</span>
+              </button>
+            ) : (
+              <div className="p-1.5 flex items-center gap-1.5">
+                <input
+                  type="text"
+                  autoFocus
+                  value={newCatInput}
+                  onChange={(e) => setNewCatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleCreate()
+                    } else if (e.key === 'Escape') {
+                      setIsAdding(false)
+                      setNewCatInput('')
+                    }
+                  }}
+                  placeholder="Ketik nama kategori..."
+                  className="flex-1 px-2.5 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg text-gray-900 outline-none focus:bg-white focus:border-gray-400 transition-colors placeholder:text-gray-400"
+                />
                 <button
-                  key={opt.id}
+                  type="button"
+                  onClick={handleCreate}
+                  disabled={!newCatInput.trim()}
+                  className="px-2.5 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg disabled:opacity-40 cursor-pointer"
+                >
+                  Simpan
+                </button>
+                <button
                   type="button"
                   onClick={() => {
-                    onChange(opt.id)
-                    setIsOpen(false)
+                    setIsAdding(false)
+                    setNewCatInput('')
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-emerald-50 text-[#009F58] font-bold'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 font-medium'
-                  }`}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isSelected ? 'text-[#009F58]' : 'text-gray-400'}`} />
-                    <span>{opt.label}</span>
-                  </div>
-                  {isSelected && <Check className="w-4 h-4 text-[#009F58]" />}
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              )
-            })}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -186,6 +354,69 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
+  // Custom categories persisted in localStorage
+  const [customCategories, setCustomCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('untungjelas_custom_categories')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Merge default categories, custom categories, and all categories from current catalog
+  const allCategories = useMemo(() => {
+    const list = [...DEFAULT_CATEGORIES]
+    customCategories.forEach((c) => {
+      const trimmed = (c || '').trim()
+      if (trimmed && !list.includes(trimmed)) list.push(trimmed)
+    })
+    catalog.forEach((item) => {
+      const trimmed = (item.category || '').trim()
+      if (trimmed && !list.includes(trimmed)) {
+        list.push(trimmed)
+      }
+    })
+    return list
+  }, [customCategories, catalog])
+
+  const handleAddCategory = (newCat) => {
+    const trimmed = (newCat || '').trim()
+    if (!trimmed) return
+    if (!DEFAULT_CATEGORIES.includes(trimmed) && !customCategories.includes(trimmed)) {
+      setCustomCategories((prev) => {
+        const next = [...prev, trimmed]
+        try {
+          localStorage.setItem('untungjelas_custom_categories', JSON.stringify(next))
+        } catch (err) {
+          console.error(err)
+        }
+        return next
+      })
+    }
+    if (onToast) onToast(`Kategori "${trimmed}" berhasil ditambahkan!`)
+  }
+
+  const handleDeleteCategory = (catToDelete) => {
+    if (DEFAULT_CATEGORIES.includes(catToDelete)) return
+    setCustomCategories((prev) => {
+      const next = prev.filter((c) => c !== catToDelete)
+      try {
+        localStorage.setItem('untungjelas_custom_categories', JSON.stringify(next))
+      } catch (err) {
+        console.error(err)
+      }
+      return next
+    })
+    if (formData.category === catToDelete) {
+      setFormData((prev) => ({ ...prev, category: 'Minuman' }))
+    }
+    if (selectedCategory === catToDelete) {
+      setSelectedCategory('Semua')
+    }
+    if (onToast) onToast(`Kategori "${catToDelete}" berhasil dihapus.`)
+  }
+
   // Form State for Add / Edit
   const [formData, setFormData] = useState({
     name: '',
@@ -194,8 +425,55 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     price: 18000,
     ingredients: [],
     notes: '',
-    image: '/assets/kasir/kopi-susu.png'
+    image: ''
   })
+
+  const fileInputRef = useRef(null)
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      if (onToast) onToast('Ukuran foto maksimal 5MB!')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX_SIZE = 500
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width)
+            width = MAX_SIZE
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height)
+            height = MAX_SIZE
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const compressed = canvas.toDataURL('image/jpeg', 0.85)
+        setFormData((prev) => ({ ...prev, image: compressed }))
+        if (onToast) onToast('Foto produk berhasil diunggah!')
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
 
   // Show inline ingredient input in Edit view
   const [showAddIngredientForm, setShowAddIngredientForm] = useState(false)
@@ -333,7 +611,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       price: 18000,
       ingredients: [],
       notes: '',
-      image: '/assets/kasir/kopi-susu.png'
+      image: ''
     })
     setIngredientInput({ name: '', detail: '', amount: '', cost: '' })
     setIsTemplateDropdownOpen(false)
@@ -357,7 +635,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       price: product.price || 18000,
       ingredients: [...existingRecipe],
       notes: product.notes || 'Takaran standar untuk barista kasir.',
-      image: product.image || '/assets/kasir/kopi-susu.png'
+      image: product.image || ''
     })
     setIngredientInput({ name: '', detail: '', amount: '', cost: '' })
     setShowAddIngredientForm(false)
@@ -409,18 +687,23 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         const profit = price - hpp
         const marginPct = price > 0 ? ((profit / price) * 100).toFixed(1) : '0'
 
-        let img = '/assets/kasir/kopi-susu.png'
-        const lowerName = (p.name || '').toLowerCase()
-        if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
-        else if (lowerName.includes('latte')) img = '/assets/kasir/cafe-latte.png'
-        else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
-        else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
-        else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
-        else if (lowerName.includes('spaghetti') || lowerName.includes('pasta') || lowerName.includes('mie')) img = '/assets/kasir/spaghetti.png'
+        let img = p.image || ''
+        if (!img) {
+          const lowerName = (p.name || '').toLowerCase()
+          if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
+          else if (lowerName.includes('latte')) img = '/assets/kasir/cafe-latte.png'
+          else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
+          else if (lowerName.includes('matcha')) img = '/assets/kasir/matcha-latte.png'
+          else if (lowerName.includes('roti')) img = '/assets/kasir/roti-bakar.png'
+          else if (lowerName.includes('spaghetti') || lowerName.includes('pasta') || lowerName.includes('mie')) img = '/assets/kasir/spaghetti.png'
+          else img = '/assets/kasir/kopi-susu.png'
+        }
 
-        let category = 'Minuman'
-        if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
-        else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('ayam')) category = 'Makanan'
+        let category = p.category || 'Minuman'
+        if (!p.category) {
+          if (lowerName.includes('croissant') || lowerName.includes('bakery') || lowerName.includes('pastry') || lowerName.includes('almond')) category = 'Pastry & Bakery'
+          else if (lowerName.includes('roti') || lowerName.includes('spaghetti') || lowerName.includes('makan') || lowerName.includes('nasi') || lowerName.includes('ayam')) category = 'Makanan'
+        }
 
         const formattedIngredients = (p.ingredients || []).map((ing, idx) => ({
           id: ing.id || idx + 1,
@@ -482,6 +765,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
     const payload = {
       name: formData.name.trim(),
+      category: formData.category || 'Minuman',
+      image: formData.image || null,
       selling_price: priceNum,
       yield_qty: 1,
       ingredients: formData.ingredients.map((ing) => ({
@@ -560,6 +845,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     let prefix = 'BEV'
     if (formData.category === 'Pastry & Bakery') prefix = 'BAK'
     else if (formData.category === 'Makanan') prefix = 'FOD'
+    else if (formData.category) {
+      const clean = formData.category.replace(/[^a-zA-Z]/g, '').toUpperCase()
+      prefix = (clean.slice(0, 3) || 'MNU').padEnd(3, 'X')
+    }
     const randomNum = Math.floor(100 + Math.random() * 900)
     setFormData((prev) => ({ ...prev, sku: `${prefix}${randomNum}` }))
   }
@@ -667,52 +956,69 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-[#009F58] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                  Aktif di Kasir
-                </span>
               </div>
 
-              {/* Foto Produk Picker (Hanya saat tambah menu baru) */}
-              {!isEdit && (
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-2">
-                    Pilih Foto / Ikon Menu
-                  </label>
-                  <div className="flex items-center gap-3 overflow-x-auto pb-1.5 [-ms-overflow-style:none] [scrollbar-width:none]">
-                    {PRODUCT_IMAGE_PRESETS.map((preset) => {
-                      const isSelected = formData.image === preset.path
-                      return (
+              {/* Upload Foto Produk */}
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                  Foto Menu <span className="text-[11px] text-gray-400 font-normal">(Opsional)</span>
+                </label>
+
+                {formData.image ? (
+                  <div className="flex items-center gap-4 p-3 bg-gray-50/80 border border-gray-200 rounded-2xl">
+                    <img
+                      src={formData.image}
+                      alt="Foto menu"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-gray-200 shadow-2xs shrink-0 bg-white"
+                    />
+                    <div className="space-y-1.5 min-w-0">
+                      <p className="text-xs font-semibold text-gray-800">Foto menu terpilih</p>
+                      <p className="text-[11px] text-gray-400">Ditampilkan pada katalog dan sistem kasir.</p>
+                      <div className="flex items-center gap-2 pt-0.5">
                         <button
-                          key={preset.id}
                           type="button"
-                          onClick={() => setFormData({ ...formData, image: preset.path })}
-                          className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 shrink-0 flex flex-col items-center gap-1 cursor-pointer ${
-                            isSelected
-                              ? 'border-[#009F58] bg-emerald-50/50 shadow-xs ring-2 ring-[#009F58]/20'
-                              : 'border-gray-200 hover:border-gray-300 bg-white'
-                          }`}
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-2.5 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
                         >
-                          <img
-                            src={preset.path}
-                            alt={preset.label}
-                            className="w-11 h-11 object-cover rounded-lg"
-                          />
-                          <span className={`text-[10px] font-semibold leading-none ${
-                            isSelected ? 'text-[#009F58]' : 'text-gray-500'
-                          }`}>
-                            {preset.label}
-                          </span>
-                          {isSelected && (
-                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#009F58] text-white flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 stroke-[3]" />
-                            </div>
-                          )}
+                          Ganti Foto
                         </button>
-                      )
-                    })}
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
+                          className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border border-dashed border-gray-300 hover:border-[#009F58] hover:bg-emerald-50/20 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all text-center group bg-gray-50/40"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-400 group-hover:text-[#009F58] group-hover:border-[#009F58]/40 flex items-center justify-center transition-colors shadow-2xs">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-700 group-hover:text-[#009F58] transition-colors">
+                        Unggah Foto Menu
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Klik untuk memilih gambar dari perangkat (JPG, PNG, WebP)
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/jpg"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
 
               {/* Nama Menu & Kategori */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -736,6 +1042,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   <CategoryDropdown
                     value={formData.category}
                     onChange={(val) => setFormData({ ...formData, category: val })}
+                    categories={allCategories}
+                    onAddCategory={handleAddCategory}
+                    onDeleteCategory={handleDeleteCategory}
                   />
                 </div>
               </div>
@@ -1594,20 +1903,32 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
       {/* ================= CATEGORY TABS (Active: #009F58) ================= */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]">
-        {[
-          { id: 'Semua', label: `Semua (${catalog.length})`, icon: Layers },
-          { id: 'Minuman', label: `Minuman (${metrics.minumanCount})`, icon: Coffee },
-          { id: 'Pastry & Bakery', label: `Pastry & Bakery (${metrics.pastryCount})`, icon: Croissant },
-          { id: 'Makanan', label: `Makanan (${metrics.makananCount})`, icon: Utensils },
-        ].map((cat) => {
-          const Icon = cat.icon
-          const isSelected = selectedCategory === cat.id
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedCategory('Semua')
+            setCurrentPage(1)
+          }}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            selectedCategory === 'Semua'
+              ? 'bg-[#009F58] text-white shadow-xs'
+              : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Semua ({catalog.length})</span>
+        </button>
+
+        {allCategories.map((catName) => {
+          const Icon = getCategoryIcon(catName)
+          const count = catalog.filter((c) => c.category === catName).length
+          const isSelected = selectedCategory === catName
           return (
             <button
-              key={cat.id}
+              key={catName}
               type="button"
               onClick={() => {
-                setSelectedCategory(cat.id)
+                setSelectedCategory(catName)
                 setCurrentPage(1)
               }}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
@@ -1617,7 +1938,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
-              <span>{cat.label}</span>
+              <span>
+                {catName} ({count})
+              </span>
             </button>
           )
         })}

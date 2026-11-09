@@ -68,6 +68,8 @@ class HppService
             'id' => $product->id,
             'user_id' => $product->user_id,
             'name' => $product->name,
+            'category' => $product->category,
+            'image' => $product->image,
             'selling_price' => (float) $product->selling_price,
             'yield_qty' => (float) $product->yield_qty,
             'ingredients' => $ingredients->map(fn ($ing) => [
@@ -106,6 +108,8 @@ class HppService
         return DB::transaction(function () use ($user, $data) {
             $product = $user->products()->create([
                 'name' => $data['name'],
+                'category' => $data['category'] ?? null,
+                'image' => $data['image'] ?? null,
                 'selling_price' => $data['selling_price'],
                 'yield_qty' => $data['yield_qty'] ?? 1,
             ]);
@@ -126,11 +130,18 @@ class HppService
     public function updateProduct(Product $product, array $data): array
     {
         return DB::transaction(function () use ($product, $data) {
-            $product->update([
+            $updateData = [
                 'name' => $data['name'] ?? $product->name,
                 'selling_price' => $data['selling_price'] ?? $product->selling_price,
                 'yield_qty' => $data['yield_qty'] ?? $product->yield_qty,
-            ]);
+            ];
+            if (array_key_exists('category', $data)) {
+                $updateData['category'] = $data['category'];
+            }
+            if (array_key_exists('image', $data)) {
+                $updateData['image'] = $data['image'];
+            }
+            $product->update($updateData);
 
             if (isset($data['ingredients'])) {
                 $product->ingredients()->delete();
