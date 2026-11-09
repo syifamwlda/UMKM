@@ -157,10 +157,11 @@ class HppService
     }
 
     /**
-     * Menghapus produk.
+     * Menghapus produk beserta bahan bakunya.
      */
     public function deleteProduct(Product $product): void
     {
+        $product->ingredients()->delete();
         $product->delete();
     }
 }

@@ -32,6 +32,7 @@ import {
   Tag
 } from 'lucide-react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 // Recipe ingredients default dataset
 const DEFAULT_RECIPES = {
@@ -354,18 +355,52 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  // Custom categories persisted in localStorage
+  const { user } = useAuth()
+  const storageKey = user?.id ? `untungjelas_custom_categories_${user.id}` : 'untungjelas_custom_categories'
+
+  // Custom categories persisted in localStorage per user
   const [customCategories, setCustomCategories] = useState(() => {
     try {
-      const saved = localStorage.getItem('untungjelas_custom_categories')
+      const saved = localStorage.getItem(storageKey)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
     }
   })
 
-  // Merge default categories, custom categories, and all categories from current catalog
-  const allCategories = useMemo(() => {
+  // Synchronize custom categories when user changes
+  useEffect(() => {
+    if (user?.id) {
+      try {
+        const saved = localStorage.getItem(`untungjelas_custom_categories_${user.id}`)
+        setCustomCategories(saved ? JSON.parse(saved) : [])
+      } catch {
+        setCustomCategories([])
+      }
+    }
+  }, [user?.id])
+
+  // Filter tabs on catalog list: ONLY show categories that actually have products in this user's catalog
+  const activeCatalogCategories = useMemo(() => {
+    const list = []
+    catalog.forEach((item) => {
+      const trimmed = (item.category || '').trim()
+      if (trimmed && !list.includes(trimmed)) {
+        list.push(trimmed)
+      }
+    })
+    return list
+  }, [catalog])
+
+  // Reset selected category if it no longer exists in current catalog
+  useEffect(() => {
+    if (selectedCategory !== 'Semua' && !activeCatalogCategories.includes(selectedCategory)) {
+      setSelectedCategory('Semua')
+    }
+  }, [activeCatalogCategories, selectedCategory])
+
+  // Categories available inside the dropdown when creating/editing a product in the form
+  const formCategories = useMemo(() => {
     const list = [...DEFAULT_CATEGORIES]
     customCategories.forEach((c) => {
       const trimmed = (c || '').trim()
@@ -387,7 +422,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       setCustomCategories((prev) => {
         const next = [...prev, trimmed]
         try {
-          localStorage.setItem('untungjelas_custom_categories', JSON.stringify(next))
+          localStorage.setItem(storageKey, JSON.stringify(next))
         } catch (err) {
           console.error(err)
         }
@@ -402,7 +437,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     setCustomCategories((prev) => {
       const next = prev.filter((c) => c !== catToDelete)
       try {
-        localStorage.setItem('untungjelas_custom_categories', JSON.stringify(next))
+        localStorage.setItem(storageKey, JSON.stringify(next))
       } catch (err) {
         console.error(err)
       }
@@ -730,7 +765,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         }
       })
 
-      if (Array.isArray(productsData) && productsData.length > 0 && onUpdateCatalog) {
+      if (Array.isArray(productsData) && onUpdateCatalog) {
         onUpdateCatalog(productsData)
       }
     } catch (err) {
@@ -743,7 +778,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
 
   useEffect(() => {
     fetchCatalog()
-  }, [])
+  }, [user?.id])
 
   // Save product to backend POST /api/products or PUT /api/products/{id}
   const handleSaveProduct = async () => {
@@ -806,6 +841,10 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     if (!window.confirm(`Yakin ingin menghapus produk "${targetProduct.name}" dari katalog?`)) return
 
     try {
+      // Optimistically remove from state so the item disappears immediately
+      if (onUpdateCatalog) {
+        onUpdateCatalog((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== targetProduct.id) : []))
+      }
       await api.delete(`/products/${targetProduct.id}`)
       if (onToast) onToast(`Produk "${targetProduct.name}" berhasil dihapus.`)
       await fetchCatalog()
@@ -815,6 +854,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
       const errorMsg = err.response?.data?.message || 'Gagal menghapus produk dari backend.'
       if (onToast) onToast(`Gagal: ${errorMsg}`)
       alert(`Pemberitahuan:\n${errorMsg}`)
+      await fetchCatalog()
     }
   }
 
@@ -1042,7 +1082,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                   <CategoryDropdown
                     value={formData.category}
                     onChange={(val) => setFormData({ ...formData, category: val })}
-                    categories={allCategories}
+                    categories={formCategories}
                     onAddCategory={handleAddCategory}
                     onDeleteCategory={handleDeleteCategory}
                   />
@@ -1919,7 +1959,7 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           <span>Semua ({catalog.length})</span>
         </button>
 
-        {allCategories.map((catName) => {
+        {activeCatalogCategories.map((catName) => {
           const Icon = getCategoryIcon(catName)
           const count = catalog.filter((c) => c.category === catName).length
           const isSelected = selectedCategory === catName

@@ -691,14 +691,9 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   const [posCategory, setPosCategory] = useState('Semua')
 
   const availablePosCategories = useMemo(() => {
-    const base = [
-      { id: 'Semua', label: 'Semua', icon: LayoutGrid },
-      { id: 'Minuman', label: 'Minuman', icon: Coffee },
-      { id: 'Pastry & Bakery', label: 'Pastry & Bakery', icon: Croissant },
-      { id: 'Makanan', label: 'Makanan', icon: Utensils },
-    ]
-    const known = new Set(base.map((b) => b.id))
-    const extra = []
+    const list = [{ id: 'Semua', label: 'Semua', icon: LayoutGrid }]
+    const known = new Set(['Semua'])
+
     ;(posCatalog || []).forEach((p) => {
       const cat = (p.category || '').trim()
       if (cat && !known.has(cat)) {
@@ -742,10 +737,10 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
         ) {
           CatIcon = Package
         }
-        extra.push({ id: cat, label: cat, icon: CatIcon })
+        list.push({ id: cat, label: cat, icon: CatIcon })
       }
     })
-    return [...base, ...extra]
+    return list
   }, [posCatalog])
   const [posSearch, setPosSearch] = useState('')
   const [posPaymentMethod, setPosPaymentMethod] = useState('Tunai')
