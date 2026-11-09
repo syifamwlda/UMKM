@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Search,
   Plus,
@@ -872,9 +873,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   // Modern Delete Confirmation Modal Component
   const renderDeleteConfirmModal = () => {
     if (!deleteConfirmProduct) return null
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-        <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-scale-up relative">
+    const modalContent = (
+      <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm m-0">
+        <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center relative animate-fade-in">
           <button
             type="button"
             disabled={isDeleting}
@@ -884,8 +885,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
             <X className="w-4 h-4" />
           </button>
 
-          <div className="w-13 h-13 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mx-auto mb-3.5 shadow-2xs">
-            <Trash2 className="w-6 h-6 stroke-[2]" />
+          <div className="flex items-center justify-center mx-auto mb-3.5 text-rose-500">
+            <Trash2 className="w-8 h-8 stroke-[1.8]" />
           </div>
 
           <h3 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
@@ -928,6 +929,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
       </div>
     )
+
+    return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent
   }
 
   // Request AI Price Advice from backend GET /api/products/{id}/advice
@@ -1660,8 +1663,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
 
         {/* Modal: Saran Harga AI Gemini */}
-        {showAdviceModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+        {showAdviceModal && typeof document !== 'undefined' && createPortal(
+          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm m-0">
             <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-scale-up">
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -1765,7 +1768,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
                 </div>
               ) : null}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Modern Delete Confirmation Modal */}

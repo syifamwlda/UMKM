@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
   LayoutGrid,
   Store,
@@ -2104,9 +2105,9 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             </div>
 
             {/* Modal: Struk Transaksi Selesai */}
-            {posReceiptModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-                <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-scale-up relative">
+            {posReceiptModal && typeof document !== 'undefined' && createPortal(
+              <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm m-0">
+                <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center relative animate-fade-in max-h-[90vh] overflow-y-auto">
                   <div className="w-12 h-12 rounded-full bg-emerald-100 text-[#009B5B] flex items-center justify-center mx-auto mb-3">
                     <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
                   </div>
@@ -2199,7 +2200,8 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                     </button>
                   </div>
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
 
 
@@ -4151,8 +4153,8 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
       </div>
 
       {/* ================= MODAL: EDIT HPP / HARGA ================= */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+      {showEditModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm m-0">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-gray-100">
             <h3 className="text-base font-bold text-gray-900 mb-1">
               Edit HPP & Harga Jual
@@ -4216,7 +4218,8 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
