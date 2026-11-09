@@ -150,6 +150,7 @@ function MainContent() {
     return (
       <PublicReceiptPage
         onNavigateHome={() => navigateTo('home')}
+        onNavigateDashboard={() => navigateTo('dashboard')}
       />
     )
   }
