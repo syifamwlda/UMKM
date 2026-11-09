@@ -112,6 +112,37 @@ const formatDayMonth = (dateStr) => {
   return `${d} ${MONTH_SHORT_ID[m - 1]}`
 }
 
+const getTodayDateStr = () => {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const getYesterdayDateStr = () => {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const getLast7DaysStr = () => {
+  const d = new Date()
+  d.setDate(d.getDate() - 6)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const getTodayLabel = () => {
+  const now = new Date()
+  return `Hari ini, ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`
+}
+
 export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   const { user, updateUser } = useAuth()
   const [activeMenu, setActiveMenu] = useState(initialMenu)
@@ -152,14 +183,17 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   
   // ================= TOP BAR STATES =================
   // 1. Date Filter & Interactive Calendar States
-  const [selectedDateFilter, setSelectedDateFilter] = useState('Hari ini, 1 Nov 2026')
+  const [selectedDateFilter, setSelectedDateFilter] = useState(() => getTodayLabel())
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const [calMonth, setCalMonth] = useState({ year: 2026, month: 10 }) // 10 is November (current today date)
-  const [selectedStartDate, setSelectedStartDate] = useState('2026-11-01')
-  const [selectedEndDate, setSelectedEndDate] = useState('2026-11-01')
-  const [tempStart, setTempStart] = useState('2026-11-01')
-  const [tempEnd, setTempEnd] = useState('2026-11-01')
-  const [chartTitle, setChartTitle] = useState('Performa Jam Operasional Hari Ini (08:00 - 20:00)')
+  const [calMonth, setCalMonth] = useState(() => {
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  })
+  const [selectedStartDate, setSelectedStartDate] = useState(() => getTodayDateStr())
+  const [selectedEndDate, setSelectedEndDate] = useState(() => getTodayDateStr())
+  const [tempStart, setTempStart] = useState(() => getTodayDateStr())
+  const [tempEnd, setTempEnd] = useState(() => getTodayDateStr())
+  const [chartTitle, setChartTitle] = useState('Performa Finansial & Arus Kas Hari Ini')
   const [chartSubtitle, setChartSubtitle] = useState('Pantau tren omzet, modal bahan baku (HPP), dan laba bersih usaha secara real-time.')
   
   // 2. Search Autocomplete
@@ -248,21 +282,45 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
   // Universal Real-time update function: immediately moves Chart lines up or down
   const updateRealtimeData = (deltaOmzet, deltaLaba, label = '') => {
     setTrendData((prev) => {
-      const updated = [...prev]
+      const prevArr = Array.isArray(prev) ? prev : []
+      if (prevArr.length === 0) {
+        return [{
+          day: 'Hari Ini',
+          date: getTodayDateStr(),
+          omzet: Math.max(0, deltaOmzet),
+          laba: Math.max(0, deltaLaba),
+          costs: Math.max(0, deltaOmzet - deltaLaba),
+        }]
+      }
+      const updated = [...prevArr]
       const lastIndex = updated.length - 1
-      const current = updated[lastIndex]
-      const newOmzet = Math.max(0, current.omzet + deltaOmzet)
-      const newLaba = Math.max(0, current.laba + deltaLaba)
-      updated[lastIndex] = { ...current, omzet: newOmzet, laba: newLaba }
+      const current = updated[lastIndex] || { omzet: 0, laba: 0 }
+      const newOmzet = Math.max(0, (Number(current.omzet) || 0) + deltaOmzet)
+      const newLaba = Math.max(0, (Number(current.laba) || 0) + deltaLaba)
+      const newCosts = Math.max(0, newOmzet - newLaba)
+      updated[lastIndex] = { ...current, omzet: newOmzet, laba: newLaba, costs: newCosts }
       return updated
     })
 
-    setKpiStats((prev) => ({
-      ...prev,
-      omzet: Math.max(0, prev.omzet + deltaOmzet),
-      untung: Math.max(0, prev.untung + deltaLaba),
-      transaksi: deltaOmzet > 0 ? `${parseInt(prev.transaksi) + 1} Struk` : prev.transaksi
-    }))
+    setKpiStats((prev) => {
+      const currentOmzet = Number(prev.omzet) || 0
+      const currentUntung = Number(prev.untung) || 0
+      const currentCount = parseInt(prev.transaksi, 10) || 0
+      const newOmzet = Math.max(0, currentOmzet + deltaOmzet)
+      const newUntung = Math.max(0, currentUntung + deltaLaba)
+      const newCount = deltaOmzet > 0 ? currentCount + 1 : currentCount
+      const margin = newOmzet > 0 ? Math.round((newUntung / newOmzet) * 100) : 0
+      return {
+        ...prev,
+        omzet: newOmzet,
+        untung: newUntung,
+        transaksi: newCount,
+        omzetGrowth: newCount > 0 ? `${newCount} transaksi tercatat hari ini` : 'Buka kasir untuk mulai transaksi',
+        untungGrowth: newOmzet > 0 ? `Margin rata-rata ${margin}%` : 'Belum ada transaksi hari ini',
+        kesehatan: Math.min(100, Math.max(0, Math.round(margin * 1.5 + 20))),
+        kesehatanLabel: margin >= 20 ? 'Sangat Sehat' : margin > 0 ? 'Cukup Sehat' : 'Perlu Evaluasi'
+      }
+    })
 
     if (deltaOmzet > 0) {
       showToast(`📈 [Penjualan Masuk] +Rp${deltaOmzet.toLocaleString('id-ID')} (${label || 'Pesanan baru'})`)
@@ -606,7 +664,26 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             }
           })
           setTrendData(formattedTrend)
+
+          // Populate DAILY_RECORDS cache so interactive calendar uses real backend data
+          rawTrend.forEach((t) => {
+            DAILY_RECORDS[t.date] = {
+              omzet: Number(t.omzet) || 0,
+              laba: Number(t.laba) || 0,
+              transaksi: Number(t.transaksi_count) || 0,
+            }
+          })
         }
+
+        const todayKey = getTodayDateStr()
+        DAILY_RECORDS[todayKey] = {
+          omzet: omzetVal,
+          laba: labaVal,
+          transaksi: countVal,
+        }
+
+        // Fetch recent transactions list for dashboard card
+        fetchRecentTransactions()
 
         if (data.products && Array.isArray(data.products)) {
           const mappedProducts = data.products.map((p) => {
@@ -682,10 +759,29 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
     }
   }
 
+  const [recentTransactions, setRecentTransactions] = useState([])
+
+  const fetchRecentTransactions = async () => {
+    try {
+      const res = await api.get('/transactions')
+      let raw = res.data?.data || []
+      if (!raw || raw.length === 0) {
+        const resAll = await api.get('/transactions?date=all')
+        raw = resAll.data?.data || []
+      }
+      setRecentTransactions(Array.isArray(raw) ? raw.slice(0, 5) : [])
+    } catch (e) {
+      console.warn('Gagal memuat transaksi terbaru:', e)
+    }
+  }
+
   useEffect(() => {
-    fetchDashboardStats()
-    fetchHealthScore()
-  }, [user?.id])
+    if (activeMenu === 'Dashboard') {
+      fetchDashboardStats()
+      fetchHealthScore()
+      fetchRecentTransactions()
+    }
+  }, [activeMenu, user?.id])
 
 
 
@@ -771,11 +867,11 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
     if (isSingleDay) {
       const dData = DAILY_RECORDS[start] || { omzet: 0, laba: 0, transaksi: 0 }
-      const isToday = start === '2026-11-01'
-      const label = isToday ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(start)} 2026`
+      const isToday = start === getTodayDateStr()
+      const label = isToday ? getTodayLabel() : `${formatDayMonth(start)} ${new Date(start).getFullYear()}`
       
       setSelectedDateFilter(label)
-      setChartTitle(isToday ? 'Performa Jam Operasional Hari Ini (08:00 - 20:00)' : `Performa Jam Sibuk & Arus Kas (${label})`)
+      setChartTitle(isToday ? 'Performa Finansial & Arus Kas Hari Ini' : `Performa Jam Sibuk & Arus Kas (${label})`)
       setChartSubtitle(`Pantau pola lonjakan transaksi dan laba bersih sepanjang jam buka toko pada ${label}.`)
 
       // Generate realistic dynamic hourly curve for selected day
@@ -798,17 +894,19 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
       const prevHourly = getHourlyPattern(prevDateStr, prevData.omzet, prevData.laba)
       setPrevTrendData(prevHourly)
 
+      const margin = dData.omzet > 0 ? Math.round((dData.laba / dData.omzet) * 100) : 0
+
       setKpiStats({
         untung: dData.laba,
-        untungGrowth: isToday ? '12% dari kemarin' : `${formatDayMonth(prevDateStr)}: Rp${prevData.laba.toLocaleString('id-ID')}`,
+        untungGrowth: dData.omzet > 0 ? `Margin rata-rata ${margin}%` : 'Belum ada transaksi hari ini',
         omzet: dData.omzet,
-        omzetGrowth: isToday ? '+8% rata-rata harian' : `Total 1 Hari (${formatDayMonth(start)})`,
+        omzetGrowth: dData.transaksi > 0 ? `${dData.transaksi} transaksi tercatat hari ini` : 'Buka kasir untuk mulai transaksi',
         transaksi: dData.transaksi,
-        transaksiSub: `Rata-rata Rp${Math.round(dData.omzet / dData.transaksi).toLocaleString('id-ID')}/struk`,
-        kesehatan: 82,
-        kesehatanLabel: 'Sehat'
+        transaksiSub: dData.transaksi > 0 ? `Rata-rata Rp${Math.round(dData.omzet / dData.transaksi).toLocaleString('id-ID')}/struk` : 'Modal Bahan: Rp0',
+        kesehatan: Math.min(100, Math.max(0, Math.round(margin * 1.5 + 20))),
+        kesehatanLabel: margin >= 20 ? 'Sangat Sehat' : margin > 0 ? 'Cukup Sehat' : 'Perlu Evaluasi'
       })
-      showToast(isToday ? 'Menampilkan data real-time Hari Ini (1 Nov 2026)' : `Data dashboard disesuaikan: ${label}`)
+      showToast(isToday ? `Menampilkan data real-time: ${label}` : `Data dashboard disesuaikan: ${label}`)
     } else {
       // Date range from start to end (e.g. 26 Okt - 1 Nov, or 10 Okt - 17 Okt)
       const dates = []
@@ -1111,6 +1209,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
       updateRealtimeData(totalReal, profitReal, `Kasir: ${method}`)
       fetchDashboardStats()
       fetchHealthScore()
+      fetchRecentTransactions()
       showToast(`Transaksi berhasil via ${method}! Laba Rp${profitReal.toLocaleString('id-ID')} dicatat.`)
     } catch (err) {
       console.error('Gagal mencatat transaksi:', err)
@@ -2535,7 +2634,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                             <button
                               type="button"
                               onClick={() => {
-                                applyDateSelection('2026-11-01', '2026-11-01')
+                                applyDateSelection(getTodayDateStr(), getTodayDateStr())
                               }}
                               className="text-[11px] font-bold text-[#009B5B] hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                             >
@@ -2557,10 +2656,10 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              applyDateSelection('2026-11-01', '2026-11-01')
+                              applyDateSelection(getTodayDateStr(), getTodayDateStr())
                             }}
                             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                              selectedStartDate === '2026-11-01' && selectedEndDate === '2026-11-01'
+                              selectedStartDate === getTodayDateStr() && selectedEndDate === getTodayDateStr()
                                 ? 'bg-emerald-50 text-[#009B5B] font-bold'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
@@ -2570,10 +2669,11 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              applyDateSelection('2026-10-31', '2026-10-31')
+                              const yDay = getYesterdayDateStr()
+                              applyDateSelection(yDay, yDay)
                             }}
                             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                              selectedStartDate === '2026-10-31' && selectedEndDate === '2026-10-31'
+                              selectedStartDate === getYesterdayDateStr() && selectedEndDate === getYesterdayDateStr()
                                 ? 'bg-emerald-50 text-[#009B5B] font-bold'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
@@ -2583,28 +2683,15 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              applyDateSelection('2026-10-26', '2026-11-01')
+                              applyDateSelection(getLast7DaysStr(), getTodayDateStr())
                             }}
                             className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                              selectedStartDate === '2026-10-26' && selectedEndDate === '2026-11-01'
+                              selectedStartDate === getLast7DaysStr() && selectedEndDate === getTodayDateStr()
                                 ? 'bg-emerald-50 text-[#009B5B] font-bold'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                           >
                             7 Hari Terakhir
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              applyDateSelection('2026-10-01', '2026-10-31')
-                            }}
-                            className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                              selectedStartDate === '2026-10-01' && selectedEndDate === '2026-10-31'
-                                ? 'bg-emerald-50 text-[#009B5B] font-bold'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            Bulan Lalu (Okt)
                           </button>
                         </div>
 
@@ -2613,14 +2700,17 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              if (calMonth.month === 9) {
-                                setCalMonth({ year: 2026, month: 8 })
-                              } else if (calMonth.month === 10) {
-                                setCalMonth({ year: 2026, month: 9 })
-                              }
+                              setCalMonth((prev) => {
+                                let m = prev.month - 1
+                                let y = prev.year
+                                if (m < 0) {
+                                  m = 11
+                                  y -= 1
+                                }
+                                return { year: y, month: m }
+                              })
                             }}
-                            disabled={calMonth.month <= 8}
-                            className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-gray-600 hover:bg-white transition-colors cursor-pointer"
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </button>
@@ -2630,13 +2720,20 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              if (calMonth.month === 8) {
-                                setCalMonth({ year: 2026, month: 9 })
-                              } else if (calMonth.month === 9) {
-                                setCalMonth({ year: 2026, month: 10 })
-                              }
+                              setCalMonth((prev) => {
+                                let m = prev.month + 1
+                                let y = prev.year
+                                if (m > 11) {
+                                  m = 0
+                                  y += 1
+                                }
+                                return { year: y, month: m }
+                              })
                             }}
-                            disabled={calMonth.month >= 10}
+                            disabled={
+                              calMonth.year > new Date().getFullYear() ||
+                              (calMonth.year === new Date().getFullYear() && calMonth.month >= new Date().getMonth())
+                            }
                             className="p-1 rounded-lg text-gray-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                           >
                             <ChevronRight className="w-4 h-4" />
@@ -2665,8 +2762,9 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           }).map((_, i) => {
                             const d = i + 1
                             const dStr = `${calMonth.year}-${String(calMonth.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-                            const isToday = dStr === '2026-11-01'
-                            const isFuture = dStr > '2026-11-01'
+                            const todayStr = getTodayDateStr()
+                            const isToday = dStr === todayStr
+                            const isFuture = dStr > todayStr
                             const isStart = tempStart === dStr
                             const isEnd = tempEnd === dStr
                             const isInRange = tempStart && tempEnd && dStr >= tempStart && dStr <= tempEnd
@@ -2723,12 +2821,12 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                           <div className="text-[11px] text-gray-600 font-medium truncate min-w-0">
                             {tempStart && tempEnd && tempStart !== tempEnd ? (
                               <span className="truncate block">
-                                <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} 2026</strong>
+                                <strong className="text-gray-900">{formatDayMonth(tempStart)} - {formatDayMonth(tempEnd)} {new Date(tempEnd).getFullYear()}</strong>
                                 <span className="text-[10px] text-gray-400 ml-1">({countDays(tempStart, tempEnd)} hari)</span>
                               </span>
                             ) : tempStart ? (
                               <span className="truncate block">
-                                <strong className="text-gray-900">{tempStart === '2026-11-01' ? 'Hari ini, 1 Nov 2026' : `${formatDayMonth(tempStart)} 2026`}</strong>
+                                <strong className="text-gray-900">{tempStart === getTodayDateStr() ? getTodayLabel() : `${formatDayMonth(tempStart)} ${new Date(tempStart).getFullYear()}`}</strong>
                                 <span className="text-[10px] text-gray-400 ml-1">(1 hari)</span>
                               </span>
                             ) : (
@@ -2812,7 +2910,7 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
             )}
 
             {/* Empty State Banner (Hari ini belum ada transaksi) */}
-            {!statsLoading && !statsError && kpiStats.transaksi === 0 && (
+            {!statsLoading && !statsError && Number(kpiStats.transaksi) === 0 && (
               <div className="mb-6 p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
                 <div className="flex items-center gap-2.5">
                   <Store className="w-4 h-4 text-amber-600 flex-shrink-0" />
@@ -4142,6 +4240,92 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                       Kas Masuk: Rp{(Number(dashboardStats?.today?.cash_in) || 0).toLocaleString('id-ID')}
                     </p>
                   </div>
+                </div>
+
+                {/* Card: Transaksi Kasir Terbaru */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#009B5B] flex items-center justify-center">
+                        <Receipt className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-[13px] font-bold text-gray-900">
+                          Transaksi Kasir Terbaru
+                        </h4>
+                        <p className="text-[10px] text-gray-400">
+                          {recentTransactions.length > 0
+                            ? `${recentTransactions.length} transaksi terakhir dicatat`
+                            : 'Belum ada transaksi tercatat'}
+                        </p>
+                      </div>
+                    </div>
+                    {recentTransactions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveMenu('Laporan Keuangan')}
+                        className="text-[11px] font-bold text-[#009B5B] hover:text-[#00874e] flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <span>Lihat Semua</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {recentTransactions.length > 0 ? (
+                    <div className="space-y-2 pt-1">
+                      {recentTransactions.map((trx) => {
+                        const shortId = trx.uuid ? `#TX-${trx.uuid.substring(0, 8).toUpperCase()}` : `#TX-${trx.id}`
+                        const timeStr = trx.paid_at
+                          ? new Date(trx.paid_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+                          : trx.time || 'Baru saja'
+                        const itemsSummary = Array.isArray(trx.items) && trx.items.length > 0
+                          ? `${trx.items[0].qty}x ${trx.items[0].product_name || trx.items[0].name || 'Menu'}${trx.items.length > 1 ? ` +${trx.items.length - 1}` : ''}`
+                          : `${trx.items_count || 1} Item`
+                        const profit = Number(trx.profit ?? trx.total_profit) || 0
+                        const omzet = Number(trx.total) || 0
+
+                        return (
+                          <div
+                            key={trx.id || trx.uuid}
+                            className="p-2.5 rounded-xl bg-gray-50/70 hover:bg-emerald-50/40 border border-gray-100 transition-colors flex items-center justify-between text-xs"
+                          >
+                            <div className="space-y-0.5 min-w-0 pr-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-gray-900">{shortId}</span>
+                                <span className="text-[10px] text-gray-400">• {timeStr}</span>
+                                <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-white text-gray-600 border border-gray-200">
+                                  {trx.payment_method || 'Tunai'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-600 truncate">{itemsSummary}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <p className="font-bold text-gray-900">Rp{omzet.toLocaleString('id-ID')}</p>
+                              <p className="text-[10px] font-semibold text-[#009B5B]">
+                                +Rp{profit.toLocaleString('id-ID')}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center rounded-xl bg-gray-50/50 border border-dashed border-gray-200">
+                      <p className="text-xs font-semibold text-gray-600">Belum ada transaksi</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Lakukan penjualan di kasir untuk melihat aktivitas di sini.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveMenu('Kasir')}
+                        className="mt-3 px-3 py-1.5 bg-[#009B5B] hover:bg-[#00874e] text-white text-xs font-bold rounded-lg inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                      >
+                        <Store className="w-3.5 h-3.5" />
+                        <span>Buka Kasir Sekarang</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>
