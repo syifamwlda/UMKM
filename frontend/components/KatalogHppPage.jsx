@@ -687,9 +687,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         const profit = price - hpp
         const marginPct = price > 0 ? ((profit / price) * 100).toFixed(1) : '0'
 
+        const lowerName = (p.name || '').toLowerCase()
         let img = p.image || ''
         if (!img) {
-          const lowerName = (p.name || '').toLowerCase()
           if (lowerName.includes('croissant')) img = '/assets/kasir/croissant.png'
           else if (lowerName.includes('latte')) img = '/assets/kasir/cafe-latte.png'
           else if (lowerName.includes('cold') || lowerName.includes('brew')) img = '/assets/kasir/cold-brew.png'
