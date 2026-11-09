@@ -524,6 +524,8 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [deleteConfirmProduct, setDeleteConfirmProduct] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // AI Advice States (GET /api/products/{id}/advice)
   const [adviceLoading, setAdviceLoading] = useState(false)
@@ -834,28 +836,98 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
     }
   }
 
-  // Delete product from backend DELETE /api/products/{id}
-  const handleDeleteProduct = async (product) => {
+  // Open modern delete confirmation modal
+  const handleDeleteProduct = (product) => {
     const targetProduct = product || editingProduct
     if (!targetProduct?.id) return
-    if (!window.confirm(`Yakin ingin menghapus produk "${targetProduct.name}" dari katalog?`)) return
+    setDeleteConfirmProduct(targetProduct)
+  }
 
+  // Execute delete product to backend DELETE /api/products/{id}
+  const executeDeleteProduct = async () => {
+    if (!deleteConfirmProduct?.id) return
+
+    setIsDeleting(true)
     try {
       // Optimistically remove from state so the item disappears immediately
       if (onUpdateCatalog) {
-        onUpdateCatalog((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== targetProduct.id) : []))
+        onUpdateCatalog((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== deleteConfirmProduct.id) : []))
       }
-      await api.delete(`/products/${targetProduct.id}`)
-      if (onToast) onToast(`Produk "${targetProduct.name}" berhasil dihapus.`)
+      await api.delete(`/products/${deleteConfirmProduct.id}`)
+      if (onToast) onToast(`Produk "${deleteConfirmProduct.name}" berhasil dihapus.`)
+      setDeleteConfirmProduct(null)
       await fetchCatalog()
       if (view === 'edit') setView('list')
     } catch (err) {
       console.error('Gagal menghapus produk:', err)
       const errorMsg = err.response?.data?.message || 'Gagal menghapus produk dari backend.'
       if (onToast) onToast(`Gagal: ${errorMsg}`)
-      alert(`Pemberitahuan:\n${errorMsg}`)
+      setDeleteConfirmProduct(null)
       await fetchCatalog()
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  // Modern Delete Confirmation Modal Component
+  const renderDeleteConfirmModal = () => {
+    if (!deleteConfirmProduct) return null
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-scale-up relative">
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={() => setDeleteConfirmProduct(null)}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="w-13 h-13 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mx-auto mb-3.5 shadow-2xs">
+            <Trash2 className="w-6 h-6 stroke-[2]" />
+          </div>
+
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
+            Hapus Menu Produk?
+          </h3>
+          
+          <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+            Menu <span className="font-bold text-gray-900">"{deleteConfirmProduct.name}"</span> akan dihapus permanen dari katalog dan kasir. Tindakan ini tidak dapat dibatalkan.
+          </p>
+
+          <div className="grid grid-cols-2 gap-2.5 mt-5">
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => setDeleteConfirmProduct(null)}
+              className="w-full py-2.5 px-3 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Batal
+            </button>
+            
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={executeDeleteProduct}
+              className="w-full py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                  <span>Menghapus...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5 stroke-[2]" />
+                  <span>Ya, Hapus</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Request AI Price Advice from backend GET /api/products/{id}/advice
@@ -1696,6 +1768,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
           </div>
         )}
 
+        {/* Modern Delete Confirmation Modal */}
+        {renderDeleteConfirmModal()}
+
       </div>
     )
   }
@@ -2345,6 +2420,9 @@ export default function KatalogHppPage({ catalog = [], onUpdateCatalog, onToast 
         </div>
 
       </div>
+
+      {/* Modern Delete Confirmation Modal */}
+      {renderDeleteConfirmModal()}
 
     </div>
   )
