@@ -1610,72 +1610,90 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
               {/* Notification Popover Panel */}
               {isNotificationOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 sm:w-88 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50 animate-fade-in">
-                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                    <div>
-                      <h4 className="text-xs font-bold text-gray-900">Notifikasi Toko</h4>
-                      <p className="text-[10px] text-gray-400">{unreadCount} pesan belum dibaca</p>
-                    </div>
-                    {unreadCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleMarkAllNotifications}
-                        className="text-[11px] font-semibold text-[#009B5B] hover:underline cursor-pointer"
-                      >
-                        Tandai dibaca
-                      </button>
-                    )}
-                  </div>
+                <>
+                  {/* Mobile Backdrop */}
+                  <div
+                    className="fixed inset-0 bg-black/25 backdrop-blur-xs z-40 sm:hidden"
+                    onClick={() => setIsNotificationOpen(false)}
+                  />
 
-                  <div className="divide-y divide-gray-50 my-2 max-h-72 overflow-y-auto">
-                    {notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        className={`py-3 px-1.5 flex gap-3 transition-colors rounded-xl ${
-                          notif.read ? 'opacity-60' : 'bg-emerald-50/20'
-                        }`}
-                      >
+                  <div className="fixed inset-x-3 top-20 sm:top-full max-w-sm sm:max-w-none mx-auto sm:mx-0 z-50 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-88 bg-white rounded-3xl sm:rounded-2xl shadow-2xl sm:shadow-xl border border-gray-100 p-4 select-none animate-fade-in">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900">Notifikasi Toko</h4>
+                        <p className="text-[10px] text-gray-400">{unreadCount} pesan belum dibaca</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleMarkAllNotifications}
+                            className="text-[11px] font-semibold text-[#009B5B] hover:underline cursor-pointer"
+                          >
+                            Tandai dibaca
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsNotificationOpen(false)}
+                          className="sm:hidden p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 cursor-pointer"
+                          title="Tutup"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-50 my-2 max-h-72 overflow-y-auto">
+                      {notifications.map((notif) => (
                         <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                            notif.type === 'danger'
-                              ? 'bg-rose-50 text-rose-500'
-                              : notif.type === 'warning'
-                              ? 'bg-amber-50 text-amber-500'
-                              : 'bg-blue-50 text-blue-500'
+                          key={notif.id}
+                          className={`py-3 px-1.5 flex gap-3 transition-colors rounded-xl ${
+                            notif.read ? 'opacity-60' : 'bg-emerald-50/20'
                           }`}
                         >
-                          {notif.type === 'danger' && <AlertTriangle className="w-4 h-4" />}
-                          {notif.type === 'warning' && <Sparkles className="w-4 h-4" />}
-                          {notif.type === 'info' && <FileSpreadsheet className="w-4 h-4" />}
+                          <div
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                              notif.type === 'danger'
+                                ? 'bg-rose-50 text-rose-500'
+                                : notif.type === 'warning'
+                                ? 'bg-amber-50 text-amber-500'
+                                : 'bg-blue-50 text-blue-500'
+                            }`}
+                          >
+                            {notif.type === 'danger' && <AlertTriangle className="w-4 h-4" />}
+                            {notif.type === 'warning' && <Sparkles className="w-4 h-4" />}
+                            {notif.type === 'info' && <FileSpreadsheet className="w-4 h-4" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-gray-900 leading-snug break-words">
+                              {notif.title}
+                            </p>
+                            <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed break-words">
+                              {notif.message}
+                            </p>
+                            <span className="text-[9px] text-gray-400 font-medium block mt-1">
+                              {notif.time}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold text-gray-900 leading-snug">
-                            {notif.title}
-                          </p>
-                          <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
-                            {notif.message}
-                          </p>
-                          <span className="text-[9px] text-gray-400 font-medium block mt-1">
-                            {notif.time}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
 
-                  <div className="pt-2 border-t border-gray-100 text-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsNotificationOpen(false)
-                        showToast('Membuka pusat riwayat notifikasi...')
-                      }}
-                      className="text-xs font-semibold text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      Lihat Semua Riwayat
-                    </button>
+                    <div className="pt-2 border-t border-gray-100 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsNotificationOpen(false)
+                          showToast('Membuka pusat riwayat notifikasi...')
+                        }}
+                        className="text-xs font-semibold text-gray-600 hover:text-gray-900 cursor-pointer"
+                      >
+                        Lihat Semua Riwayat
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
@@ -1712,7 +1730,13 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
 
               {/* Profile Menu Dropdown */}
               {isProfileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-fade-in">
+                <>
+                  {/* Mobile Backdrop */}
+                  <div
+                    className="fixed inset-0 bg-black/25 backdrop-blur-xs z-40 sm:hidden"
+                    onClick={() => setIsProfileOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-100 p-2 z-50 animate-fade-in">
                   {/* User Profile Card Header */}
                   <div className="px-3 py-2.5 border-b border-gray-100 flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-[#EBF8F2] border border-[#BCE8D3] flex items-center justify-center">
@@ -1801,8 +1825,9 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
+              </>
+            )}
+          </div>
 
           </div>
         </header>
