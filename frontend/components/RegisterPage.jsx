@@ -461,7 +461,7 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onRegist
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               className="w-full py-2.5 sm:py-3 bg-[#009B5B] hover:bg-[#00854d] text-white font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-85 disabled:cursor-not-allowed mt-2 cursor-pointer flex items-center justify-center gap-2"
             >
               {isLoading ? (

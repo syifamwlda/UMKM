@@ -64,8 +64,6 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess, mode = 'lo
     loadGoogleScript()
   }, [isOpen, googleClientId, mode])
 
-  if (!isOpen) return null
-
   const handleAuthenticate = async (payload) => {
     setLoading(true)
     setError('')
@@ -87,6 +85,8 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess, mode = 'lo
       setLoading(false)
     }
   }
+
+  if (!isOpen) return null
 
   const handleSelectSample = (sample) => {
     handleAuthenticate({
@@ -316,3 +316,4 @@ export default function GoogleAuthModal({ isOpen, onClose, onSuccess, mode = 'lo
 
   return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null
 }
+

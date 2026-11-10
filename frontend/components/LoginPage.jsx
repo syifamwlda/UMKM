@@ -220,7 +220,7 @@ export default function LoginPage({ onNavigateHome, onNavigateRegister, onLoginS
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || isGoogleLoading}
+                disabled={isLoading}
                 className="w-full py-3.5 bg-[#009B5B] hover:bg-[#00854d] text-white font-semibold rounded-xl text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-85 disabled:cursor-not-allowed mt-2 cursor-pointer flex items-center justify-center gap-2"
               >
                 {isLoading ? (
