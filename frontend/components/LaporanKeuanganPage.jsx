@@ -202,6 +202,18 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
     return filteredTransactions.slice(start, start + itemsPerPage)
   }, [filteredTransactions, currentPage])
 
+  const handleOpenReceipt = (tx) => {
+    if (tx?.uuid) {
+      const url = `/#struk/${tx.uuid}`
+      const win = window.open(url, '_blank')
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.hash = `struk/${tx.uuid}`
+      }
+    } else if (onToast) {
+      onToast(`Membuka rincian transaksi ${tx.id}...`)
+    }
+  }
+
   // Real Payment Methods Breakdown (Tunai, QRIS, Kartu/Debit)
   const pmData = useMemo(() => {
     if (stats?.payment_methods) {
@@ -1010,15 +1022,26 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
                     {tx.date} • {tx.time}
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px]">
-                  {tx.method === 'QRIS' ? (
-                    <QrCode className="w-3 h-3" />
-                  ) : tx.method === 'Cash' ? (
-                    <Coins className="w-3 h-3 text-emerald-600" />
-                  ) : (
-                    <CreditCard className="w-3 h-3 text-purple-600" />
-                  )}
-                  <span>{tx.method}</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px]">
+                    {tx.method === 'QRIS' ? (
+                      <QrCode className="w-3 h-3" />
+                    ) : tx.method === 'Cash' ? (
+                      <Coins className="w-3 h-3 text-emerald-600" />
+                    ) : (
+                      <CreditCard className="w-3 h-3 text-purple-600" />
+                    )}
+                    <span>{tx.method}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenReceipt(tx)}
+                    title="Buka Struk Digital"
+                    aria-label="Buka Struk Digital"
+                    className="w-7 h-7 -mr-1 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4 stroke-[1.8]" />
+                  </button>
                 </div>
               </div>
 
@@ -1052,6 +1075,16 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
                   </span>
                 </div>
               </div>
+
+              {/* Action Button: Buka Struk Digital Mobile */}
+              <button
+                type="button"
+                onClick={() => handleOpenReceipt(tx)}
+                className="w-full mt-3 py-2 px-3 rounded-xl bg-emerald-50/60 hover:bg-emerald-100/80 text-[#009F58] font-bold text-xs transition-colors flex items-center justify-center gap-1.5 border border-emerald-100 cursor-pointer active:scale-[0.99]"
+              >
+                <Eye className="w-3.5 h-3.5 stroke-[2]" />
+                <span>Lihat Struk Digital</span>
+              </button>
             </div>
           ))}
         </div>
@@ -1132,13 +1165,7 @@ export default function LaporanKeuanganPage({ onToast, onNavigateMenu }) {
                   <td className="py-4 px-4 text-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (tx.uuid) {
-                          window.open(`/#struk/${tx.uuid}`, '_blank')
-                        } else if (onToast) {
-                          onToast(`Membuka rincian transaksi ${tx.id}...`)
-                        }
-                      }}
+                      onClick={() => handleOpenReceipt(tx)}
                       title="Buka Struk Digital"
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 transition-colors cursor-pointer mx-auto"
                     >

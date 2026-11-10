@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
   Wallet,
   Receipt,
+  Eye,
   Menu,
   X,
   CheckCircle2,
@@ -4300,11 +4301,29 @@ export default function DashboardPage({ onLogout, initialMenu = 'Dashboard' }) {
                               </div>
                               <p className="text-[11px] text-gray-600 truncate">{itemsSummary}</p>
                             </div>
-                            <div className="text-right flex-shrink-0">
-                              <p className="font-bold text-gray-900">Rp{omzet.toLocaleString('id-ID')}</p>
-                              <p className="text-[10px] font-semibold text-[#009B5B]">
-                                +Rp{profit.toLocaleString('id-ID')}
-                              </p>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className="text-right">
+                                <p className="font-bold text-gray-900">Rp{omzet.toLocaleString('id-ID')}</p>
+                                <p className="text-[10px] font-semibold text-[#009B5B]">
+                                  +Rp{profit.toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                              {trx.uuid && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const url = `/#struk/${trx.uuid}`
+                                    const win = window.open(url, '_blank')
+                                    if (!win || win.closed || typeof win.closed === 'undefined') {
+                                      window.location.hash = `struk/${trx.uuid}`
+                                    }
+                                  }}
+                                  title="Buka Struk Digital"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#009F58] hover:bg-emerald-50 active:scale-95 transition-all cursor-pointer"
+                                >
+                                  <Eye className="w-3.5 h-3.5 stroke-[1.8]" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         )
