@@ -74,15 +74,32 @@ class AuthController extends Controller
      */
     public function redirectToGoogle(Request $request): RedirectResponse
     {
-        $clientId = config('services.google.client_id');
+        $rawClientId = config('services.google.client_id');
+        $clientId = trim(str_replace(['http://', 'https://', '/'], '', $rawClientId ?? ''));
         $redirectUri = config('services.google.redirect_uri', 'http://127.0.0.1:8000/api/auth/google/callback');
-        $frontendUrl = config('services.google.frontend_url', 'http://localhost:5173');
+        
+        // Deteksi URL frontend asal (localhost atau vercel)
+        $frontendUrl = $request->query('frontend_url');
+        if (empty($frontendUrl)) {
+            $referer = $request->header('referer');
+            if ($referer && (str_contains($referer, 'vercel.app') || str_contains($referer, 'localhost') || str_contains($referer, '127.0.0.1'))) {
+                $parsed = parse_url($referer);
+                $frontendUrl = ($parsed['scheme'] ?? 'http') . '://' . ($parsed['host'] ?? 'localhost') . (isset($parsed['port']) ? ':' . $parsed['port'] : '');
+            } else {
+                $frontendUrl = config('services.google.frontend_url', 'http://localhost:5173');
+            }
+        }
         $from = $request->query('from', 'login');
 
         if (empty($clientId)) {
             $targetHash = ($from === 'register' || $from === 'daftar') ? '#daftar' : '#login';
             return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Google OAuth belum aktif: GOOGLE_CLIENT_ID belum diisi di backend/.env. Silakan masukkan Client ID dari Google Cloud Console.'));
         }
+
+        $statePayload = base64_encode(json_encode([
+            'from'         => $from,
+            'frontend_url' => $frontendUrl,
+        ]));
 
         $params = http_build_query([
             'client_id'              => $clientId,
@@ -92,7 +109,7 @@ class AuthController extends Controller
             'access_type'            => 'offline',
             'include_granted_scopes' => 'true',
             'prompt'                 => 'select_account',
-            'state'                  => $from,
+            'state'                  => $statePayload,
         ]);
 
         return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?' . $params);
@@ -103,8 +120,17 @@ class AuthController extends Controller
      */
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
-        $frontendUrl = config('services.google.frontend_url', 'http://localhost:5173');
-        $from = $request->query('state', 'login');
+        $rawState = $request->query('state');
+        $stateData = [];
+        if (!empty($rawState)) {
+            $decoded = json_decode(base64_decode($rawState), true);
+            if (is_array($decoded)) {
+                $stateData = $decoded;
+            }
+        }
+
+        $from = $stateData['from'] ?? $request->query('state', 'login');
+        $frontendUrl = $stateData['frontend_url'] ?? config('services.google.frontend_url', 'http://localhost:5173');
         $targetHash = ($from === 'register' || $from === 'daftar') ? '#daftar' : '#login';
 
         if ($request->has('error')) {
