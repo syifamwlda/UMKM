@@ -46,6 +46,27 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function google(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'credential' => 'nullable|string',
+            'google_id'  => 'nullable|string',
+            'email'      => 'nullable|email',
+            'name'       => 'nullable|string',
+            'avatar'     => 'nullable|string',
+        ]);
+
+        $result = $this->authService->loginWithGoogle($validated);
+
+        return response()->json([
+            'message' => 'Autentikasi dengan Google berhasil. Selamat datang di UntungJelas!',
+            'data' => [
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
+            ],
+        ], 200);
+    }
+
     public function me(Request $request): JsonResponse
     {
         return response()->json([

@@ -88,6 +88,18 @@ export function AuthProvider({ children }) {
     return response.data
   }
 
+  const loginWithGoogle = async (googleData) => {
+    const response = await api.post('/auth/google', googleData)
+    const payload = response.data?.data
+    if (payload?.token && payload?.user) {
+      localStorage.setItem('sanctum_token', payload.token)
+      localStorage.setItem('auth_user', JSON.stringify(payload.user))
+      setToken(payload.token)
+      setUser(payload.user)
+    }
+    return response.data
+  }
+
   const logout = async () => {
     try {
       await api.post('/logout')
@@ -117,6 +129,7 @@ export function AuthProvider({ children }) {
         isLoading,
         login,
         register,
+        loginWithGoogle,
         logout,
         updateUser,
       }}

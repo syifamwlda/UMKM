@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/auth/google', [AuthController::class, 'google']);
 
 // Struk Digital Publik (Read-Only via UUID, throttle 60 req/menit)
 Route::get('/public/receipts/{uuid}', [PublicReceiptController::class, 'show'])->middleware('throttle:60,1');
