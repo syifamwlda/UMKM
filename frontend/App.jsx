@@ -20,9 +20,10 @@ function MainContent() {
   const [currentPage, setCurrentPage] = useState(() => {
     const hash = window.location.hash
     const path = window.location.pathname
+    if (hash.startsWith('#google-callback')) return 'dashboard'
     if (hash.startsWith('#struk/') || path.startsWith('/struk/')) return 'struk'
-    if (hash === '#login') return 'login'
-    if (hash === '#daftar' || hash === '#register') return 'register'
+    if (hash === '#login' || hash.startsWith('#login?')) return 'login'
+    if (hash === '#daftar' || hash === '#register' || hash.startsWith('#daftar?') || hash.startsWith('#register?')) return 'register'
     if (hash === '#dashboard') return 'dashboard'
     if (hash === '#produk') return 'produk'
     return 'home'
@@ -38,15 +39,16 @@ function MainContent() {
       setCurrentPage((prev) => {
         const hash = window.location.hash
         const path = window.location.pathname
+        if (hash.startsWith('#google-callback')) return 'dashboard'
         if (hash.startsWith('#struk/') || path.startsWith('/struk/')) return 'struk'
         if (prev === 'dashboard') {
-          if (hash === '#login') return 'login'
-          if (hash === '#daftar' || hash === '#register') return 'register'
+          if (hash === '#login' || hash.startsWith('#login?')) return 'login'
+          if (hash === '#daftar' || hash === '#register' || hash.startsWith('#daftar?') || hash.startsWith('#register?')) return 'register'
           if (hash === '#produk') return 'produk'
           return 'dashboard'
         }
-        if (hash === '#login') return 'login'
-        if (hash === '#daftar' || hash === '#register') return 'register'
+        if (hash === '#login' || hash.startsWith('#login?')) return 'login'
+        if (hash === '#daftar' || hash === '#register' || hash.startsWith('#daftar?') || hash.startsWith('#register?')) return 'register'
         if (hash === '#dashboard') return 'dashboard'
         if (hash === '#produk') return 'produk'
         return 'home'

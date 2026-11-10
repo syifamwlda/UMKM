@@ -3,9 +3,36 @@ import api from '../services/api'
 
 const AuthContext = createContext(null)
 
+// Helper untuk mengekstrak token & profil dari callback Google OAuth di hash URL
+const parseOAuthCallback = () => {
+  try {
+    const hash = window.location.hash
+    if (hash.startsWith('#google-callback')) {
+      const queryStr = hash.includes('?') ? hash.split('?')[1] : ''
+      const params = new URLSearchParams(queryStr)
+      const oauthToken = params.get('token')
+      const rawUser = params.get('user')
+      if (oauthToken && rawUser) {
+        const decoded = JSON.parse(atob(decodeURIComponent(rawUser)))
+        return { token: oauthToken, user: decoded }
+      }
+    }
+  } catch (e) {
+    console.error('Failed to parse OAuth callback:', e)
+  }
+  return null
+}
+
+const initialOAuth = parseOAuthCallback()
+if (initialOAuth) {
+  localStorage.setItem('sanctum_token', initialOAuth.token)
+  localStorage.setItem('auth_user', JSON.stringify(initialOAuth.user))
+}
+
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('sanctum_token') || null)
+  const [token, setToken] = useState(() => initialOAuth?.token || localStorage.getItem('sanctum_token') || null)
   const [user, setUser] = useState(() => {
+    if (initialOAuth?.user) return initialOAuth.user
     try {
       const saved = localStorage.getItem('auth_user')
       return saved ? JSON.parse(saved) : null
@@ -18,6 +45,11 @@ export function AuthProvider({ children }) {
   // Sinkronisasi status autentikasi awal & verifikasi token ke backend jika ada
   useEffect(() => {
     let isMounted = true
+
+    if (window.location.hash.startsWith('#google-callback')) {
+      window.history.replaceState(null, '', window.location.pathname + '#dashboard')
+      window.location.hash = '#dashboard'
+    }
 
     const verifyAuth = async () => {
       const storedToken = localStorage.getItem('sanctum_token')

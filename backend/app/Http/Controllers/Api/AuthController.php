@@ -8,8 +8,10 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -65,6 +67,106 @@ class AuthController extends Controller
                 'token' => $result['token'],
             ],
         ], 200);
+    }
+
+    /**
+     * Redirect pengguna ke halaman Google OAuth 2.0 resmi (Account Chooser / Pilih Akun).
+     */
+    public function redirectToGoogle(Request $request): RedirectResponse
+    {
+        $clientId = config('services.google.client_id');
+        $redirectUri = config('services.google.redirect_uri', 'http://127.0.0.1:8000/api/auth/google/callback');
+        $frontendUrl = config('services.google.frontend_url', 'http://localhost:5173');
+        $from = $request->query('from', 'login');
+
+        if (empty($clientId)) {
+            $targetHash = ($from === 'register' || $from === 'daftar') ? '#daftar' : '#login';
+            return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Google OAuth belum aktif: GOOGLE_CLIENT_ID belum diisi di backend/.env. Silakan masukkan Client ID dari Google Cloud Console.'));
+        }
+
+        $params = http_build_query([
+            'client_id'              => $clientId,
+            'redirect_uri'           => $redirectUri,
+            'response_type'          => 'code',
+            'scope'                  => 'openid email profile',
+            'access_type'            => 'offline',
+            'include_granted_scopes' => 'true',
+            'prompt'                 => 'select_account',
+            'state'                  => $from,
+        ]);
+
+        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?' . $params);
+    }
+
+    /**
+     * Menangani callback resmi dari Google API setelah otorisasi akun.
+     */
+    public function handleGoogleCallback(Request $request): RedirectResponse
+    {
+        $frontendUrl = config('services.google.frontend_url', 'http://localhost:5173');
+        $from = $request->query('state', 'login');
+        $targetHash = ($from === 'register' || $from === 'daftar') ? '#daftar' : '#login';
+
+        if ($request->has('error')) {
+            $errorDesc = $request->query('error_description') ?: $request->query('error');
+            return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Login Google dibatalkan: ' . $errorDesc));
+        }
+
+        $code = $request->query('code');
+        if (empty($code)) {
+            return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Kode otorisasi dari Google tidak ditemukan.'));
+        }
+
+        try {
+            $clientId = config('services.google.client_id');
+            $clientSecret = config('services.google.client_secret');
+            $redirectUri = config('services.google.redirect_uri', 'http://127.0.0.1:8000/api/auth/google/callback');
+
+            // 1. Tukar authorization code dengan access token ke Google Token API
+            $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'client_id'     => $clientId,
+                'client_secret' => $clientSecret,
+                'code'          => $code,
+                'grant_type'    => 'authorization_code',
+                'redirect_uri'  => $redirectUri,
+            ]);
+
+            if ($tokenResponse->failed()) {
+                $err = $tokenResponse->json('error_description') ?? 'Gagal menukarkan token otorisasi ke Google API.';
+                return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode($err));
+            }
+
+            $tokens = $tokenResponse->json();
+            $accessToken = $tokens['access_token'] ?? null;
+
+            if (empty($accessToken)) {
+                return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Access token dari Google tidak valid.'));
+            }
+
+            // 2. Ambil profil user resmi langsung dari Google UserInfo API
+            $userResponse = Http::withToken($accessToken)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+            if ($userResponse->failed()) {
+                return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Gagal memuat profil akun dari Google.'));
+            }
+
+            $profile = $userResponse->json();
+
+            // 3. Login / Buat akun di UntungJelas dan terbitkan Sanctum token
+            $result = $this->authService->loginWithGoogle([
+                'google_id' => $profile['sub'] ?? null,
+                'email'     => $profile['email'] ?? null,
+                'name'      => $profile['name'] ?? null,
+                'avatar'    => $profile['picture'] ?? null,
+            ]);
+
+            $token = $result['token'];
+            $userData = base64_encode(json_encode((new UserResource($result['user']))->toArray(request())));
+
+            return redirect()->away($frontendUrl . '/#google-callback?token=' . urlencode($token) . '&user=' . urlencode($userData));
+        } catch (\Throwable $e) {
+            return redirect()->away($frontendUrl . '/' . $targetHash . '?error=' . urlencode('Terjadi kesalahan saat memproses login Google: ' . $e->getMessage()));
+        }
     }
 
     public function me(Request $request): JsonResponse
