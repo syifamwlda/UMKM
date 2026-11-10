@@ -162,7 +162,9 @@ export default function RegisterPage({ onNavigateHome, onNavigateLogin, onRegist
 
   const handleGoogleLogin = () => {
     setIsGoogleRedirecting(true)
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
+    const apiBase = import.meta.env.VITE_API_BASE_URL
+    const defaultBackend = apiBase ? apiBase.replace(/\/api\/?$/, '') : 'http://127.0.0.1:8000'
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || defaultBackend
     window.location.href = `${backendUrl}/api/auth/google/redirect?from=register`
   }
 
